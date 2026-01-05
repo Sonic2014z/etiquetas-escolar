@@ -31,10 +31,24 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
             <Card variant="accent" className="flex flex-col items-center justify-center p-8 bg-slate-50">
 
                 <div id="etiqueta-qr" className="bg-white w-full max-w-[400px] aspect-[2.5/1] border-2 border-black rounded-lg shadow-xl flex flex-row overflow-hidden relative">
-                    {/* Borde izquierdo rosa/fucsia con QR Code y texto vertical "DEVOLVER AQUI" */}
-                    <div className="bg-[#ec4899] w-20 flex flex-col items-center justify-between p-2 relative shrink-0 h-full">
-                        {/* QR Code en la parte superior del área rosa */}
-                        <div className="shrink-0 pt-2">
+                    {/* Borde izquierdo rosa/fucsia con texto "DEVOLVER AQUI" y QR Code */}
+                    <div className="bg-[#ec4899] w-28 flex flex-row items-center justify-between p-2 relative shrink-0 h-full">
+                        {/* Texto vertical "DEVOLVER AQUI" a la izquierda */}
+                        <div className="shrink-0 flex items-center justify-center">
+                            <span 
+                                className="text-white font-bold text-[9px] tracking-wider whitespace-nowrap"
+                                style={{ 
+                                    writingMode: 'vertical-rl',
+                                    textOrientation: 'mixed',
+                                    transform: 'rotate(180deg)'
+                                }}
+                            >
+                                DEVOLVER AQUI
+                            </span>
+                        </div>
+                        
+                        {/* QR Code a la derecha dentro del área rosa */}
+                        <div className="shrink-0">
                             {qrUrl ? (
                                 <div className="border border-white/30 p-1 rounded bg-white">
                                     <QRCode 
@@ -50,20 +64,6 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
                                     <span className="text-[8px] text-white font-medium">Faltan datos</span>
                                 </div>
                             )}
-                        </div>
-                        
-                        {/* Texto vertical "DEVOLVER AQUI" en la parte inferior */}
-                        <div className="shrink-0 pb-2 flex items-center justify-center">
-                            <span 
-                                className="text-white font-bold text-[9px] tracking-wider whitespace-nowrap"
-                                style={{ 
-                                    writingMode: 'vertical-rl',
-                                    textOrientation: 'mixed',
-                                    transform: 'rotate(180deg)'
-                                }}
-                            >
-                                DEVOLVER AQUI
-                            </span>
                         </div>
                     </div>
 
