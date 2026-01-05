@@ -106,7 +106,7 @@ export function SearchableSelect({
     
           {/* Lista Desplegable */}
           {isOpen && (
-            <div className="absolute z-50 w-full mt-1 bg-white border border-border rounded-md shadow-lg max-h-60 overflow-auto">
+            <div className="absolute z-50 w-full mt-1 top-full left-0 bg-white border border-border rounded-md shadow-lg max-h-60 overflow-auto">
               {filteredOptions.length > 0 ? (
                 filteredOptions.map((opt) => (
                   <div
