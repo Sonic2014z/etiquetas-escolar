@@ -34,15 +34,23 @@ export async function createApoderado(data: {
   uid: string;
 }): Promise<Apoderado> {
   try {
-    const payload = {
+    const payload: any = {
       nombres: data.nombres,
       primer_apellido: data.primer_apellido,
       segundo_apellido: data.segundo_apellido || "",
       rut: data.rut.replace(/[^0-9kK]/g, ''), // Limpiar RUT
       telefono: data.telefono,
-      email: data.email || "",
       uid: data.uid,
     };
+    
+    // Solo agregar email si tiene valor, de lo contrario no lo enviamos (o enviamos null si Strapi lo requiere)
+    if (data.email && data.email.trim() !== "") {
+      payload.email = data.email;
+    } else {
+      // Si el campo es requerido en Strapi pero puede ser null, enviamos null
+      // Si no es requerido, simplemente no lo incluimos
+      payload.email = null;
+    }
     
     console.log("[createApoderado] Payload enviado:", JSON.stringify(payload, null, 2));
     
