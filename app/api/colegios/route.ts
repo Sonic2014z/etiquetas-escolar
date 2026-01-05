@@ -27,8 +27,28 @@ export async function GET() {
     // Llamar a Strapi desde el servidor (donde el token está disponible)
     const response = await strapi.get<StrapiColegiosResponse>('colegios');
     
-    // Retornar los datos al cliente
-    return NextResponse.json(response.data || []);
+    // Debug: Log para verificar estructura (remover en producción)
+    console.log('[API /api/colegios] Response structure:', JSON.stringify(response, null, 2).substring(0, 500));
+    
+    // Verificar que response tenga la estructura esperada
+    if (!response || typeof response !== 'object') {
+      console.error('[API /api/colegios] Invalid response structure:', response);
+      return NextResponse.json([], { status: 200 });
+    }
+    
+    // Extraer el array de colegios
+    const colegios = response.data || [];
+    
+    // Validar que cada colegio tenga la estructura correcta
+    const validColegios = colegios.filter((colegio: any) => {
+      return colegio && 
+             typeof colegio.id !== 'undefined' && 
+             colegio.attributes && 
+             typeof colegio.attributes === 'object';
+    });
+    
+    // Retornar los datos validados al cliente
+    return NextResponse.json(validColegios);
   } catch (error) {
     console.error('[API /api/colegios] Error:', error);
     

@@ -85,11 +85,19 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
                         <option value="" disabled>
                             {loadingColegios ? "Cargando colegios..." : "Seleccionar colegio"}
                         </option>
-                        {colegios.map((colegioItem) => (
-                            <option key={colegioItem.id} value={colegioItem.id.toString()}>
-                                {colegioItem.attributes.colegio_nombre}
-                            </option>
-                        ))}
+                        {colegios.map((colegioItem) => {
+                            // Validación defensiva: verificar que attributes exista
+                            if (!colegioItem || !colegioItem.attributes) {
+                                console.warn('[AlumnoForm] Colegio inválido:', colegioItem);
+                                return null;
+                            }
+                            
+                            return (
+                                <option key={colegioItem.id} value={colegioItem.id.toString()}>
+                                    {colegioItem.attributes.colegio_nombre || 'Sin nombre'}
+                                </option>
+                            );
+                        })}
                     </select>
                     {errors?.colegio && (
                         <p className="text-xs text-error mt-1">{errors.colegio}</p>
