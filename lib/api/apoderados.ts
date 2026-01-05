@@ -6,17 +6,28 @@ import type { Apoderado, StrapiCollectionResponse, StrapiResponse } from "@/type
  */
 export async function verifyApoderadoExists(apoderadoId: number): Promise<Apoderado | null> {
   try {
+    console.log(`[verifyApoderadoExists] Buscando apoderado con ID: ${apoderadoId}`);
     const response = await strapi.get<StrapiResponse<Apoderado>>(
       `etiquetas-apoderados/${apoderadoId}`
     );
     
+    console.log(`[verifyApoderadoExists] Respuesta completa:`, JSON.stringify(response, null, 2));
+    
     if (response.data) {
+      const idReal = response.data.id;
+      console.log(`[verifyApoderadoExists] ID solicitado: ${apoderadoId}, ID devuelto por Strapi: ${idReal}`);
+      
+      if (idReal !== apoderadoId) {
+        console.warn(`[verifyApoderadoExists] ⚠️ ID diferente! Solicitado: ${apoderadoId}, Devuelto: ${idReal}`);
+      }
+      
       return response.data;
     }
     return null;
   } catch (error: any) {
     // Si es 404, el apoderado no existe
     if (error.message?.includes('404')) {
+      console.log(`[verifyApoderadoExists] Apoderado ${apoderadoId} no encontrado (404)`);
       return null;
     }
     console.error("Error verificando apoderado por ID:", error);

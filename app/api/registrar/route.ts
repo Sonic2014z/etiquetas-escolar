@@ -104,35 +104,42 @@ export async function POST(request: NextRequest) {
     }
     
     // 3. VERIFICAR QUE AMBOS REGISTROS EXISTEN EN STRAPI
-    console.log(`[REGISTRO] Verificando existencia de apoderado ${apoderadoId} y alumno ${alumnoId}...`);
+    // Buscar por campos únicos para obtener los IDs reales (más confiable que usar el ID de creación)
+    console.log(`[REGISTRO] Buscando registros por campos únicos para obtener IDs reales...`);
     
-    const apoderadoVerificado = await verifyApoderadoExists(apoderadoId);
-    const alumnoVerificado = await verifyAlumnoExists(alumnoId);
-    
+    // Buscar apoderado por RUT (más confiable que por ID)
+    const apoderadoVerificado = await findApoderadoByRut(cleanRut);
     if (!apoderadoVerificado) {
-      throw new Error(`No se pudo verificar la existencia del apoderado con ID ${apoderadoId}`);
+      throw new Error(`No se pudo encontrar el apoderado con RUT ${cleanRut} después de crearlo`);
     }
+    const apoderadoIdReal = apoderadoVerificado.id;
+    console.log(`[REGISTRO] ✓ Apoderado encontrado por RUT: ID original ${apoderadoId} -> ID real ${apoderadoIdReal}`);
+    
+    // Buscar alumno por criterios únicos (más confiable que por ID)
+    const alumnoVerificado = await findAlumno({
+      nombres: studentData.nombres,
+      primer_apellido: studentData.primerApellido,
+      segundo_apellido: studentData.segundoApellido || "",
+      curso: studentData.course,
+      letra: studentData.letter,
+      colegio: studentData.colegio,
+    });
     
     if (!alumnoVerificado) {
-      throw new Error(`No se pudo verificar la existencia del alumno con ID ${alumnoId}`);
+      throw new Error(`No se pudo encontrar el alumno después de crearlo`);
+    }
+    const alumnoIdReal = alumnoVerificado.id;
+    console.log(`[REGISTRO] ✓ Alumno encontrado por criterios: ID original ${alumnoId} -> ID real ${alumnoIdReal}`);
+    
+    // Usar los IDs reales obtenidos de la búsqueda
+    if (apoderadoIdReal !== apoderadoId) {
+      console.warn(`[REGISTRO] ⚠️ ID de apoderado diferente: ${apoderadoId} -> ${apoderadoIdReal} (usando ID real)`);
+      apoderadoId = apoderadoIdReal;
     }
     
-    // Usar los IDs verificados (por si acaso son diferentes)
-    const apoderadoIdVerificado = apoderadoVerificado.id;
-    const alumnoIdVerificado = alumnoVerificado.id;
-    
-    console.log(`[REGISTRO] ✓ Apoderado verificado: ID original ${apoderadoId} -> ID verificado ${apoderadoIdVerificado}`);
-    console.log(`[REGISTRO] ✓ Alumno verificado: ID original ${alumnoId} -> ID verificado ${alumnoIdVerificado}`);
-    
-    // Si los IDs son diferentes, usar los verificados
-    if (apoderadoIdVerificado !== apoderadoId) {
-      console.warn(`[REGISTRO] ⚠️ ID de apoderado cambió: ${apoderadoId} -> ${apoderadoIdVerificado}`);
-      apoderadoId = apoderadoIdVerificado;
-    }
-    
-    if (alumnoIdVerificado !== alumnoId) {
-      console.warn(`[REGISTRO] ⚠️ ID de alumno cambió: ${alumnoId} -> ${alumnoIdVerificado}`);
-      alumnoId = alumnoIdVerificado;
+    if (alumnoIdReal !== alumnoId) {
+      console.warn(`[REGISTRO] ⚠️ ID de alumno diferente: ${alumnoId} -> ${alumnoIdReal} (usando ID real)`);
+      alumnoId = alumnoIdReal;
     }
     
     // 4. ESTABLECER RELACIONES BIDIRECCIONALES DESPUÉS DE VERIFICAR
