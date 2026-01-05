@@ -21,20 +21,59 @@ interface StrapiColegiosResponse {
  * GET /api/colegios
  * Obtiene todos los colegios desde Strapi
  * Esta ruta actúa como proxy para mantener el token seguro en el servidor
+ * Maneja paginación automáticamente para obtener todos los resultados
  */
 export async function GET() {
   try {
-    // Llamar a Strapi desde el servidor (donde el token está disponible)
-    const response = await strapi.get<any>('colegios');
-    
-    // Verificar que response tenga la estructura esperada
-    if (!response || typeof response !== 'object') {
-      console.error('[API /api/colegios] Invalid response structure:', response);
-      return NextResponse.json([], { status: 200 });
+    const allColegios: any[] = [];
+    let page = 1;
+    let pageSize = 100; // Máximo típico de Strapi (puede ser 100 o 1000 según configuración)
+    let totalPages = 1;
+    let hasMore = true;
+
+    // Hacer requests paginados hasta obtener todos los colegios
+    while (hasMore && page <= 100) { // Límite de seguridad: máximo 100 páginas
+      // Construir URL con parámetros de paginación
+      const paginationParams = `pagination[page]=${page}&pagination[pageSize]=${pageSize}`;
+      const path = `colegios?${paginationParams}`;
+      
+      // Llamar a Strapi con paginación
+      const response = await strapi.get<any>(path);
+      
+      // Verificar que response tenga la estructura esperada
+      if (!response || typeof response !== 'object' || !response.data) {
+        console.error('[API /api/colegios] Invalid response structure en página', page);
+        break;
+      }
+      
+      // Agregar los colegios de esta página al array total
+      const colegiosRaw = response.data || [];
+      allColegios.push(...colegiosRaw);
+      
+      // Verificar información de paginación
+      if (response.meta?.pagination) {
+        totalPages = response.meta.pagination.pageCount || 1;
+        const currentPage = response.meta.pagination.page || page;
+        const total = response.meta.pagination.total || 0;
+        
+        console.log(`[API /api/colegios] Página ${currentPage}/${totalPages} - Total: ${total} - Cargados: ${allColegios.length}`);
+        
+        // Si ya cargamos todas las páginas, salir del loop
+        if (currentPage >= totalPages || colegiosRaw.length === 0) {
+          hasMore = false;
+        }
+      } else {
+        // Si no hay información de paginación, asumir que esta es la última página
+        hasMore = colegiosRaw.length === pageSize;
+      }
+      
+      page++;
     }
     
-    // Extraer el array de colegios
-    const colegiosRaw = response.data || [];
+    console.log(`[API /api/colegios] Total colegios cargados: ${allColegios.length}`);
+    
+    // Extraer el array de colegios (ya tenemos todos)
+    const colegiosRaw = allColegios;
     
     // Normalizar los datos: Strapi puede retornar con o sin "attributes"
     // Convertimos a la estructura esperada: { id, attributes: { ... } }
