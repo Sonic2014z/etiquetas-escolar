@@ -14,7 +14,13 @@ interface LabelPreviewProps {
 }
 
 export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado, telefonoApoderado, qrUrl }: LabelPreviewProps) {
-    const displayPhone = telefonoApoderado ? formatChileanPhone(telefonoApoderado) : "+56 9 ...";
+    // Obtener el año actual
+    const currentYear = new Date().getFullYear();
+    
+    // Dividir el nombre del colegio en dos líneas si es muy largo
+    const colegioParts = colegio ? colegio.split(' ') : [];
+    const colegioLine1 = colegioParts.slice(0, Math.ceil(colegioParts.length / 2)).join(' ');
+    const colegioLine2 = colegioParts.slice(Math.ceil(colegioParts.length / 2)).join(' ');
 
     return (
         <div className="sticky top-6">
@@ -24,45 +30,79 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
 
             <Card variant="accent" className="flex flex-col items-center justify-center p-8 bg-slate-50">
 
-                <div id="etiqueta-qr" className="bg-white w-full max-w-[350px] aspect-[2/1] border-2 border-black rounded-lg shadow-xl flex flex-row items-center p-4 gap-4 overflow-hidden relative">
-                    <div className="absolute left-0 top-0 bottom-0 w-2 bg-primary"></div>
-
-                    <div className="shrink-0 ml-2">
-                        {qrUrl ? (
-                            <div className="border border-gray-200 p-1 rounded bg-white">
-                                <QRCode 
-                                    value={qrUrl}
-                                    size={80}
-                                    level="M"
-                                    fgColor="#000000"
-                                    bgColor="#ffffff" 
-                                />
-                            </div>
-                        ) : (
-                            <div className="w-[82px] h-[82px] bg-gray-100 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-center p-1">
-                                <span className="text-[10px] text-gray-400 font-medium">Faltan datos</span>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="flex-1 min-w-0 flex flex-col justify-center h-full">
-                        <h3 className={`font-bold leading-tight truncate text-black ${nombreAlumno.length > 20 ? 'text-sm' : 'text-lg'}`}>
-                            {nombreAlumno || "Nombre del Alumno"}
-                        </h3>
-
-                        <div className="flex items-baseline gap-2 mt-1 text-black">
-                            <span className="text-sm font-medium">
-                                {curso || "Curso"}
-                            </span>
-                            <span className="text-2xl font-black bg-black text-white px-2 rounded-md leading-none pb-1 pt-0.5">
-                                {letra || "?"}
+                <div id="etiqueta-qr" className="bg-white w-full max-w-[400px] aspect-[2.5/1] border-2 border-black rounded-lg shadow-xl flex flex-row overflow-hidden relative">
+                    {/* Borde izquierdo rosa/fucsia con texto vertical "DEVOLVER AQUI" */}
+                    <div className="bg-[#ec4899] w-14 flex items-center justify-center relative shrink-0">
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <span 
+                                className="text-white font-bold text-[10px] tracking-wider whitespace-nowrap"
+                                style={{ 
+                                    writingMode: 'vertical-rl',
+                                    textOrientation: 'mixed',
+                                    transform: 'rotate(180deg)'
+                                }}
+                            >
+                                DEVOLVER AQUI
                             </span>
                         </div>
+                    </div>
 
-                        <div className="h-px w-full bg-gray-200 my-2"></div>
+                    {/* Contenido principal */}
+                    <div className="flex-1 flex flex-row items-start p-4 gap-4">
+                        {/* QR Code en la parte superior izquierda */}
+                        <div className="shrink-0 mt-0">
+                            {qrUrl ? (
+                                <div className="border border-gray-200 p-1 rounded bg-white">
+                                    <QRCode 
+                                        value={qrUrl}
+                                        size={80}
+                                        level="M"
+                                        fgColor="#000000"
+                                        bgColor="#ffffff" 
+                                    />
+                                </div>
+                            ) : (
+                                <div className="w-[82px] h-[82px] bg-gray-100 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-center p-1">
+                                    <span className="text-[10px] text-gray-400 font-medium">Faltan datos</span>
+                                </div>
+                            )}
+                        </div>
 
-                        <div className="text-sm text-gray-500 mt-2">
-                            {colegio || "Nombre del Colegio"}
+                        {/* Información del alumno y colegio */}
+                        <div className="flex-1 min-w-0 flex flex-col justify-start h-full">
+                            {/* Nombre del alumno - grande y en negrita */}
+                            <h3 className="font-bold text-lg leading-tight text-black mb-1">
+                                {nombreAlumno || "Nombre del Alumno"}
+                            </h3>
+
+                            {/* Curso y letra con subrayado */}
+                            <div className="flex items-baseline gap-1 mb-2">
+                                <span className="text-sm font-bold text-black underline">
+                                    {curso || "Curso"} {letra || "?"}
+                                </span>
+                            </div>
+
+                            {/* Nombre del colegio en dos líneas con año y ESCOLAR */}
+                            <div className="flex flex-col gap-0 mt-auto">
+                                <div className="flex items-baseline gap-2">
+                                    <div className="flex flex-col">
+                                        <span className="text-xs text-black leading-tight">
+                                            {colegioLine1 || "Nombre del"}
+                                        </span>
+                                        {colegioLine2 && (
+                                            <span className="text-xs text-black leading-tight">
+                                                {colegioLine2}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <span className="text-xs text-black ml-auto">
+                                        {currentYear}
+                                    </span>
+                                    <span className="text-xs font-bold text-black uppercase ml-2">
+                                        ESCOLAR
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
