@@ -8,7 +8,7 @@ export async function findApoderadoByRut(rut: string): Promise<Apoderado | null>
   try {
     const cleanRut = rut.replace(/[^0-9kK]/g, '');
     const response = await strapi.get<StrapiCollectionResponse<Apoderado>>(
-      `etiqueta-apoderados?filters[rut][$eq]=${cleanRut}&populate=alumnos`
+      `etiquetas-apoderados?filters[rut][$eq]=${cleanRut}&populate=alumnos`
     );
     
     if (response.data && response.data.length > 0) {
@@ -35,7 +35,7 @@ export async function createApoderado(data: {
 }): Promise<Apoderado> {
   try {
     const response = await strapi.post<StrapiResponse<Apoderado>>(
-      "etiqueta-apoderados",
+      "etiquetas-apoderados",
       {
         nombres: data.nombres,
         primer_apellido: data.primer_apellido,
@@ -64,7 +64,7 @@ export async function updateApoderadoWithAlumno(
   try {
     // Primero obtenemos el apoderado con sus alumnos actuales
     const apoderadoResponse = await strapi.get<StrapiResponse<Apoderado>>(
-      `etiqueta-apoderados/${apoderadoId}?populate=alumnos`
+      `etiquetas-apoderados/${apoderadoId}?populate=alumnos`
     );
     
     const apoderado = apoderadoResponse.data;
@@ -81,7 +81,7 @@ export async function updateApoderadoWithAlumno(
     
     // Actualizamos el apoderado
     const response = await strapi.put<StrapiResponse<Apoderado>>(
-      `etiqueta-apoderados/${apoderadoId}`,
+      `etiquetas-apoderados/${apoderadoId}`,
       {
         alumnos: nuevosAlumnos,
       }

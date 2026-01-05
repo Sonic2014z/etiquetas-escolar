@@ -27,7 +27,7 @@ export async function findAlumno(data: {
     }
     
     const response = await strapi.get<StrapiCollectionResponse<Alumno>>(
-      `etiqueta-alumnos?${filters.join("&")}&populate=apoderado`
+      `etiquetas-alumnos?${filters.join("&")}&populate=apoderado`
     );
     
     if (response.data && response.data.length > 0) {
@@ -68,7 +68,7 @@ export async function createAlumno(data: {
     }
     
     const response = await strapi.post<StrapiResponse<Alumno>>(
-      "etiqueta-alumnos",
+      "etiquetas-alumnos",
       payload
     );
     
