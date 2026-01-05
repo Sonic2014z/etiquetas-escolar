@@ -15,7 +15,7 @@ export default async function TestConnectionPage() {
 
   try {
     // Intento de conexión
-    data = await strapi.get("colegio");
+    data = await strapi.get("colegios");
     status = "Conexión Exitosa";
   } catch (error: unknown) {
     status = "Error de Conexión";
