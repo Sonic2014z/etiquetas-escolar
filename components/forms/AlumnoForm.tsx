@@ -81,7 +81,6 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
 
                 {/* Campo Colegio */}
                 <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-foreground-secondary">Colegio *</label>
                     <SearchableSelect
                         label="Colegio *"
                         placeholder={loadingColegios ? "Cargando datos..." : "Buscar colegio..."}
