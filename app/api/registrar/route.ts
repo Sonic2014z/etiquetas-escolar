@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { findApoderadoByRut, createApoderado, updateApoderadoWithAlumno } from "@/lib/api/apoderados";
-import { findAlumno, createAlumno } from "@/lib/api/alumnos";
+import { findApoderadoByRut, createApoderado, updateApoderadoWithAlumno, verifyApoderadoExists } from "@/lib/api/apoderados";
+import { findAlumno, createAlumno, verifyAlumnoExists, updateAlumnoWithApoderado } from "@/lib/api/alumnos";
 import { generateUID } from "@/lib/helpers/uid";
 import { validateRut } from "@/lib/validations/rut";
 import { cleanRUT } from "@/lib/formatters/rut";
@@ -87,21 +87,8 @@ export async function POST(request: NextRequest) {
       // Alumno existe
       alumnoId = alumnoExistente.id;
       console.log(`Alumno existente encontrado: ID ${alumnoId}`);
-      
-      // Verificar si ya está relacionado con el apoderado
-      const apoderadoRelacionado = alumnoExistente.attributes.apoderado?.data;
-      if (!apoderadoRelacionado || apoderadoRelacionado.id !== apoderadoId) {
-        // Si no está relacionado o está relacionado con otro apoderado, intentamos actualizar
-        // Intentamos actualizar desde el lado del apoderado (puede fallar si el endpoint no está disponible)
-        try {
-          await updateApoderadoWithAlumno(apoderadoId, alumnoId);
-          console.log(`Relación actualizada: Apoderado ${apoderadoId} <-> Alumno ${alumnoId}`);
-        } catch (error) {
-          console.warn(`No se pudo actualizar relación desde apoderado, pero la relación ya existe desde el alumno:`, error);
-        }
-      }
     } else {
-      // Crear nuevo alumno relacionado con el apoderado
+      // Crear nuevo alumno SIN relación (se establecerá después de verificar)
       const nuevoAlumno = await createAlumno({
         nombres: studentData.nombres,
         primer_apellido: studentData.primerApellido,
@@ -109,21 +96,50 @@ export async function POST(request: NextRequest) {
         curso: studentData.course,
         letra: studentData.letter,
         colegio: studentData.colegio,
-        apoderadoId: apoderadoId,
       });
       alumnoId = nuevoAlumno.id;
       console.log(`Nuevo alumno creado: ID ${alumnoId}`);
-      
-      // Actualizar el apoderado para incluir la relación con el nuevo alumno
-      // Nota: La relación ya está establecida desde el lado del alumno (apoderadoId en createAlumno)
-      // Intentamos actualizar desde el lado del apoderado también (puede fallar si el endpoint no está disponible)
-      try {
-        await updateApoderadoWithAlumno(apoderadoId, alumnoId);
-        console.log(`Relación creada: Apoderado ${apoderadoId} <-> Alumno ${alumnoId}`);
-      } catch (error) {
-        console.warn(`No se pudo actualizar relación desde apoderado, pero la relación ya existe desde el alumno:`, error);
-      }
     }
+    
+    // 3. VERIFICAR QUE AMBOS REGISTROS EXISTEN EN STRAPI
+    console.log(`Verificando existencia de apoderado ${apoderadoId} y alumno ${alumnoId}...`);
+    
+    const apoderadoVerificado = await verifyApoderadoExists(apoderadoId);
+    const alumnoVerificado = await verifyAlumnoExists(alumnoId);
+    
+    if (!apoderadoVerificado) {
+      throw new Error(`No se pudo verificar la existencia del apoderado con ID ${apoderadoId}`);
+    }
+    
+    if (!alumnoVerificado) {
+      throw new Error(`No se pudo verificar la existencia del alumno con ID ${alumnoId}`);
+    }
+    
+    console.log(`✓ Apoderado ${apoderadoId} verificado`);
+    console.log(`✓ Alumno ${alumnoId} verificado`);
+    
+    // 4. ESTABLECER RELACIONES BIDIRECCIONALES DESPUÉS DE VERIFICAR
+    console.log(`Estableciendo relaciones bidireccionales...`);
+    
+    // Relación: Alumno -> Apoderado
+    try {
+      await updateAlumnoWithApoderado(alumnoId, apoderadoId);
+      console.log(`✓ Relación establecida: Alumno ${alumnoId} -> Apoderado ${apoderadoId}`);
+    } catch (error) {
+      console.error(`Error estableciendo relación Alumno -> Apoderado:`, error);
+      throw new Error(`No se pudo establecer la relación del alumno con el apoderado`);
+    }
+    
+    // Relación: Apoderado -> Alumno
+    try {
+      await updateApoderadoWithAlumno(apoderadoId, alumnoId);
+      console.log(`✓ Relación establecida: Apoderado ${apoderadoId} -> Alumno ${alumnoId}`);
+    } catch (error) {
+      console.warn(`No se pudo establecer relación Apoderado -> Alumno (puede ser normal si el endpoint no está disponible):`, error);
+      // No lanzamos error aquí porque la relación principal (Alumno -> Apoderado) ya está establecida
+    }
+    
+    console.log(`Relaciones bidireccionales establecidas correctamente`);
     
     return NextResponse.json({
       success: true,

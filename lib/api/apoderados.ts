@@ -2,6 +2,29 @@ import { strapi } from "./strapi";
 import type { Apoderado, StrapiCollectionResponse, StrapiResponse } from "@/types/strapi";
 
 /**
+ * Verifica que un apoderado existe por ID
+ */
+export async function verifyApoderadoExists(apoderadoId: number): Promise<Apoderado | null> {
+  try {
+    const response = await strapi.get<StrapiResponse<Apoderado>>(
+      `etiquetas-apoderados/${apoderadoId}`
+    );
+    
+    if (response.data) {
+      return response.data;
+    }
+    return null;
+  } catch (error: any) {
+    // Si es 404, el apoderado no existe
+    if (error.message?.includes('404')) {
+      return null;
+    }
+    console.error("Error verificando apoderado por ID:", error);
+    throw error;
+  }
+}
+
+/**
  * Busca un apoderado por RUT
  */
 export async function findApoderadoByRut(rut: string): Promise<Apoderado | null> {
