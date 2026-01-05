@@ -18,7 +18,8 @@ export default function GeneratorPage() {
     primerApellido: "",
     segundoApellido: "",
     rut: "",
-    phone: ""
+    phone: "",
+    email: ""
   });
 
   const [studentData, setStudentData] = useState<StudentData>({
@@ -135,6 +136,7 @@ export default function GeneratorPage() {
             segundoApellido: parentData.segundoApellido,
             rut: parentData.rut,
             phone: parentData.phone,
+            email: parentData.email,
           },
           studentData: {
             nombres: studentData.nombres,
@@ -217,12 +219,14 @@ export default function GeneratorPage() {
                     segundoApellido={parentData.segundoApellido}
                     rut={parentData.rut}
                     phone={parentData.phone}
+                    email={parentData.email}
                     
                     onNombresChange={(val: string) => handleParentChange('nombres', val)}
                     onPrimerApellidoChange={(val: string) => handleParentChange('primerApellido', val)}
                     onSegundoApellidoChange={(val: string) => handleParentChange('segundoApellido', val)}
                     onRutChange={(val: string) => handleParentChange('rut', val)}
                     onPhoneChange={(val: string) => handleParentChange('phone', val)}
+                    onEmailChange={(val: string) => handleParentChange('email', val)}
                     
                     isRutValid={isRutValid}
                     errors={{ rut: formErrors['rut'] }}

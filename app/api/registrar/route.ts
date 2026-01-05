@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
         segundo_apellido: parentData.segundoApellido || "",
         rut: cleanRut,
         telefono: parentData.phone,
-        email: undefined, // No enviamos email si no está disponible
+        email: parentData.email || undefined, // Enviamos el email si está disponible
         uid: uid,
       });
       apoderadoId = nuevoApoderado.id;

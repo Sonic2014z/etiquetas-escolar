@@ -8,6 +8,7 @@ export interface ParentData {
   segundoApellido: string;
   rut: string;
   phone: string;
+  email: string;
 }
 
 export interface StudentData {
