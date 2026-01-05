@@ -9,13 +9,13 @@ export default async function TestConnectionPage() {
   let errorMsg: string | null = null;
   
   const config = {
-    url: process.env.NEXT_PUBLIC_STRAPI_API_URL,
+    url: process.env.NEXT_PUBLIC_STRAPI_URL,
     hasToken: !!process.env.STRAPI_API_TOKEN,
   };
 
   try {
     // Intento de conexión
-    data = await strapi.get("users-permissions/roles");
+    data = await strapi.get("colegio");
     status = "Conexión Exitosa";
   } catch (error: unknown) {
     status = "Error de Conexión";
@@ -44,6 +44,7 @@ export default async function TestConnectionPage() {
           <p><strong>URL Configurada:</strong> {config.url || "NO DEFINIDA"}</p>
           <p><strong>Token Detectado:</strong> {config.hasToken ? "SÍ" : "NO"}</p>
         </div>
+        
       </div>
     </div>
   );
