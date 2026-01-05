@@ -34,17 +34,21 @@ export async function createApoderado(data: {
   uid: string;
 }): Promise<Apoderado> {
   try {
+    const payload = {
+      nombres: data.nombres,
+      primer_apellido: data.primer_apellido,
+      segundo_apellido: data.segundo_apellido || "",
+      rut: data.rut.replace(/[^0-9kK]/g, ''), // Limpiar RUT
+      telefono: data.telefono,
+      email: data.email || "",
+      uid: data.uid,
+    };
+    
+    console.log("[createApoderado] Payload enviado:", JSON.stringify(payload, null, 2));
+    
     const response = await strapi.post<StrapiResponse<Apoderado>>(
       "etiquetas-apoderados",
-      {
-        nombres: data.nombres,
-        primer_apellido: data.primer_apellido,
-        segundo_apellido: data.segundo_apellido || "",
-        rut: data.rut.replace(/[^0-9kK]/g, ''), // Limpiar RUT
-        telefono: data.telefono,
-        email: data.email || "",
-        uid: data.uid,
-      }
+      payload
     );
     
     return response.data;
@@ -77,6 +81,7 @@ export async function updateApoderadoWithAlumno(
     }
     
     // Agregamos el nuevo alumno a la lista
+    // En Strapi v4, para relaciones many-to-many o one-to-many, podemos pasar un array de IDs
     const nuevosAlumnos = [...alumnosExistentes.map((a) => a.id), alumnoId];
     
     // Actualizamos el apoderado

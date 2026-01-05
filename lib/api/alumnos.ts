@@ -63,9 +63,12 @@ export async function createAlumno(data: {
     };
     
     // Si hay apoderadoId, lo relacionamos
+    // En Strapi v4, las relaciones pueden requerir el ID directamente o un objeto con connect
     if (data.apoderadoId) {
       payload.apoderado = data.apoderadoId;
     }
+    
+    console.log("[createAlumno] Payload enviado:", JSON.stringify(payload, null, 2));
     
     const response = await strapi.post<StrapiResponse<Alumno>>(
       "etiquetas-alumnos",

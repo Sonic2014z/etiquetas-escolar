@@ -41,7 +41,9 @@ async function fetchAPI<T>(
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(`Error Strapi (${response.status}): ${errorData.message || response.statusText}`);
+            const errorMessage = errorData.error?.message || errorData.message || response.statusText;
+            const errorDetails = errorData.error?.details ? JSON.stringify(errorData.error.details, null, 2) : '';
+            throw new Error(`Error Strapi (${response.status}): ${errorMessage}${errorDetails ? `\nDetalles: ${errorDetails}` : ''}`);
         }
 
         const data = await response.json();

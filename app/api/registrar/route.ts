@@ -133,10 +133,19 @@ export async function POST(request: NextRequest) {
     
   } catch (error: any) {
     console.error("Error en registro:", error);
+    console.error("Stack trace:", error.stack);
+    
+    // Intentar extraer más detalles del error
+    let errorDetails = error.message || "Error desconocido";
+    if (error.message && error.message.includes("Detalles:")) {
+      errorDetails = error.message;
+    }
+    
     return NextResponse.json(
       { 
         error: "Error al registrar datos",
-        message: error.message || "Error desconocido"
+        message: errorDetails,
+        fullError: process.env.NODE_ENV === 'development' ? error.stack : undefined
       },
       { status: 500 }
     );
