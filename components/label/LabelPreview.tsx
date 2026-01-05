@@ -31,11 +31,31 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
             <Card variant="accent" className="flex flex-col items-center justify-center p-8 bg-slate-50">
 
                 <div id="etiqueta-qr" className="bg-white w-full max-w-[400px] aspect-[2.5/1] border-2 border-black rounded-lg shadow-xl flex flex-row overflow-hidden relative">
-                    {/* Borde izquierdo rosa/fucsia con texto vertical "DEVOLVER AQUI" */}
-                    <div className="bg-[#ec4899] w-14 flex items-center justify-center relative shrink-0">
-                        <div className="absolute inset-0 flex items-center justify-center">
+                    {/* Borde izquierdo rosa/fucsia con QR Code y texto vertical "DEVOLVER AQUI" */}
+                    <div className="bg-[#ec4899] w-20 flex flex-col items-center justify-between p-2 relative shrink-0">
+                        {/* QR Code en la parte superior del área rosa */}
+                        <div className="mt-2">
+                            {qrUrl ? (
+                                <div className="border border-white/30 p-1 rounded bg-white">
+                                    <QRCode 
+                                        value={qrUrl}
+                                        size={70}
+                                        level="M"
+                                        fgColor="#000000"
+                                        bgColor="#ffffff" 
+                                    />
+                                </div>
+                            ) : (
+                                <div className="w-[72px] h-[72px] bg-white/20 border-2 border-dashed border-white/50 rounded flex items-center justify-center text-center p-1">
+                                    <span className="text-[8px] text-white font-medium">Faltan datos</span>
+                                </div>
+                            )}
+                        </div>
+                        
+                        {/* Texto vertical "DEVOLVER AQUI" en la parte inferior */}
+                        <div className="mb-2">
                             <span 
-                                className="text-white font-bold text-[10px] tracking-wider whitespace-nowrap"
+                                className="text-white font-bold text-[9px] tracking-wider whitespace-nowrap"
                                 style={{ 
                                     writingMode: 'vertical-rl',
                                     textOrientation: 'mixed',
@@ -47,29 +67,11 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
                         </div>
                     </div>
 
-                    {/* Contenido principal */}
-                    <div className="flex-1 flex flex-row items-start p-4 gap-4">
-                        {/* QR Code en la parte superior izquierda */}
-                        <div className="shrink-0 mt-0">
-                            {qrUrl ? (
-                                <div className="border border-gray-200 p-1 rounded bg-white">
-                                    <QRCode 
-                                        value={qrUrl}
-                                        size={80}
-                                        level="M"
-                                        fgColor="#000000"
-                                        bgColor="#ffffff" 
-                                    />
-                                </div>
-                            ) : (
-                                <div className="w-[82px] h-[82px] bg-gray-100 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-center p-1">
-                                    <span className="text-[10px] text-gray-400 font-medium">Faltan datos</span>
-                                </div>
-                            )}
-                        </div>
+                    {/* Contenido principal - área blanca */}
+                    <div className="flex-1 flex flex-col items-start p-4">
 
                         {/* Información del alumno y colegio */}
-                        <div className="flex-1 min-w-0 flex flex-col justify-start h-full">
+                        <div className="flex-1 min-w-0 flex flex-col justify-start w-full h-full">
                             {/* Nombre del alumno - grande y en negrita */}
                             <h3 className="font-bold text-lg leading-tight text-black mb-1">
                                 {nombreAlumno || "Nombre del Alumno"}
