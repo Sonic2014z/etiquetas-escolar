@@ -31,6 +31,9 @@ async function fetchAPI<T>(
 
     if (STRAPI_TOKEN) {
         (headers as any)["Authorization"] = `Bearer ${STRAPI_TOKEN}`;
+        console.log(`[Strapi API] Token presente: ${STRAPI_TOKEN.substring(0, 10)}...`);
+    } else {
+        console.warn(`[Strapi API] ⚠️ No hay STRAPI_API_TOKEN configurado`);
     }
     
     const options: RequestInit = {
