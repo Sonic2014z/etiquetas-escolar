@@ -35,6 +35,8 @@ export default function GeneratorPage() {
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [colegios, setColegios] = useState<Colegio[]>([]);
   const [loadingColegios, setLoadingColegios] = useState(true);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [registerMessage, setRegisterMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // --- 2.1. CARGAR COLEGIOS DESDE STRAPI ---
   useEffect(() => {
@@ -97,21 +99,79 @@ export default function GeneratorPage() {
   );
   const colegioNombre = colegioSeleccionado?.attributes.colegio_nombre || "Seleccione un colegio";
 
-  // Función simulada de descarga
-  const handleDownload = () => {
-    // Validaciones finales antes de imprimir
+  // Función para registrar en Strapi
+  const handleRegister = async () => {
+    // Validaciones finales antes de registrar
     const errors: { [key: string]: string } = {};
     if (!parentData.nombres) errors['nombres'] = "Requerido";
+    if (!parentData.primerApellido) errors['primerApellido'] = "Requerido";
     if (isRutValid === false) errors['rut'] = "RUT Inválido";
+    if (!parentData.phone) errors['phone'] = "Teléfono requerido";
+    if (!studentData.nombres) errors['nombresAlumno'] = "Requerido";
+    if (!studentData.primerApellido) errors['primerApellidoAlumno'] = "Requerido";
     if (!studentData.course) errors['course'] = "Selecciona un curso";
     if (!studentData.letter) errors['letra'] = "Falta letra";
     if (!studentData.colegio) errors['colegio'] = "Selecciona un colegio";
 
     setFormErrors(errors);
+    setRegisterMessage(null);
 
-    if (Object.keys(errors).length === 0) {
-      alert("¡Generando PDF! (Aquí iría la lógica de impresión)");
-      window.print(); // Por ahora abrimos el diálogo de impresión del navegador
+    if (Object.keys(errors).length > 0) {
+      return;
+    }
+
+    setIsRegistering(true);
+
+    try {
+      const response = await fetch('/api/registrar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          parentData: {
+            nombres: parentData.nombres,
+            primerApellido: parentData.primerApellido,
+            segundoApellido: parentData.segundoApellido,
+            rut: parentData.rut,
+            phone: parentData.phone,
+          },
+          studentData: {
+            nombres: studentData.nombres,
+            primerApellido: studentData.primerApellido,
+            segundoApellido: studentData.segundoApellido,
+            course: studentData.course,
+            letter: studentData.letter,
+            colegio: colegioNombre, // Enviamos el nombre del colegio como string
+          },
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || result.message || 'Error al registrar');
+      }
+
+      // Éxito
+      setRegisterMessage({
+        type: 'success',
+        text: result.message || 'Registro completado exitosamente',
+      });
+
+      // Opcional: limpiar el formulario después de un tiempo
+      setTimeout(() => {
+        setRegisterMessage(null);
+      }, 5000);
+
+    } catch (error: any) {
+      console.error('Error al registrar:', error);
+      setRegisterMessage({
+        type: 'error',
+        text: error.message || 'Error al registrar los datos. Por favor, intenta nuevamente.',
+      });
+    } finally {
+      setIsRegistering(false);
     }
   };
 
@@ -130,10 +190,18 @@ export default function GeneratorPage() {
            
            {/* Botón de Acción Principal (Móvil y Desktop) */}
            <button 
-             onClick={handleDownload}
-             className="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center gap-2"
+             onClick={handleRegister}
+             disabled={isRegistering}
+             className="bg-primary hover:bg-primary-dark disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center gap-2"
            >
-             <span>🖨️ Imprimir Etiqueta</span>
+             {isRegistering ? (
+               <>
+                 <span className="animate-spin">⏳</span>
+                 <span>Registrando...</span>
+               </>
+             ) : (
+               <span>📝 Registrar</span>
+             )}
            </button>
         </div>
 
@@ -194,6 +262,20 @@ export default function GeneratorPage() {
                     telefonoApoderado={parentData.phone}
                     qrUrl={qrUrl}
                 />
+
+                {/* Mensaje de registro */}
+                {registerMessage && (
+                  <div className={`mt-8 p-4 rounded-lg ${
+                    registerMessage.type === 'success' 
+                      ? 'bg-green-100 text-green-800 border border-green-300' 
+                      : 'bg-red-100 text-red-800 border border-red-300'
+                  }`}>
+                    <p className="font-semibold">
+                      {registerMessage.type === 'success' ? '✓ ' : '✗ '}
+                      {registerMessage.text}
+                    </p>
+                  </div>
+                )}
 
                 {/* Debug Info (Opcional, para desarrollo) */}
                 <div className="mt-8 p-4 bg-slate-100 rounded-lg text-xs font-mono text-slate-500 overflow-hidden">
