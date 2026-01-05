@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/Card";
 import { capitalizeFirstLetter } from "@/lib/helpers/common";
 import { Colegio } from "@/types/strapi";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 
 interface AlumnoFormProps {
     nombres: string;
@@ -31,6 +32,11 @@ interface AlumnoFormProps {
 
 export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, letra, colegio, colegios = [], loadingColegios = false, onNombresChange, onPrimerApellidoChange, onSegundoApellidoChange, onCursoChange, onLetraChange, onColegioChange, errors }: AlumnoFormProps) {
     const baseInputClass = "w-full p-2 rounded-md border border-border bg-background-secondary text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all";
+
+    const colegioOptions = colegios.filter(c => c && c.attributes).map(c => ({
+        value: c.id.toString(),
+        label: c.attributes.colegio_nombre || `Colegio ${c.id}`
+    }));
 
     return (
         <Card title="Datos del Alumno" variant="default">
@@ -76,37 +82,14 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
                 {/* Campo Colegio */}
                 <div className="flex flex-col gap-1">
                     <label className="text-sm font-medium text-foreground-secondary">Colegio *</label>
-                    <select
+                    <SearchableSelect
+                        label="Colegio *"
+                        placeholder={loadingColegios ? "Cargando datos..." : "Buscar colegio..."}
+                        options={colegioOptions}
                         value={colegio}
-                        onChange={(e) => onColegioChange(e.target.value)}
-                        disabled={loadingColegios}
-                        className={`${baseInputClass} ${errors?.colegio ? 'border-error' : ''}`}
-                    >
-                        <option value="" disabled>
-                            {loadingColegios ? "Cargando colegios..." : "Seleccionar colegio"}
-                        </option>
-                        {colegios.map((colegioItem) => {
-                            // Validación defensiva: verificar que attributes exista
-                            if (!colegioItem || !colegioItem.attributes) {
-                                console.warn('[AlumnoForm] Colegio inválido:', colegioItem);
-                                return null;
-                            }
-                            
-                            return (
-                                <option key={colegioItem.id} value={colegioItem.id.toString()}>
-                                    {colegioItem.attributes.colegio_nombre || 'Sin nombre'}
-                                </option>
-                            );
-                        })}
-                    </select>
-                    {errors?.colegio && (
-                        <p className="text-xs text-error mt-1">{errors.colegio}</p>
-                    )}
-                    {colegios.length === 0 && !loadingColegios && (
-                        <p className="text-xs text-foreground-muted mt-1">
-                            No hay colegios disponibles
-                        </p>
-                    )}
+                        onChange={(val) => onColegioChange(val as string)}
+                        error={errors?.colegio}
+                    />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
