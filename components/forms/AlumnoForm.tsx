@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/Card";
 import { capitalizeFirstLetter } from "@/lib/helpers/common";
+import { Colegio } from "@/types/strapi";
 
 interface AlumnoFormProps {
     nombres: string;
@@ -7,12 +8,16 @@ interface AlumnoFormProps {
     segundoApellido: string;
     curso: string;
     letra: string;
+    colegio: string;
+    colegios?: Colegio[];
+    loadingColegios?: boolean;
 
     onNombresChange: (nombres: string) => void;
     onPrimerApellidoChange: (primerApellido: string) => void;
     onSegundoApellidoChange: (segundoApellido: string) => void;
     onCursoChange: (curso: string) => void;
     onLetraChange: (letra: string) => void;
+    onColegioChange: (colegio: string) => void;
 
     errors?: {
         nombres?: string;
@@ -20,10 +25,11 @@ interface AlumnoFormProps {
         segundoApellido?: string;
         curso?: string;
         letra?: string;
+        colegio?: string;
     };
 }
 
-export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, letra, onNombresChange, onPrimerApellidoChange, onSegundoApellidoChange, onCursoChange, onLetraChange, errors }: AlumnoFormProps) {
+export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, letra, colegio, colegios = [], loadingColegios = false, onNombresChange, onPrimerApellidoChange, onSegundoApellidoChange, onCursoChange, onLetraChange, onColegioChange, errors }: AlumnoFormProps) {
     const baseInputClass = "w-full p-2 rounded-md border border-border bg-background-secondary text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all";
 
     return (
@@ -65,6 +71,34 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
                             className={baseInputClass}
                         />
                     </div>
+                </div>
+
+                {/* Campo Colegio */}
+                <div className="flex flex-col gap-1">
+                    <label className="text-sm font-medium text-foreground-secondary">Colegio *</label>
+                    <select
+                        value={colegio}
+                        onChange={(e) => onColegioChange(e.target.value)}
+                        disabled={loadingColegios}
+                        className={`${baseInputClass} ${errors?.colegio ? 'border-error' : ''}`}
+                    >
+                        <option value="" disabled>
+                            {loadingColegios ? "Cargando colegios..." : "Seleccionar colegio"}
+                        </option>
+                        {colegios.map((colegioItem) => (
+                            <option key={colegioItem.id} value={colegioItem.id.toString()}>
+                                {colegioItem.attributes.colegio_nombre}
+                            </option>
+                        ))}
+                    </select>
+                    {errors?.colegio && (
+                        <p className="text-xs text-error mt-1">{errors.colegio}</p>
+                    )}
+                    {colegios.length === 0 && !loadingColegios && (
+                        <p className="text-xs text-foreground-muted mt-1">
+                            No hay colegios disponibles
+                        </p>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

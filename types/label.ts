@@ -16,5 +16,6 @@ export interface StudentData {
   segundoApellido: string;
   course: string;
   letter: string;
+  colegio: string;
 }
 

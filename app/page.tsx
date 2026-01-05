@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ParentData, StudentData } from "@/types/label";
 import { ApoderadoForm } from "@/components/forms/ApoderadoForm";
 import { AlumnoForm } from "@/components/forms/AlumnoForm";
@@ -8,6 +8,8 @@ import { LabelPreview } from "@/components/label/LabelPreview";
 import { validateRut } from "@/lib/validations/rut";
 import { formatRutOnType } from "@/lib/formatters/rut";
 import { getWhatsAppNumber } from "@/lib/helpers/common";
+import { Colegio } from "@/types/strapi";
+import { getColegios } from "@/lib/api/colegios";
 
 export default function GeneratorPage() {
   // --- 1. ESTADO DE DATOS ---
@@ -24,12 +26,33 @@ export default function GeneratorPage() {
     primerApellido: "",
     segundoApellido: "",
     course: "", // Iniciamos vacío para obligar selección
-    letter: ""
+    letter: "",
+    colegio: ""
   });
 
   // --- 2. ESTADO DE VALIDACIÓN ---
   const [isRutValid, setIsRutValid] = useState<boolean | null>(null);
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const [colegios, setColegios] = useState<Colegio[]>([]);
+  const [loadingColegios, setLoadingColegios] = useState(true);
+
+  // --- 2.1. CARGAR COLEGIOS DESDE STRAPI ---
+  useEffect(() => {
+    const loadColegios = async () => {
+      setLoadingColegios(true);
+      try {
+        const colegiosData = await getColegios();
+        setColegios(colegiosData);
+      } catch (error) {
+        console.error("Error cargando colegios:", error);
+        setColegios([]);
+      } finally {
+        setLoadingColegios(false);
+      }
+    };
+
+    loadColegios();
+  }, []);
 
   // --- 3. HANDLERS APODERADO ---
   const handleParentChange = (field: keyof ParentData, value: string) => {
@@ -68,8 +91,11 @@ export default function GeneratorPage() {
   // Nombre completo para la vista previa
   const studentFullName = `${studentData.nombres} ${studentData.primerApellido} ${studentData.segundoApellido}`.trim();
   
-  // Colegio (por ahora hardcodeado, luego puede venir de configuración)
-  const colegio = "Colegio Ejemplo";
+  // Obtener el nombre del colegio seleccionado
+  const colegioSeleccionado = colegios.find(
+    (c) => c.id.toString() === studentData.colegio
+  );
+  const colegioNombre = colegioSeleccionado?.attributes.colegio_nombre || "Seleccione un colegio";
 
   // Función simulada de descarga
   const handleDownload = () => {
@@ -79,6 +105,7 @@ export default function GeneratorPage() {
     if (isRutValid === false) errors['rut'] = "RUT Inválido";
     if (!studentData.course) errors['course'] = "Selecciona un curso";
     if (!studentData.letter) errors['letra'] = "Falta letra";
+    if (!studentData.colegio) errors['colegio'] = "Selecciona un colegio";
 
     setFormErrors(errors);
 
@@ -139,16 +166,19 @@ export default function GeneratorPage() {
                     segundoApellido={studentData.segundoApellido}
                     curso={studentData.course}
                     letra={studentData.letter}
-
+                    colegio={studentData.colegio}
+                    colegios={colegios}
+                    loadingColegios={loadingColegios}
                     onNombresChange={(val) => handleStudentChange('nombres', val)}
                     onPrimerApellidoChange={(val) => handleStudentChange('primerApellido', val)}
                     onSegundoApellidoChange={(val) => handleStudentChange('segundoApellido', val)}
                     onCursoChange={(val) => handleStudentChange('course', val)}
                     onLetraChange={(val) => handleStudentChange('letter', val)}
-                    
+                    onColegioChange={(val) => handleStudentChange('colegio', val)}
                     errors={{ 
                         curso: formErrors['course'], 
-                        letra: formErrors['letra'] 
+                        letra: formErrors['letra'],
+                        colegio: formErrors['colegio']
                     }}
                 />
             </div>
@@ -159,7 +189,7 @@ export default function GeneratorPage() {
                     nombreAlumno={studentFullName}
                     curso={studentData.course}
                     letra={studentData.letter}
-                    colegio={colegio}
+                    colegio={colegioNombre}
                     rutApoderado={parentData.rut}
                     telefonoApoderado={parentData.phone}
                     qrUrl={qrUrl}
