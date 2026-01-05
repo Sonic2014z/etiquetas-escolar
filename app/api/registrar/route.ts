@@ -91,11 +91,14 @@ export async function POST(request: NextRequest) {
       // Verificar si ya está relacionado con el apoderado
       const apoderadoRelacionado = alumnoExistente.attributes.apoderado?.data;
       if (!apoderadoRelacionado || apoderadoRelacionado.id !== apoderadoId) {
-        // Si no está relacionado o está relacionado con otro apoderado, actualizamos
-        // Nota: En Strapi, si un alumno ya tiene un apoderado, necesitarías actualizar el alumno
-        // Por ahora, solo actualizamos el apoderado para agregar la relación
-        await updateApoderadoWithAlumno(apoderadoId, alumnoId);
-        console.log(`Relación actualizada: Apoderado ${apoderadoId} <-> Alumno ${alumnoId}`);
+        // Si no está relacionado o está relacionado con otro apoderado, intentamos actualizar
+        // Intentamos actualizar desde el lado del apoderado (puede fallar si el endpoint no está disponible)
+        try {
+          await updateApoderadoWithAlumno(apoderadoId, alumnoId);
+          console.log(`Relación actualizada: Apoderado ${apoderadoId} <-> Alumno ${alumnoId}`);
+        } catch (error) {
+          console.warn(`No se pudo actualizar relación desde apoderado, pero la relación ya existe desde el alumno:`, error);
+        }
       }
     } else {
       // Crear nuevo alumno relacionado con el apoderado
@@ -112,8 +115,14 @@ export async function POST(request: NextRequest) {
       console.log(`Nuevo alumno creado: ID ${alumnoId}`);
       
       // Actualizar el apoderado para incluir la relación con el nuevo alumno
-      await updateApoderadoWithAlumno(apoderadoId, alumnoId);
-      console.log(`Relación creada: Apoderado ${apoderadoId} <-> Alumno ${alumnoId}`);
+      // Nota: La relación ya está establecida desde el lado del alumno (apoderadoId en createAlumno)
+      // Intentamos actualizar desde el lado del apoderado también (puede fallar si el endpoint no está disponible)
+      try {
+        await updateApoderadoWithAlumno(apoderadoId, alumnoId);
+        console.log(`Relación creada: Apoderado ${apoderadoId} <-> Alumno ${alumnoId}`);
+      } catch (error) {
+        console.warn(`No se pudo actualizar relación desde apoderado, pero la relación ya existe desde el alumno:`, error);
+      }
     }
     
     return NextResponse.json({

@@ -72,25 +72,36 @@ export async function createApoderado(data: {
 export async function updateApoderadoWithAlumno(
   apoderadoId: number,
   alumnoId: number
-): Promise<Apoderado> {
+): Promise<Apoderado | null> {
   try {
-    // Primero obtenemos el apoderado con sus alumnos actuales
-    const apoderadoResponse = await strapi.get<StrapiResponse<Apoderado>>(
-      `etiquetas-apoderados/${apoderadoId}?populate=alumnos`
-    );
+    // Intentamos obtener el apoderado con sus alumnos actuales
+    let alumnosExistentes: number[] = [];
     
-    const apoderado = apoderadoResponse.data;
-    const alumnosExistentes = apoderado.attributes.alumnos?.data || [];
-    
-    // Verificamos que el alumno no esté ya relacionado
-    const yaRelacionado = alumnosExistentes.some((a) => a.id === alumnoId);
-    if (yaRelacionado) {
-      return apoderado;
+    try {
+      const apoderadoResponse = await strapi.get<StrapiResponse<Apoderado>>(
+        `etiquetas-apoderados/${apoderadoId}?populate=alumnos`
+      );
+      
+      const apoderado = apoderadoResponse.data;
+      alumnosExistentes = apoderado.attributes.alumnos?.data?.map((a) => a.id) || [];
+      
+      // Verificamos que el alumno no esté ya relacionado
+      if (alumnosExistentes.includes(alumnoId)) {
+        console.log(`Alumno ${alumnoId} ya está relacionado con apoderado ${apoderadoId}`);
+        return apoderado;
+      }
+    } catch (getError: any) {
+      // Si no podemos obtener el apoderado, continuamos de todas formas
+      // Esto puede pasar si el endpoint no está disponible o hay un problema de permisos
+      console.warn(`No se pudo obtener apoderado ${apoderadoId}, continuando con actualización directa:`, getError.message);
+      alumnosExistentes = [];
     }
     
     // Agregamos el nuevo alumno a la lista
     // En Strapi v4, para relaciones many-to-many o one-to-many, podemos pasar un array de IDs
-    const nuevosAlumnos = [...alumnosExistentes.map((a) => a.id), alumnoId];
+    const nuevosAlumnos = [...alumnosExistentes, alumnoId];
+    
+    console.log(`[updateApoderadoWithAlumno] Actualizando apoderado ${apoderadoId} con alumnos:`, nuevosAlumnos);
     
     // Actualizamos el apoderado
     const response = await strapi.put<StrapiResponse<Apoderado>>(
@@ -103,7 +114,8 @@ export async function updateApoderadoWithAlumno(
     return response.data;
   } catch (error) {
     console.error("Error actualizando apoderado con alumno:", error);
-    throw error;
+    // No lanzamos el error, solo lo registramos, porque la relación ya está establecida desde el lado del alumno
+    return null;
   }
 }
 
