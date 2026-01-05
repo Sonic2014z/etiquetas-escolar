@@ -68,7 +68,8 @@ export async function POST(request: NextRequest) {
       });
       apoderadoId = nuevoApoderado.id;
       apoderado = nuevoApoderado;
-      console.log(`Nuevo apoderado creado: ID ${apoderadoId}, UID ${uid}`);
+      console.log(`[REGISTRO] Nuevo apoderado creado: ID ${apoderadoId}, UID ${uid}`);
+      console.log(`[REGISTRO] Estructura completa del apoderado:`, JSON.stringify(nuevoApoderado, null, 2));
     }
     
     // 2. Buscar si el alumno ya existe
@@ -98,11 +99,12 @@ export async function POST(request: NextRequest) {
         colegio: studentData.colegio,
       });
       alumnoId = nuevoAlumno.id;
-      console.log(`Nuevo alumno creado: ID ${alumnoId}`);
+      console.log(`[REGISTRO] Nuevo alumno creado: ID ${alumnoId}`);
+      console.log(`[REGISTRO] Estructura completa del alumno:`, JSON.stringify(nuevoAlumno, null, 2));
     }
     
     // 3. VERIFICAR QUE AMBOS REGISTROS EXISTEN EN STRAPI
-    console.log(`Verificando existencia de apoderado ${apoderadoId} y alumno ${alumnoId}...`);
+    console.log(`[REGISTRO] Verificando existencia de apoderado ${apoderadoId} y alumno ${alumnoId}...`);
     
     const apoderadoVerificado = await verifyApoderadoExists(apoderadoId);
     const alumnoVerificado = await verifyAlumnoExists(alumnoId);
@@ -115,8 +117,23 @@ export async function POST(request: NextRequest) {
       throw new Error(`No se pudo verificar la existencia del alumno con ID ${alumnoId}`);
     }
     
-    console.log(`✓ Apoderado ${apoderadoId} verificado`);
-    console.log(`✓ Alumno ${alumnoId} verificado`);
+    // Usar los IDs verificados (por si acaso son diferentes)
+    const apoderadoIdVerificado = apoderadoVerificado.id;
+    const alumnoIdVerificado = alumnoVerificado.id;
+    
+    console.log(`[REGISTRO] ✓ Apoderado verificado: ID original ${apoderadoId} -> ID verificado ${apoderadoIdVerificado}`);
+    console.log(`[REGISTRO] ✓ Alumno verificado: ID original ${alumnoId} -> ID verificado ${alumnoIdVerificado}`);
+    
+    // Si los IDs son diferentes, usar los verificados
+    if (apoderadoIdVerificado !== apoderadoId) {
+      console.warn(`[REGISTRO] ⚠️ ID de apoderado cambió: ${apoderadoId} -> ${apoderadoIdVerificado}`);
+      apoderadoId = apoderadoIdVerificado;
+    }
+    
+    if (alumnoIdVerificado !== alumnoId) {
+      console.warn(`[REGISTRO] ⚠️ ID de alumno cambió: ${alumnoId} -> ${alumnoIdVerificado}`);
+      alumnoId = alumnoIdVerificado;
+    }
     
     // 4. ESTABLECER RELACIONES BIDIRECCIONALES DESPUÉS DE VERIFICAR
     console.log(`Estableciendo relaciones bidireccionales...`);

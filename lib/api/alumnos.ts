@@ -93,6 +93,9 @@ export async function createAlumno(data: {
       payload
     );
     
+    console.log("[createAlumno] Respuesta completa:", JSON.stringify(response, null, 2));
+    console.log("[createAlumno] ID extraído:", response.data?.id);
+    
     return response.data;
   } catch (error) {
     console.error("Error creando alumno:", error);
