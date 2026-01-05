@@ -25,10 +25,7 @@ interface StrapiColegiosResponse {
 export async function GET() {
   try {
     // Llamar a Strapi desde el servidor (donde el token está disponible)
-    const response = await strapi.get<StrapiColegiosResponse>('colegios');
-    
-    // Debug: Log para verificar estructura (remover en producción)
-    console.log('[API /api/colegios] Response structure:', JSON.stringify(response, null, 2).substring(0, 500));
+    const response = await strapi.get<any>('colegios');
     
     // Verificar que response tenga la estructura esperada
     if (!response || typeof response !== 'object') {
@@ -37,18 +34,44 @@ export async function GET() {
     }
     
     // Extraer el array de colegios
-    const colegios = response.data || [];
+    const colegiosRaw = response.data || [];
     
-    // Validar que cada colegio tenga la estructura correcta
-    const validColegios = colegios.filter((colegio: any) => {
+    // Normalizar los datos: Strapi puede retornar con o sin "attributes"
+    // Convertimos a la estructura esperada: { id, attributes: { ... } }
+    const colegiosNormalizados: Colegio[] = colegiosRaw.map((colegio: any) => {
+      // Si ya tiene la estructura con attributes, retornarlo tal cual
+      if (colegio.attributes && typeof colegio.attributes === 'object') {
+        return colegio;
+      }
+      
+      // Si no tiene attributes, los campos están directamente en el objeto
+      // Extraemos id y el resto va a attributes
+      const { id, ...resto } = colegio;
+      
+      return {
+        id: id || colegio.id,
+        attributes: {
+          rbd: resto.rbd || colegio.rbd,
+          colegio_nombre: resto.colegio_nombre || colegio.colegio_nombre || '',
+          dependencia: resto.dependencia || colegio.dependencia || '',
+          comuna: resto.comuna || colegio.comuna || '',
+          region: resto.region || colegio.region || '',
+        },
+      };
+    }).filter((colegio: Colegio) => {
+      // Filtrar solo colegios válidos
       return colegio && 
              typeof colegio.id !== 'undefined' && 
              colegio.attributes && 
-             typeof colegio.attributes === 'object';
+             colegio.attributes.colegio_nombre;
     });
     
-    // Retornar los datos validados al cliente
-    return NextResponse.json(validColegios);
+    // Retornar los datos normalizados al cliente
+    return NextResponse.json(colegiosNormalizados, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+      },
+    });
   } catch (error) {
     console.error('[API /api/colegios] Error:', error);
     
