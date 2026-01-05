@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Validar campos requeridos del alumno
-    if (!studentData.nombres || !studentData.primerApellido || !studentData.course || !studentData.letra || !studentData.colegio) {
+    if (!studentData.nombres || !studentData.primerApellido || !studentData.course || !studentData.letter || !studentData.colegio) {
       return NextResponse.json(
         { error: "Faltan campos requeridos del alumno" },
         { status: 400 }
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       primer_apellido: studentData.primerApellido,
       segundo_apellido: studentData.segundoApellido || "",
       curso: studentData.course,
-      letra: studentData.letra,
+      letra: studentData.letter,
       colegio: studentData.colegio,
     });
     
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         primer_apellido: studentData.primerApellido,
         segundo_apellido: studentData.segundoApellido || "",
         curso: studentData.course,
-        letra: studentData.letra,
+        letra: studentData.letter,
         colegio: studentData.colegio,
         apoderadoId: apoderadoId,
       });
