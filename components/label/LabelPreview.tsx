@@ -32,28 +32,28 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
 
                 <div id="etiqueta-qr" className="bg-white w-full max-w-[400px] aspect-[2.5/1] border-2 border-black rounded-lg shadow-xl flex flex-row overflow-hidden relative">
                     {/* Borde izquierdo rosa/fucsia con QR Code y texto vertical "DEVOLVER AQUI" */}
-                    <div className="bg-[#ec4899] w-20 flex flex-col items-center justify-between p-2 relative shrink-0">
+                    <div className="bg-[#ec4899] w-20 flex flex-col items-center justify-between p-2 relative shrink-0 h-full">
                         {/* QR Code en la parte superior del área rosa */}
-                        <div className="mt-2">
+                        <div className="shrink-0 pt-2">
                             {qrUrl ? (
                                 <div className="border border-white/30 p-1 rounded bg-white">
                                     <QRCode 
                                         value={qrUrl}
-                                        size={70}
+                                        size={60}
                                         level="M"
                                         fgColor="#000000"
                                         bgColor="#ffffff" 
                                     />
                                 </div>
                             ) : (
-                                <div className="w-[72px] h-[72px] bg-white/20 border-2 border-dashed border-white/50 rounded flex items-center justify-center text-center p-1">
+                                <div className="w-[62px] h-[62px] bg-white/20 border-2 border-dashed border-white/50 rounded flex items-center justify-center text-center p-1">
                                     <span className="text-[8px] text-white font-medium">Faltan datos</span>
                                 </div>
                             )}
                         </div>
                         
                         {/* Texto vertical "DEVOLVER AQUI" en la parte inferior */}
-                        <div className="mb-2">
+                        <div className="shrink-0 pb-2 flex items-center justify-center">
                             <span 
                                 className="text-white font-bold text-[9px] tracking-wider whitespace-nowrap"
                                 style={{ 
