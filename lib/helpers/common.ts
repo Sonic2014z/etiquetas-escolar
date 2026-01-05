@@ -50,3 +50,13 @@ export function capitalizeFirstLetter(str: string): string {
     })
     .join(' '); // Ej: "juan pérez" -> "Juan Pérez"
 }
+
+export function validateEmail(email: string): boolean {
+    // Verificación básica: debe ser un string y no estar vacío.
+    if (!email || typeof email !== 'string') return false;
+
+    // Verificación básica: debe tener un @ y un .
+    if (!email.includes('@') || !email.includes('.')) return false;
+
+    return true; // Si pasa todas las verificaciones, el email es válido.
+}

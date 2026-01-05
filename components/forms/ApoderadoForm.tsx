@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/Card";
 import { capitalizeFirstLetter } from "@/lib/helpers/common";
+import { validateEmail } from "@/lib/helpers/common";
 
 interface ApoderadoFormProps {
     rut: string;
@@ -7,24 +8,28 @@ interface ApoderadoFormProps {
     nombres?: string;
     primerApellido?: string;
     segundoApellido?: string;
+    email?: string;
 
     onRutChange: (rut: string) => void;
     onPhoneChange: (phone: string) => void;
     onNombresChange?: (nombres: string) => void;
     onPrimerApellidoChange?: (primerApellido: string) => void;
     onSegundoApellidoChange?: (segundoApellido: string) => void;
+    onEmailChange?: (email: string) => void;
 
     isRutValid?: boolean | null;
+    isEmailValid?: boolean | null;
     errors?: {
         rut?: string;
         phone?: string;
         nombres?: string;
         primerApellido?: string;
         segundoApellido?: string;
+        email?: string;
     };
 }
 
-export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApellido, onRutChange, onPhoneChange, onNombresChange, onPrimerApellidoChange, onSegundoApellidoChange, isRutValid, errors }: ApoderadoFormProps) {
+export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApellido, email, onRutChange, onPhoneChange, onNombresChange, onPrimerApellidoChange, onSegundoApellidoChange, onEmailChange, isRutValid, errors }: ApoderadoFormProps) {
     const getRutInputClass = () => {
         const base = "w-full p-2 rounded-md border transition-all focus:outline-none focus:ring-2 focus:ring-primary";
 
@@ -39,7 +44,7 @@ export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApel
         <Card title="Datos del Apoderado" variant="default">
             <div className="space-y-4">
                 <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-foreground-secondary">Nombres:</label>
+                    <label className="text-sm font-medium text-foreground-secondary">Nombres *</label>
                     <input
                         type="text"
                         value={nombres}
@@ -52,7 +57,7 @@ export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApel
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1">
-                        <label className="text-sm font-medium text-foreground-secondary">Primer Apellido:</label>
+                        <label className="text-sm font-medium text-foreground-secondary">Primer Apellido *</label>
                         <input
                             type="text"
                             value={primerApellido}
@@ -64,7 +69,7 @@ export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApel
                     </div>
 
                     <div className="flex flex-col gap-1">
-                        <label className="text-sm font-medium text-foreground-secondary">Segundo Apellido:</label>
+                        <label className="text-sm font-medium text-foreground-secondary">Segundo Apellido *</label>
                         <input
                             type="text"
                             value={segundoApellido}
@@ -91,6 +96,18 @@ export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApel
                         className={`w-full p-2 rounded-md border transition-all focus:outline-none focus:ring-2 ${getRutInputClass()}`}
                     />
                     {errors?.rut && <p className="text-xs text-error mt-1 animate-pulse">{errors.rut}</p>}
+                </div>
+
+                <div className="flex flex-col gap-1">
+                    <label className="text-sm font-medium text-foreground-secondary">Correo Electrónico Apoderado *</label>
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => onEmailChange?.(e.target.value)}
+                        placeholder="Ej: juan.perez@gmail.com"
+                        className={baseInputClass}
+                    />
+                    {errors?.email && <p className="text-xs text-error mt-1 animate-pulse">{errors.email}</p>}
                 </div>
 
                 <div className="flex flex-col gap-1">
