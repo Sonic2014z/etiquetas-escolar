@@ -6,8 +6,12 @@ const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
 const STRAPI_TOKEN = process.env.STRAPI_API_TOKEN;
 
 export function getStrapiURL(path = ""): string {
+    // Normalizar el path: si no empieza con /, agregarlo
     const normalizedPath = path !== "" && !path.startsWith("/") ? `/${path}` : path;
-    return `${STRAPI_URL}/api${normalizedPath}`;
+    // Construir la URL completa
+    const url = `${STRAPI_URL}/api${normalizedPath}`;
+    console.log(`[getStrapiURL] Path: "${path}" -> URL: "${url}"`);
+    return url;
 }
 
 /* Helpers */
@@ -37,10 +41,20 @@ async function fetchAPI<T>(
     };
 
     try {
+        console.log(`[Strapi API] ${method} ${requestUrl}`);
+        if (body) {
+            console.log(`[Strapi API] Body:`, JSON.stringify(body, null, 2));
+        }
+        
         const response = await fetch(requestUrl, options);
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
+            console.error(`[Strapi API] Error response:`, {
+                status: response.status,
+                statusText: response.statusText,
+                errorData
+            });
             const errorMessage = errorData.error?.message || errorData.message || response.statusText;
             const errorDetails = errorData.error?.details ? JSON.stringify(errorData.error.details, null, 2) : '';
             throw new Error(`Error Strapi (${response.status}): ${errorMessage}${errorDetails ? `\nDetalles: ${errorDetails}` : ''}`);
