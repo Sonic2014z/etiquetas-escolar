@@ -33,10 +33,23 @@ interface AlumnoFormProps {
 export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, letra, colegio, colegios = [], loadingColegios = false, onNombresChange, onPrimerApellidoChange, onSegundoApellidoChange, onCursoChange, onLetraChange, onColegioChange, errors }: AlumnoFormProps) {
     const baseInputClass = "w-full p-2 rounded-md border border-border bg-background-secondary text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all";
 
-    const colegioOptions = colegios.filter(c => c && c.attributes).map(c => ({
-        value: c.id.toString(),
-        label: c.attributes.colegio_nombre || `Colegio ${c.id}`
-    }));
+    // Convertir colegios a opciones, asegurándonos de incluir todos los colegios válidos
+    const colegioOptions = colegios
+        .filter(c => {
+            // Incluir colegios que tengan id y nombre
+            if (!c || !c.id) return false;
+            // Verificar si tiene attributes o si los campos están directamente
+            const nombre = c.attributes?.colegio_nombre || (c as any).colegio_nombre;
+            return nombre && nombre.trim().length > 0;
+        })
+        .map(c => {
+            // Extraer el nombre del colegio (puede estar en attributes o directamente)
+            const nombre = c.attributes?.colegio_nombre || (c as any).colegio_nombre || `Colegio ${c.id}`;
+            return {
+                value: c.id.toString(),
+                label: nombre.trim()
+            };
+        });
 
     return (
         <Card title="Datos del Alumno" variant="default">

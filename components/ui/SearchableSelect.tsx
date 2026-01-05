@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { normalizeSearchText } from "@/lib/helpers/common";
 
 interface Option {
     value: string | number;
@@ -32,7 +33,22 @@ export function SearchableSelect({
 
     const selectedOption = options.find((opt) => opt.value === value);
 
-    const filteredOptions = options.filter((opt) => opt.label.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 50);
+    // Normalizar el término de búsqueda para hacer la búsqueda más flexible
+    const normalizedSearchTerm = normalizeSearchText(searchTerm);
+    
+    // Filtrar opciones usando normalización (ignora acentos, mayúsculas, espacios extra)
+    const filteredOptions = options.filter((opt) => {
+        if (!opt || !opt.label || typeof opt.label !== 'string') return false;
+        
+        // Normalizar tanto el label como el término de búsqueda
+        const normalizedLabel = normalizeSearchText(opt.label);
+        
+        // Si no hay término de búsqueda, mostrar todas las opciones
+        if (!normalizedSearchTerm) return true;
+        
+        // Buscar si el término normalizado está incluido en el label normalizado
+        return normalizedLabel.includes(normalizedSearchTerm);
+    }).slice(0, 100); // Mostrar hasta 100 resultados
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -90,7 +106,7 @@ export function SearchableSelect({
     
           {/* Lista Desplegable */}
           {isOpen && (
-            <div className="absolute z-50 w-full mt-1 bg-white dark:bg-neutral-800 border border-border rounded-md shadow-lg max-h-60 overflow-auto">
+            <div className="absolute z-50 w-full mt-1 bg-white border border-border rounded-md shadow-lg max-h-60 overflow-auto">
               {filteredOptions.length > 0 ? (
                 filteredOptions.map((opt) => (
                   <div

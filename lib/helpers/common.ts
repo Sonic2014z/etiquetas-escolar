@@ -60,3 +60,20 @@ export function validateEmail(email: string): boolean {
 
     return true; // Si pasa todas las verificaciones, el email es válido.
 }
+
+/**
+ * Normaliza texto para búsquedas: quita acentos, convierte a minúsculas y elimina espacios extra
+ * Útil para hacer búsquedas más flexibles que ignoren acentos y mayúsculas
+ * @param text - Texto a normalizar
+ * @returns Texto normalizado
+ */
+export function normalizeSearchText(text: string): string {
+    if (!text || typeof text !== 'string') return '';
+    
+    return text
+        .toLowerCase()
+        .normalize('NFD') // Descompone caracteres con acentos
+        .replace(/[\u0300-\u036f]/g, '') // Elimina diacríticos (acentos)
+        .trim() // Elimina espacios al inicio y final
+        .replace(/\s+/g, ' '); // Reemplaza múltiples espacios por uno solo
+}
