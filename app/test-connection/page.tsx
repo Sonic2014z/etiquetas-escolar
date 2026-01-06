@@ -1,9 +1,15 @@
 import { strapi } from "@/lib/api/strapi";
+import { notFound } from "next/navigation";
 
 // Forzamos que esta página sea dinámica para evitar caché
 export const dynamic = "force-dynamic";
 
 export default async function TestConnectionPage() {
+
+  if (process.env.NODE_ENV === "production") {
+    notFound();
+  }
+
   let status = "Pendiente";
   let data = null;
   let errorMsg: string | null = null;

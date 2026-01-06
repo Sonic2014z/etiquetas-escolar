@@ -24,6 +24,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Librería Escolar | Etiquetas Inteligentes",
     description: "Recupera tus útiles escolares perdidos con nuestro sistema de etiquetas QR.",
+    url: "https://libreriaescolar.cl/",
     locale: "es_CL",
     type: "website",
   },
