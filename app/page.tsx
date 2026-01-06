@@ -101,6 +101,28 @@ export default function GeneratorPage() {
   );
   const colegioNombre = colegioSeleccionado?.colegio_nombre || "Seleccione un colegio";
 
+  // Función para limpiar el formulario
+  const resetForm = () => {
+    setParentData({
+      nombres: "",
+      primerApellido: "",
+      segundoApellido: "",
+      rut: "",
+      phone: "",
+      email: ""
+    });
+    setStudentData({
+      nombres: "",
+      primerApellido: "",
+      segundoApellido: "",
+      course: "",
+      letter: "",
+      colegio: ""
+    });
+    setIsRutValid(null);
+    setFormErrors({});
+  };
+
   // Función para registrar en Strapi
   const handleRegister = async () => {
     // Validaciones finales antes de registrar
@@ -162,7 +184,10 @@ export default function GeneratorPage() {
         text: result.message || 'Registro completado exitosamente',
       });
 
-      // Opcional: limpiar el formulario después de un tiempo
+      // Limpiar el formulario después de un registro exitoso
+      resetForm();
+
+      // Ocultar el mensaje después de 5 segundos
       setTimeout(() => {
         setRegisterMessage(null);
       }, 5000);
