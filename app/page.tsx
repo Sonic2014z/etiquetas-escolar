@@ -5,6 +5,7 @@ import { ParentData, StudentData } from "@/types/label";
 import { ApoderadoForm } from "@/components/forms/ApoderadoForm";
 import { AlumnoForm } from "@/components/forms/AlumnoForm";
 import { LabelPreview } from "@/components/label/LabelPreview";
+import { Logo } from "@/components/ui/Logo";
 import { validateRut } from "@/lib/validations/rut";
 import { formatRutOnType } from "@/lib/formatters/rut";
 import { getWhatsAppNumber } from "@/lib/helpers/common";
@@ -184,8 +185,9 @@ export default function GeneratorPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
            <div>
-             <h1 className="text-3xl font-bold text-primary tracking-tight">Generador de Etiquetas</h1>
-             <p className="text-foreground-secondary mt-1">
+             <Logo className="mb-2" />
+             <br/>
+             <p className="text-foreground-secondary mt-1 font-bold text-lg">
                Sistema de recuperación de útiles escolares mediante QR.
              </p>
            </div>
