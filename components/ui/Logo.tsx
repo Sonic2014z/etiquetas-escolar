@@ -29,10 +29,10 @@ export function Logo({ className = '' }: LogoProps) {
     return (
       <div className={`flex items-center ${className}`}>
         <div className="flex flex-col items-start">
-          <span className="text-4xl font-bold text-primary tracking-tight" style={{ fontFamily: 'sans-serif', letterSpacing: '-0.5px' }}>
+          <span className="text-4xl font-bold text-primary tracking-tight" style={{ letterSpacing: '-0.5px' }}>
             escolar
           </span>
-          <span className="text-2xl text-primary italic" style={{ fontFamily: 'serif' }}>
+          <span className="text-2xl text-primary italic">
             Librería
           </span>
         </div>
