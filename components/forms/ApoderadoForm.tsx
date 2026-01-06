@@ -53,6 +53,7 @@ export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApel
                         placeholder="Ej: Juan Carlos"
                         className={baseInputClass}
                     />
+                    {errors?.nombres && <p className="text-xs text-error mt-1 animate-pulse">{errors.nombres}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -66,6 +67,7 @@ export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApel
                             placeholder="Ej: Pérez"
                             className={baseInputClass}
                         />
+                        {errors?.primerApellido && <p className="text-xs text-error mt-1 animate-pulse">{errors.primerApellido}</p>}
                     </div>
 
                     <div className="flex flex-col gap-1">
@@ -78,6 +80,7 @@ export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApel
                             placeholder="Ej: Gómez"
                             className={baseInputClass}
                         />
+                        {errors?.segundoApellido && <p className="text-xs text-error mt-1 animate-pulse">{errors.segundoApellido}</p>}
                     </div>
                 </div>
 
@@ -120,7 +123,8 @@ export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApel
                         placeholder="Ej: +56 9 8765 4321"
                         className={baseInputClass}
                     />
-                    <p className="text-xs text-foreground-muted">Se agregará +56 9 automáticamente.</p>
+                    {errors?.phone && <p className="text-xs text-error mt-1 animate-pulse">{errors.phone}</p>}
+                    {!errors?.phone && <p className="text-xs text-foreground-muted">Se agregará +56 9 automáticamente.</p>}
                 </div>
 
             </div>

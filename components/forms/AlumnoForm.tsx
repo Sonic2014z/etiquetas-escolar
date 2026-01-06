@@ -64,6 +64,7 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
                         placeholder="Ej: Juan Carlos"
                         className={baseInputClass}
                     />
+                    {errors?.nombres && <p className="text-xs text-error mt-1 animate-pulse">{errors.nombres}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -77,6 +78,7 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
                             placeholder="Ej: Pérez"
                             className={baseInputClass}
                         />
+                        {errors?.primerApellido && <p className="text-xs text-error mt-1 animate-pulse">{errors.primerApellido}</p>}
                     </div>
 
                     <div className="flex flex-col gap-1">
@@ -89,6 +91,7 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
                             placeholder="Ej: Gómez"
                             className={baseInputClass}
                         />
+                        {errors?.segundoApellido && <p className="text-xs text-error mt-1 animate-pulse">{errors.segundoApellido}</p>}
                     </div>
                 </div>
 
@@ -130,6 +133,7 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
                                 <option value="4° Medio">4° Medio</option>
                             </optgroup>
                         </select>
+                        {errors?.curso && <p className="text-xs text-error mt-1 animate-pulse">{errors.curso}</p>}
                     </div>
 
                     <div className="flex flex-col gap-1">
@@ -167,6 +171,7 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
                             <option value="Y">Y</option>
                             <option value="Z">Z</option>
                         </select>
+                        {errors?.letra && <p className="text-xs text-error mt-1 animate-pulse">{errors.letra}</p>}
                     </div>
                 </div>
             </div>

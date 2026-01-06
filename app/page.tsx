@@ -39,6 +39,7 @@ export default function GeneratorPage() {
   const [loadingColegios, setLoadingColegios] = useState(true);
   const [isRegistering, setIsRegistering] = useState(false);
   const [registerMessage, setRegisterMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [validationAlert, setValidationAlert] = useState<{ show: boolean; missingFields: string[] }>({ show: false, missingFields: [] });
 
   // --- 2.1. CARGAR COLEGIOS DESDE STRAPI ---
   useEffect(() => {
@@ -125,22 +126,90 @@ export default function GeneratorPage() {
 
   // Función para registrar en Strapi
   const handleRegister = async () => {
+    // Ocultar alerta de validación al presionar el botón (se mostrará de nuevo si hay errores)
+    setValidationAlert({ show: false, missingFields: [] });
+    
     // Validaciones finales antes de registrar
     const errors: { [key: string]: string } = {};
-    if (!parentData.nombres) errors['nombres'] = "Requerido";
-    if (!parentData.primerApellido) errors['primerApellido'] = "Requerido";
-    if (isRutValid === false) errors['rut'] = "RUT Inválido";
-    if (!parentData.phone) errors['phone'] = "Teléfono requerido";
-    if (!studentData.nombres) errors['nombresAlumno'] = "Requerido";
-    if (!studentData.primerApellido) errors['primerApellidoAlumno'] = "Requerido";
-    if (!studentData.course) errors['course'] = "Selecciona un curso";
-    if (!studentData.letter) errors['letra'] = "Falta letra";
-    if (!studentData.colegio) errors['colegio'] = "Selecciona un colegio";
+    const missingFields: string[] = [];
+    
+    // Mapeo de campos a nombres amigables
+    const fieldNames: { [key: string]: string } = {
+      'nombres': 'Nombres del apoderado',
+      'primerApellido': 'Primer apellido del apoderado',
+      'segundoApellido': 'Segundo apellido del apoderado',
+      'rut': 'RUT del apoderado',
+      'phone': 'Teléfono del apoderado',
+      'nombresAlumno': 'Nombres del alumno',
+      'primerApellidoAlumno': 'Primer apellido del alumno',
+      'segundoApellidoAlumno': 'Segundo apellido del alumno',
+      'course': 'Curso del alumno',
+      'letra': 'Letra del curso',
+      'colegio': 'Colegio del alumno',
+    };
+
+    if (!parentData.nombres) {
+      errors['nombres'] = "Requerido";
+      missingFields.push(fieldNames['nombres']);
+    }
+    if (!parentData.primerApellido) {
+      errors['primerApellido'] = "Requerido";
+      missingFields.push(fieldNames['primerApellido']);
+    }
+    if (!parentData.segundoApellido) {
+      errors['segundoApellido'] = "Requerido";
+      missingFields.push(fieldNames['segundoApellido']);
+    }
+    if (isRutValid === false) {
+      errors['rut'] = "RUT Inválido";
+    } else if (!parentData.rut) {
+      errors['rut'] = "Requerido";
+      missingFields.push(fieldNames['rut']);
+    }
+    if (!parentData.phone) {
+      errors['phone'] = "Teléfono requerido";
+      missingFields.push(fieldNames['phone']);
+    }
+    if (!studentData.nombres) {
+      errors['nombresAlumno'] = "Requerido";
+      missingFields.push(fieldNames['nombresAlumno']);
+    }
+    if (!studentData.primerApellido) {
+      errors['primerApellidoAlumno'] = "Requerido";
+      missingFields.push(fieldNames['primerApellidoAlumno']);
+    }
+    if (!studentData.segundoApellido) {
+      errors['segundoApellidoAlumno'] = "Requerido";
+      missingFields.push(fieldNames['segundoApellidoAlumno']);
+    }
+    if (!studentData.course) {
+      errors['course'] = "Selecciona un curso";
+      missingFields.push(fieldNames['course']);
+    }
+    if (!studentData.letter) {
+      errors['letra'] = "Falta letra";
+      missingFields.push(fieldNames['letra']);
+    }
+    if (!studentData.colegio) {
+      errors['colegio'] = "Selecciona un colegio";
+      missingFields.push(fieldNames['colegio']);
+    }
 
     setFormErrors(errors);
     setRegisterMessage(null);
 
     if (Object.keys(errors).length > 0) {
+      // Mostrar alerta de validación
+      setValidationAlert({ show: true, missingFields });
+      
+      // Hacer scroll suave hacia la alerta después de un pequeño delay
+      setTimeout(() => {
+        const alertElement = document.getElementById('validation-alert');
+        if (alertElement) {
+          alertElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+      
       return;
     }
 
@@ -234,6 +303,37 @@ export default function GeneratorPage() {
            </button>
         </div>
 
+        {/* Alerta de validación */}
+        {validationAlert.show && validationAlert.missingFields.length > 0 && (
+          <div 
+            id="validation-alert"
+            className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg shadow-md animate-fade-in"
+          >
+            <div className="flex items-start">
+              <div className="shrink-0">
+                <span className="text-yellow-400 text-2xl">⚠️</span>
+              </div>
+              <div className="ml-3 flex-1">
+                <h3 className="text-sm font-bold text-yellow-800 mb-2">
+                  Por favor, completa los siguientes campos requeridos:
+                </h3>
+                <ul className="list-disc list-inside text-sm text-yellow-700 space-y-1">
+                  {validationAlert.missingFields.map((field, index) => (
+                    <li key={index}>{field}</li>
+                  ))}
+                </ul>
+              </div>
+              <button
+                onClick={() => setValidationAlert({ show: false, missingFields: [] })}
+                className="ml-4 shrink-0 text-yellow-400 hover:text-yellow-600 transition-colors"
+                aria-label="Cerrar alerta"
+              >
+                <span className="text-xl">×</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Grid Principal */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
@@ -256,7 +356,13 @@ export default function GeneratorPage() {
                     onEmailChange={(val: string) => handleParentChange('email', val)}
                     
                     isRutValid={isRutValid}
-                    errors={{ rut: formErrors['rut'] }}
+                    errors={{ 
+                      rut: formErrors['rut'],
+                      nombres: formErrors['nombres'],
+                      primerApellido: formErrors['primerApellido'],
+                      segundoApellido: formErrors['segundoApellido'],
+                      phone: formErrors['phone']
+                    }}
                 />
                 
                 <AlumnoForm 
@@ -275,6 +381,9 @@ export default function GeneratorPage() {
                     onLetraChange={(val) => handleStudentChange('letter', val)}
                     onColegioChange={(val) => handleStudentChange('colegio', val)}
                     errors={{ 
+                        nombres: formErrors['nombresAlumno'],
+                        primerApellido: formErrors['primerApellidoAlumno'],
+                        segundoApellido: formErrors['segundoApellidoAlumno'],
                         curso: formErrors['course'], 
                         letra: formErrors['letra'],
                         colegio: formErrors['colegio']
