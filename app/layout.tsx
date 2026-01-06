@@ -19,6 +19,7 @@ const sourceSans = Source_Sans_3({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://libreriaescolar.cl/"),
   title: "Librería Escolar | Etiquetas Inteligentes",
   description: "Sistema de recuperación de útiles escolares mediante QR Inteligentes",
   openGraph: {

@@ -1,9 +1,11 @@
 /* API de Strapi */
 
+import { env } from "@/lib/env";
+
 /* Variables de entorno */
 
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
-const STRAPI_TOKEN = process.env.STRAPI_API_TOKEN;
+const STRAPI_URL = env.STRAPI_URL;
+const STRAPI_TOKEN = env.STRAPI_API_TOKEN;
 
 export function getStrapiURL(path = ""): string {
     const normalizedPath = path !== "" && !path.startsWith("/") ? `/${path}` : path;
