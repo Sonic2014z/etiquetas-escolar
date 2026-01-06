@@ -42,6 +42,16 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const nombreApoderado = `${parentData.nombres} ${parentData.primerApellido} ${parentData.segundoApellido}`.trim().toLowerCase();
+    const nombreAlumno = `${studentData.nombres} ${studentData.primerApellido} ${studentData.segundoApellido}`.trim().toLowerCase();
+
+    if (nombreApoderado === nombreAlumno) {
+      return NextResponse.json(
+        { error: "Por seguridad, el nombre del alumno no puede ser idéntico al nombre del apoderado. Si son homónimos, por favor agregue el segundo nombre o apellido."},
+        { status: 400 }
+      );
+    }
     
     // Limpiar RUT para búsqueda
     const cleanRut = cleanRUT(parentData.rut);
