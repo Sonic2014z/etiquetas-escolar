@@ -112,7 +112,7 @@ export async function updateApoderadoWithAlumno(
 ): Promise<Apoderado | null> {
   try {
     // Intentamos obtener el apoderado con sus alumnos actuales
-    let alumnosExistentes: number[] = [];
+    let alumnosExistentesIds: number[] = [];
     
     try {
       const apoderadoResponse = await strapi.get<StrapiResponse<Apoderado>>(
@@ -120,10 +120,15 @@ export async function updateApoderadoWithAlumno(
       );
       
       const apoderado = apoderadoResponse.data;
-      alumnosExistentes = apoderado.alumnos?.data?.map((a) => a.id) || [];
+      
+      if (Array.isArray(apoderado.alumnos)) {
+        alumnosExistentesIds = apoderado.alumnos.map((a) => a.id);
+      } else if ((apoderado.alumnos as any)?.data) {
+        alumnosExistentesIds = (apoderado.alumnos as any).data.map((a: any) => a.id);
+      }
       
       // Verificamos que el alumno no esté ya relacionado
-      if (alumnosExistentes.includes(alumnoId)) {
+      if (alumnosExistentesIds.includes(alumnoId)) {
         console.log(`Alumno ${alumnoId} ya está relacionado con apoderado ${apoderadoId}`);
         return apoderado;
       }
@@ -131,14 +136,14 @@ export async function updateApoderadoWithAlumno(
       // Si no podemos obtener el apoderado, continuamos de todas formas
       // Esto puede pasar si el endpoint no está disponible o hay un problema de permisos
       console.warn(`No se pudo obtener apoderado ${apoderadoId}, continuando con actualización directa:`, getError.message);
-      alumnosExistentes = [];
+      alumnosExistentesIds = [];
     }
     
     // Agregamos el nuevo alumno a la lista
     // En Strapi v4, para relaciones many-to-many o one-to-many, podemos pasar un array de IDs
-    const nuevosAlumnos = [...alumnosExistentes, alumnoId];
+    const nuevosAlumnos = [...alumnosExistentesIds, alumnoId];
     
-    console.log(`[updateApoderadoWithAlumno] Actualizando apoderado ${apoderadoId} con alumnos:`, nuevosAlumnos);
+    console.log(`[updateApoderadoWithAlumno] IDs a relacionar:`, nuevosAlumnos);
     
     // Actualizamos el apoderado
     const response = await strapi.put<StrapiResponse<Apoderado>>(

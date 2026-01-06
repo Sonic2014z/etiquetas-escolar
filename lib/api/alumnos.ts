@@ -105,7 +105,10 @@ export async function createAlumno(data: {
     );
     
     console.log("[createAlumno] Respuesta completa:", JSON.stringify(response, null, 2));
-    console.log("[createAlumno] ID extraído:", response.data?.id);
+    
+    if (!response.data || !response.data.id) {
+      throw new Error("Error: Strapi no devolvió ID al crear alumno");
+    }
     
     return response.data;
   } catch (error) {
