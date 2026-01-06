@@ -50,27 +50,19 @@ export async function GET() {
       const colegiosRaw = response.data || [];
       allColegios.push(...colegiosRaw);
       
-      // Verificar información de paginación
       if (response.meta?.pagination) {
         totalPages = response.meta.pagination.pageCount || 1;
         const currentPage = response.meta.pagination.page || page;
-        const total = response.meta.pagination.total || 0;
         
-        console.log(`[API /api/colegios] Página ${currentPage}/${totalPages} - Total: ${total} - Cargados: ${allColegios.length}`);
-        
-        // Si ya cargamos todas las páginas, salir del loop
         if (currentPage >= totalPages || colegiosRaw.length === 0) {
           hasMore = false;
         }
       } else {
-        // Si no hay información de paginación, asumir que esta es la última página
         hasMore = colegiosRaw.length === pageSize;
       }
       
       page++;
     }
-    
-    console.log(`[API /api/colegios] Total colegios cargados: ${allColegios.length}`);
     
     // Extraer el array de colegios (ya tenemos todos)
     const colegiosRaw = allColegios;

@@ -6,28 +6,13 @@ import type { Apoderado, StrapiCollectionResponse, StrapiResponse } from "@/type
  */
 export async function verifyApoderadoExists(apoderadoId: number): Promise<Apoderado | null> {
   try {
-    console.log(`[verifyApoderadoExists] Buscando apoderado con ID: ${apoderadoId}`);
     const response = await strapi.get<StrapiResponse<Apoderado>>(
       `etiquetas-apoderados/${apoderadoId}`
     );
     
-    console.log(`[verifyApoderadoExists] Respuesta completa:`, JSON.stringify(response, null, 2));
-    
-    if (response.data) {
-      const idReal = response.data.id;
-      console.log(`[verifyApoderadoExists] ID solicitado: ${apoderadoId}, ID devuelto por Strapi: ${idReal}`);
-      
-      if (idReal !== apoderadoId) {
-        console.warn(`[verifyApoderadoExists] ⚠️ ID diferente! Solicitado: ${apoderadoId}, Devuelto: ${idReal}`);
-      }
-      
-      return response.data;
-    }
-    return null;
+    return response.data || null;
   } catch (error: any) {
-    // Si es 404, el apoderado no existe
     if (error.message?.includes('404')) {
-      console.log(`[verifyApoderadoExists] Apoderado ${apoderadoId} no encontrado (404)`);
       return null;
     }
     console.error("Error verificando apoderado por ID:", error);
@@ -77,24 +62,16 @@ export async function createApoderado(data: {
       uid: data.uid,
     };
     
-    // Solo agregar email si tiene valor, de lo contrario no lo enviamos (o enviamos null si Strapi lo requiere)
     if (data.email && data.email.trim() !== "") {
       payload.email = data.email;
     } else {
-      // Si el campo es requerido en Strapi pero puede ser null, enviamos null
-      // Si no es requerido, simplemente no lo incluimos
       payload.email = null;
     }
-    
-    console.log("[createApoderado] Payload enviado:", JSON.stringify(payload, null, 2));
     
     const response = await strapi.post<StrapiResponse<Apoderado>>(
       "etiquetas-apoderados",
       payload
     );
-    
-    console.log("[createApoderado] Respuesta completa:", JSON.stringify(response, null, 2));
-    console.log("[createApoderado] ID extraído:", response.data?.id);
     
     return response.data;
   } catch (error) {
@@ -128,25 +105,15 @@ export async function updateApoderadoWithAlumno(
         alumnosExistentesDocumentIds = (apoderado.alumnos as any).data.map((a: any) => a.documentId || a.id);
       }
       
-      // Verificamos que el alumno no esté ya relacionado
       if (alumnosExistentesDocumentIds.includes(alumnoDocumentId)) {
-        console.log(`Alumno ${alumnoDocumentId} ya está relacionado con apoderado ${apoderadoDocumentId}`);
         return apoderado;
       }
     } catch (getError: any) {
-      // Si no podemos obtener el apoderado, continuamos de todas formas
-      // Esto puede pasar si el endpoint no está disponible o hay un problema de permisos
-      console.warn(`No se pudo obtener apoderado ${apoderadoDocumentId}, continuando con actualización directa:`, getError.message);
       alumnosExistentesDocumentIds = [];
     }
     
-    // Agregamos el nuevo alumno a la lista usando documentId
-    // En Strapi v5, para relaciones usamos documentId
     const nuevosAlumnos = [...alumnosExistentesDocumentIds, alumnoDocumentId];
     
-    console.log(`[updateApoderadoWithAlumno] Actualizando apoderado ${apoderadoDocumentId} con alumnos:`, nuevosAlumnos);
-    
-    // Actualizamos el apoderado usando documentId
     const response = await strapi.put<StrapiResponse<Apoderado>>(
       `etiquetas-apoderados/${apoderadoDocumentId}`,
       {

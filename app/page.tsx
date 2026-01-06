@@ -283,12 +283,6 @@ export default function GeneratorPage() {
                   </div>
                 )}
 
-                {/* Debug Info (Opcional, para desarrollo) */}
-                <div className="mt-8 p-4 bg-slate-100 rounded-lg text-xs font-mono text-slate-500 overflow-hidden">
-                    <p className="font-bold mb-2">DEV INFO:</p>
-                    <p>Phone Valid: {isPhoneValid ? 'YES' : 'NO'}</p>
-                    <p>QR Link: {qrUrl || 'Pending...'}</p>
-                </div>
             </div>
 
         </div>

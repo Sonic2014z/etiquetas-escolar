@@ -6,12 +6,8 @@ const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
 const STRAPI_TOKEN = process.env.STRAPI_API_TOKEN;
 
 export function getStrapiURL(path = ""): string {
-    // Normalizar el path: si no empieza con /, agregarlo
     const normalizedPath = path !== "" && !path.startsWith("/") ? `/${path}` : path;
-    // Construir la URL completa
-    const url = `${STRAPI_URL}/api${normalizedPath}`;
-    console.log(`[getStrapiURL] Path: "${path}" -> URL: "${url}"`);
-    return url;
+    return `${STRAPI_URL}/api${normalizedPath}`;
 }
 
 /* Helpers */
@@ -31,9 +27,6 @@ async function fetchAPI<T>(
 
     if (STRAPI_TOKEN) {
         (headers as any)["Authorization"] = `Bearer ${STRAPI_TOKEN}`;
-        console.log(`[Strapi API] Token presente: ${STRAPI_TOKEN.substring(0, 10)}...`);
-    } else {
-        console.warn(`[Strapi API] ⚠️ No hay STRAPI_API_TOKEN configurado`);
     }
     
     const options: RequestInit = {
@@ -44,11 +37,6 @@ async function fetchAPI<T>(
     };
 
     try {
-        console.log(`[Strapi API] ${method} ${requestUrl}`);
-        if (body) {
-            console.log(`[Strapi API] Body:`, JSON.stringify(body, null, 2));
-        }
-        
         const response = await fetch(requestUrl, options);
 
         if (!response.ok) {

@@ -6,28 +6,13 @@ import type { Alumno, StrapiCollectionResponse, StrapiResponse } from "@/types/s
  */
 export async function verifyAlumnoExists(alumnoId: number): Promise<Alumno | null> {
   try {
-    console.log(`[verifyAlumnoExists] Buscando alumno con ID: ${alumnoId}`);
     const response = await strapi.get<StrapiResponse<Alumno>>(
       `etiquetas-alumnos/${alumnoId}`
     );
     
-    console.log(`[verifyAlumnoExists] Respuesta completa:`, JSON.stringify(response, null, 2));
-    
-    if (response.data) {
-      const idReal = response.data.id;
-      console.log(`[verifyAlumnoExists] ID solicitado: ${alumnoId}, ID devuelto por Strapi: ${idReal}`);
-      
-      if (idReal !== alumnoId) {
-        console.warn(`[verifyAlumnoExists] ⚠️ ID diferente! Solicitado: ${alumnoId}, Devuelto: ${idReal}`);
-      }
-      
-      return response.data;
-    }
-    return null;
+    return response.data || null;
   } catch (error: any) {
-    // Si es 404, el alumno no existe
     if (error.message?.includes('404')) {
-      console.log(`[verifyAlumnoExists] Alumno ${alumnoId} no encontrado (404)`);
       return null;
     }
     console.error("Error verificando alumno por ID:", error);
@@ -95,16 +80,10 @@ export async function createAlumno(data: {
       colegio: data.colegio,
     };
     
-    // NO establecemos la relación aquí - se hará después de verificar que ambos existen
-    
-    console.log("[createAlumno] Payload enviado:", JSON.stringify(payload, null, 2));
-    
     const response = await strapi.post<StrapiResponse<Alumno>>(
       "etiquetas-alumnos",
       payload
     );
-    
-    console.log("[createAlumno] Respuesta completa:", JSON.stringify(response, null, 2));
     
     if (!response.data || !response.data.id) {
       throw new Error("Error: Strapi no devolvió ID al crear alumno");
@@ -125,9 +104,6 @@ export async function updateAlumnoWithApoderado(
   apoderadoDocumentId: string
 ): Promise<Alumno | null> {
   try {
-    console.log(`[updateAlumnoWithApoderado] Actualizando alumno ${alumnoDocumentId} con apoderado ${apoderadoDocumentId}`);
-    
-    // Actualizamos el alumno con la relación al apoderado usando documentId
     const response = await strapi.put<StrapiResponse<Alumno>>(
       `etiquetas-alumnos/${alumnoDocumentId}`,
       {
@@ -138,7 +114,6 @@ export async function updateAlumnoWithApoderado(
     return response.data;
   } catch (error) {
     console.error("Error actualizando alumno con apoderado:", error);
-    // No lanzamos el error, solo lo registramos
     return null;
   }
 }
