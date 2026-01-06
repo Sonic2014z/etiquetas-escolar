@@ -21,6 +21,12 @@ const sourceSans = Source_Sans_3({
 export const metadata: Metadata = {
   title: "Librería Escolar | Etiquetas Inteligentes",
   description: "Sistema de recuperación de útiles escolares mediante QR Inteligentes",
+  openGraph: {
+    title: "Librería Escolar | Etiquetas Inteligentes",
+    description: "Recupera tus útiles escolares perdidos con nuestro sistema de etiquetas QR.",
+    locale: "es_CL",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
