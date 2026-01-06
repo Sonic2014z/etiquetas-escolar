@@ -213,7 +213,7 @@ export default function GeneratorPage() {
              <Logo className="mb-2" />
              <br/>
              <p className="text-foreground-secondary mt-1 font-bold text-lg">
-               Sistema de recuperación de útiles escolares mediante QR.
+               Formulario de Registro de Apoderados y Alumnos.
              </p>
            </div>
            
