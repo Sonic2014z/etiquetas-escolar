@@ -25,6 +25,14 @@ export const metadata: Metadata = {
     title: "Librería Escolar | Etiquetas Inteligentes",
     description: "Recupera tus útiles escolares perdidos con nuestro sistema de etiquetas QR.",
     url: "https://libreriaescolar.cl/",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Librería Escolar | Etiquetas Inteligentes",
+      },
+    ],
     locale: "es_CL",
     type: "website",
   },
