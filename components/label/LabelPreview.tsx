@@ -32,11 +32,11 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
 
                 <div id="etiqueta-qr" className="bg-white w-full max-w-[400px] aspect-[2.5/1] border-2 border-black rounded-lg shadow-xl flex flex-row overflow-hidden relative">
                     {/* Borde izquierdo rosa/fucsia con texto "DEVOLVER AQUI" y QR Code */}
-                    <div className="bg-[#ec4899] w-28 flex flex-row items-center justify-between p-2 relative shrink-0 h-full">
+                    <div className="bg-[#ec4899] w-36 flex flex-row items-center justify-between p-3 relative shrink-0 h-full">
                         {/* Texto vertical "DEVOLVER AQUI" a la izquierda */}
                         <div className="shrink-0 flex items-center justify-center">
                             <span 
-                                className="text-white font-bold text-[9px] tracking-wider whitespace-nowrap"
+                                className="text-white font-bold text-[10px] tracking-wider whitespace-nowrap"
                                 style={{ 
                                     writingMode: 'vertical-rl',
                                     textOrientation: 'mixed',
@@ -47,20 +47,20 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
                             </span>
                         </div>
                         
-                        {/* QR Code a la derecha dentro del área rosa */}
+                        {/* QR Code a la derecha dentro del área rosa - Aumentado para mejor escaneo */}
                         <div className="shrink-0">
                             {qrUrl ? (
-                                <div className="border border-white/30 p-1 rounded bg-white">
+                                <div className="border border-white/30 p-1.5 rounded bg-white">
                                     <QRCode 
                                         value={qrUrl}
-                                        size={60}
-                                        level="M"
+                                        size={120}
+                                        level="H"
                                         fgColor="#000000"
                                         bgColor="#ffffff" 
                                     />
                                 </div>
                             ) : (
-                                <div className="w-[62px] h-[62px] bg-white/20 border-2 border-dashed border-white/50 rounded flex items-center justify-center text-center p-1">
+                                <div className="w-[122px] h-[122px] bg-white/20 border-2 border-dashed border-white/50 rounded flex items-center justify-center text-center p-1">
                                     <span className="text-[8px] text-white font-medium">Faltan datos</span>
                                 </div>
                             )}

@@ -120,7 +120,7 @@
   --color-card: var(--color-card);
 
 
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-source-sans);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -141,5 +141,5 @@
 body {
   background: var(--color-background);
   color: var(--color-foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-source-sans), sans-serif;
 }
