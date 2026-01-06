@@ -12,7 +12,7 @@ export interface Colegio {
 // Tipos para Etiquetas - Apoderados
 export interface Apoderado {
     id: number;
-    documentId?: string;
+    documentId: string;
     nombres: string;
     primer_apellido: string;
     segundo_apellido?: string;
@@ -27,7 +27,7 @@ export interface Apoderado {
 // Tipos para Etiquetas - Alumnos
 export interface Alumno {
     id: number;
-    documentId?: string;
+    documentId: string;
     nombres: string;
     primer_apellido: string;
     segundo_apellido?: string;

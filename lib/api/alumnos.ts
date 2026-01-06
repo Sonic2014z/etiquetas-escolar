@@ -121,17 +121,17 @@ export async function createAlumno(data: {
  * Actualiza un alumno existente agregando una relación con un apoderado
  */
 export async function updateAlumnoWithApoderado(
-  alumnoId: number,
-  apoderadoId: number
+  alumnoDocumentId: string,
+  apoderadoDocumentId: string
 ): Promise<Alumno | null> {
   try {
-    console.log(`[updateAlumnoWithApoderado] Actualizando alumno ${alumnoId} con apoderado ${apoderadoId}`);
+    console.log(`[updateAlumnoWithApoderado] Actualizando alumno ${alumnoDocumentId} con apoderado ${apoderadoDocumentId}`);
     
-    // Actualizamos el alumno con la relación al apoderado
+    // Actualizamos el alumno con la relación al apoderado usando documentId
     const response = await strapi.put<StrapiResponse<Alumno>>(
-      `etiquetas-alumnos/${alumnoId}`,
+      `etiquetas-alumnos/${alumnoDocumentId}`,
       {
-        apoderado: apoderadoId,
+        apoderado: apoderadoDocumentId,
       }
     );
     

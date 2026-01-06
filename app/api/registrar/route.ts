@@ -48,12 +48,15 @@ export async function POST(request: NextRequest) {
     
     // 1. Buscar si el apoderado ya existe
     let apoderado = await findApoderadoByRut(cleanRut);
-    let apoderadoId: number;
+    let apoderadoDocumentId: string;
     
     if (apoderado) {
-      // Apoderado existe, usar su ID
-      apoderadoId = apoderado.id;
-      console.log(`Apoderado existente encontrado: ID ${apoderadoId}`);
+      // Apoderado existe, usar su documentId
+      if (!apoderado.documentId) {
+        throw new Error(`Apoderado encontrado no tiene documentId`);
+      }
+      apoderadoDocumentId = apoderado.documentId;
+      console.log(`Apoderado existente encontrado: documentId ${apoderadoDocumentId}`);
     } else {
       // Crear nuevo apoderado
       const uid = generateUID();
@@ -66,9 +69,14 @@ export async function POST(request: NextRequest) {
         email: parentData.email || undefined, // Enviamos el email si está disponible
         uid: uid,
       });
-      apoderadoId = nuevoApoderado.id;
+      
+      if (!nuevoApoderado.documentId) {
+        throw new Error(`Apoderado creado no tiene documentId`);
+      }
+      
+      apoderadoDocumentId = nuevoApoderado.documentId;
       apoderado = nuevoApoderado;
-      console.log(`[REGISTRO] Nuevo apoderado creado: ID ${apoderadoId}, UID ${uid}`);
+      console.log(`[REGISTRO] Nuevo apoderado creado: documentId ${apoderadoDocumentId}, UID ${uid}`);
       console.log(`[REGISTRO] Estructura completa del apoderado:`, JSON.stringify(nuevoApoderado, null, 2));
     }
     
@@ -82,12 +90,15 @@ export async function POST(request: NextRequest) {
       colegio: studentData.colegio,
     });
     
-    let alumnoId: number;
+    let alumnoDocumentId: string;
     
     if (alumnoExistente) {
       // Alumno existe
-      alumnoId = alumnoExistente.id;
-      console.log(`Alumno existente encontrado: ID ${alumnoId}`);
+      if (!alumnoExistente.documentId) {
+        throw new Error(`Alumno encontrado no tiene documentId`);
+      }
+      alumnoDocumentId = alumnoExistente.documentId;
+      console.log(`Alumno existente encontrado: documentId ${alumnoDocumentId}`);
     } else {
       // Crear nuevo alumno SIN relación (se establecerá después de verificar)
       const nuevoAlumno = await createAlumno({
@@ -98,22 +109,27 @@ export async function POST(request: NextRequest) {
         letra: studentData.letter,
         colegio: studentData.colegio,
       });
-      alumnoId = nuevoAlumno.id;
-      console.log(`[REGISTRO] Nuevo alumno creado: ID ${alumnoId}`);
+      
+      if (!nuevoAlumno.documentId) {
+        throw new Error(`Alumno creado no tiene documentId`);
+      }
+      
+      alumnoDocumentId = nuevoAlumno.documentId;
+      console.log(`[REGISTRO] Nuevo alumno creado: documentId ${alumnoDocumentId}`);
       console.log(`[REGISTRO] Estructura completa del alumno:`, JSON.stringify(nuevoAlumno, null, 2));
     }
     
     // 3. VERIFICAR QUE AMBOS REGISTROS EXISTEN EN STRAPI
-    // Buscar por campos únicos para obtener los IDs reales (más confiable que usar el ID de creación)
-    console.log(`[REGISTRO] Buscando registros por campos únicos para obtener IDs reales...`);
+    // Buscar por campos únicos para obtener los documentIds reales
+    console.log(`[REGISTRO] Buscando registros por campos únicos para obtener documentIds reales...`);
     
     // Buscar apoderado por RUT (más confiable que por ID)
     const apoderadoVerificado = await findApoderadoByRut(cleanRut);
-    if (!apoderadoVerificado) {
-      throw new Error(`No se pudo encontrar el apoderado con RUT ${cleanRut} después de crearlo`);
+    if (!apoderadoVerificado || !apoderadoVerificado.documentId) {
+      throw new Error(`No se pudo encontrar el apoderado con RUT ${cleanRut} después de crearlo o no tiene documentId`);
     }
-    const apoderadoIdReal = apoderadoVerificado.id;
-    console.log(`[REGISTRO] ✓ Apoderado encontrado por RUT: ID original ${apoderadoId} -> ID real ${apoderadoIdReal}`);
+    const apoderadoDocumentIdReal = apoderadoVerificado.documentId;
+    console.log(`[REGISTRO] ✓ Apoderado encontrado por RUT: documentId original ${apoderadoDocumentId} -> documentId real ${apoderadoDocumentIdReal}`);
     
     // Buscar alumno por criterios únicos (más confiable que por ID)
     const alumnoVerificado = await findAlumno({
@@ -125,30 +141,30 @@ export async function POST(request: NextRequest) {
       colegio: studentData.colegio,
     });
     
-    if (!alumnoVerificado) {
-      throw new Error(`No se pudo encontrar el alumno después de crearlo`);
+    if (!alumnoVerificado || !alumnoVerificado.documentId) {
+      throw new Error(`No se pudo encontrar el alumno después de crearlo o no tiene documentId`);
     }
-    const alumnoIdReal = alumnoVerificado.id;
-    console.log(`[REGISTRO] ✓ Alumno encontrado por criterios: ID original ${alumnoId} -> ID real ${alumnoIdReal}`);
+    const alumnoDocumentIdReal = alumnoVerificado.documentId;
+    console.log(`[REGISTRO] ✓ Alumno encontrado por criterios: documentId original ${alumnoDocumentId} -> documentId real ${alumnoDocumentIdReal}`);
     
-    // Usar los IDs reales obtenidos de la búsqueda
-    if (apoderadoIdReal !== apoderadoId) {
-      console.warn(`[REGISTRO] ⚠️ ID de apoderado diferente: ${apoderadoId} -> ${apoderadoIdReal} (usando ID real)`);
-      apoderadoId = apoderadoIdReal;
+    // Usar los documentIds reales obtenidos de la búsqueda
+    if (apoderadoDocumentIdReal !== apoderadoDocumentId) {
+      console.warn(`[REGISTRO] ⚠️ documentId de apoderado diferente: ${apoderadoDocumentId} -> ${apoderadoDocumentIdReal} (usando documentId real)`);
+      apoderadoDocumentId = apoderadoDocumentIdReal;
     }
     
-    if (alumnoIdReal !== alumnoId) {
-      console.warn(`[REGISTRO] ⚠️ ID de alumno diferente: ${alumnoId} -> ${alumnoIdReal} (usando ID real)`);
-      alumnoId = alumnoIdReal;
+    if (alumnoDocumentIdReal !== alumnoDocumentId) {
+      console.warn(`[REGISTRO] ⚠️ documentId de alumno diferente: ${alumnoDocumentId} -> ${alumnoDocumentIdReal} (usando documentId real)`);
+      alumnoDocumentId = alumnoDocumentIdReal;
     }
     
     // 4. ESTABLECER RELACIONES BIDIRECCIONALES DESPUÉS DE VERIFICAR
-    console.log(`Estableciendo relaciones bidireccionales...`);
+    console.log(`Estableciendo relaciones bidireccionales usando documentIds...`);
     
     // Relación: Alumno -> Apoderado
     try {
-      await updateAlumnoWithApoderado(alumnoId, apoderadoId);
-      console.log(`✓ Relación establecida: Alumno ${alumnoId} -> Apoderado ${apoderadoId}`);
+      await updateAlumnoWithApoderado(alumnoDocumentId, apoderadoDocumentId);
+      console.log(`✓ Relación establecida: Alumno ${alumnoDocumentId} -> Apoderado ${apoderadoDocumentId}`);
     } catch (error) {
       console.error(`Error estableciendo relación Alumno -> Apoderado:`, error);
       throw new Error(`No se pudo establecer la relación del alumno con el apoderado`);
@@ -156,8 +172,8 @@ export async function POST(request: NextRequest) {
     
     // Relación: Apoderado -> Alumno
     try {
-      await updateApoderadoWithAlumno(apoderadoId, alumnoId);
-      console.log(`✓ Relación establecida: Apoderado ${apoderadoId} -> Alumno ${alumnoId}`);
+      await updateApoderadoWithAlumno(apoderadoDocumentId, alumnoDocumentId);
+      console.log(`✓ Relación establecida: Apoderado ${apoderadoDocumentId} -> Alumno ${alumnoDocumentId}`);
     } catch (error) {
       console.warn(`No se pudo establecer relación Apoderado -> Alumno (puede ser normal si el endpoint no está disponible):`, error);
       // No lanzamos error aquí porque la relación principal (Alumno -> Apoderado) ya está establecida
@@ -170,11 +186,11 @@ export async function POST(request: NextRequest) {
       message: "Registro completado exitosamente",
       data: {
         apoderado: {
-          id: apoderadoId,
-          existia: !!apoderado && apoderado.id === apoderadoId,
+          documentId: apoderadoDocumentId,
+          existia: !!apoderado && apoderado.documentId === apoderadoDocumentId,
         },
         alumno: {
-          id: alumnoId,
+          documentId: alumnoDocumentId,
           existia: !!alumnoExistente,
         },
       },
