@@ -30,9 +30,9 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
 
             <Card variant="accent" className="flex flex-col items-center justify-center p-8 bg-slate-50">
 
-                <div id="etiqueta-qr" className="bg-white w-full max-w-[400px] aspect-[2.5/1] border-2 border-black rounded-lg shadow-xl flex flex-row overflow-hidden relative">
+                <div id="etiqueta-qr" className="bg-white w-full max-w-[550px] min-h-[200px] aspect-[2.3/1] border-2 border-black rounded-lg shadow-xl flex flex-row overflow-hidden relative">
                     {/* Borde izquierdo rosa/fucsia con texto "DEVOLVER AQUI" y QR Code */}
-                    <div className="bg-[#ec4899] w-36 flex flex-row items-center justify-between p-3 relative shrink-0 h-full">
+                    <div className="bg-[#ec4899] w-40 flex flex-row items-center justify-between p-4 relative shrink-0 h-full">
                         {/* Texto vertical "DEVOLVER AQUI" a la izquierda */}
                         <div className="shrink-0 flex items-center justify-center">
                             <span 
