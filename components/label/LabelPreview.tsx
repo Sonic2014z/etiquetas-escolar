@@ -30,9 +30,9 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
 
             <Card variant="accent" className="flex flex-col items-center justify-center p-8 bg-slate-50">
 
-                <div id="etiqueta-qr" className="bg-white w-full max-w-[550px] min-h-[200px] aspect-[2.3/1] border-2 border-black rounded-lg shadow-xl flex flex-row overflow-hidden relative">
+                <div id="etiqueta-qr" className="bg-white w-full max-w-[508px] min-h-[185px] aspect-[2.3/1] border-2 border-black rounded-lg shadow-xl flex flex-row overflow-hidden relative">
                     {/* Borde izquierdo rosa/fucsia con texto "DEVOLVER AQUI" y QR Code */}
-                    <div className="bg-[#ec4899] w-40 flex flex-row items-center justify-between p-4 relative shrink-0 h-full">
+                    <div className="bg-[#ec4899] w-40 flex flex-row items-center justify-center gap-3 p-4 relative shrink-0 h-full">
                         {/* Texto vertical "DEVOLVER AQUI" a la izquierda */}
                         <div className="shrink-0 flex items-center justify-center">
                             <span 
@@ -47,7 +47,7 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
                             </span>
                         </div>
                         
-                        {/* QR Code a la derecha dentro del área rosa - Aumentado para mejor escaneo */}
+                        {/* QR Code centrado junto con el texto - Aumentado para mejor escaneo */}
                         <div className="shrink-0">
                             {qrUrl ? (
                                 <div className="border border-white/30 p-1.5 rounded bg-white">
