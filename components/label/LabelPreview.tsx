@@ -47,20 +47,20 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
                             </span>
                         </div>
                         
-                        {/* QR Code centrado junto con el texto - Aumentado para mejor escaneo */}
+                        {/* QR Code centrado junto con el texto - Reducido 10% para mejor espaciado */}
                         <div className="shrink-0">
                             {qrUrl ? (
                                 <div className="border border-white/30 p-1.5 rounded bg-white">
                                     <QRCode 
                                         value={qrUrl}
-                                        size={120}
+                                        size={108}
                                         level="H"
                                         fgColor="#000000"
                                         bgColor="#ffffff" 
                                     />
                                 </div>
                             ) : (
-                                <div className="w-[122px] h-[122px] bg-white/20 border-2 border-dashed border-white/50 rounded flex items-center justify-center text-center p-1">
+                                <div className="w-[110px] h-[110px] bg-white/20 border-2 border-dashed border-white/50 rounded flex items-center justify-center text-center p-1">
                                     <span className="text-[8px] text-white font-medium">Faltan datos</span>
                                 </div>
                             )}
