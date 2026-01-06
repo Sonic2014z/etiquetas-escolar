@@ -1,18 +1,16 @@
-export interface ColegioAttributes {
-   rbd: number;
-   colegio_nombre: string;
-   dependencia: string;
-   comuna: string;
-   region: string; 
-}
-
+// Strapi v5: Los datos están directamente en el objeto, sin wrapper "attributes"
 export interface Colegio {
     id: number;
-    attributes: ColegioAttributes;
+    rbd: number;
+    colegio_nombre: string;
+    dependencia: string;
+    comuna: string;
+    region: string;
 }
 
 // Tipos para Etiquetas - Apoderados
-export interface ApoderadoAttributes {
+export interface Apoderado {
+    id: number;
     nombres: string;
     primer_apellido: string;
     segundo_apellido?: string;
@@ -25,13 +23,9 @@ export interface ApoderadoAttributes {
     };
 }
 
-export interface Apoderado {
-    id: number;
-    attributes: ApoderadoAttributes;
-}
-
 // Tipos para Etiquetas - Alumnos
-export interface AlumnoAttributes {
+export interface Alumno {
+    id: number;
     nombres: string;
     primer_apellido: string;
     segundo_apellido?: string;
@@ -41,11 +35,6 @@ export interface AlumnoAttributes {
     apoderado?: {
         data: Apoderado | null;
     };
-}
-
-export interface Alumno {
-    id: number;
-    attributes: AlumnoAttributes;
 }
 
 // Respuesta genérica de Strapi

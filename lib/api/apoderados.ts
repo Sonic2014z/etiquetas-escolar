@@ -120,7 +120,7 @@ export async function updateApoderadoWithAlumno(
       );
       
       const apoderado = apoderadoResponse.data;
-      alumnosExistentes = apoderado.attributes.alumnos?.data?.map((a) => a.id) || [];
+      alumnosExistentes = apoderado.alumnos?.data?.map((a) => a.id) || [];
       
       // Verificamos que el alumno no esté ya relacionado
       if (alumnosExistentes.includes(alumnoId)) {

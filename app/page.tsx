@@ -98,7 +98,7 @@ export default function GeneratorPage() {
   const colegioSeleccionado = colegios.find(
     (c) => c.id.toString() === studentData.colegio
   );
-  const colegioNombre = colegioSeleccionado?.attributes.colegio_nombre || "Seleccione un colegio";
+  const colegioNombre = colegioSeleccionado?.colegio_nombre || "Seleccione un colegio";
 
   // Función para registrar en Strapi
   const handleRegister = async () => {

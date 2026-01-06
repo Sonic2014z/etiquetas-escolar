@@ -34,17 +34,17 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
     const baseInputClass = "w-full p-2 rounded-md border border-border bg-background-secondary text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all";
 
     // Convertir colegios a opciones, asegurándonos de incluir todos los colegios válidos
+    // Strapi v5: Los datos están directamente en el objeto, sin wrapper "attributes"
     const colegioOptions = colegios
         .filter(c => {
             // Incluir colegios que tengan id y nombre
             if (!c || !c.id) return false;
-            // Verificar si tiene attributes o si los campos están directamente
-            const nombre = c.attributes?.colegio_nombre || (c as any).colegio_nombre;
+            const nombre = c.colegio_nombre;
             return nombre && nombre.trim().length > 0;
         })
         .map(c => {
-            // Extraer el nombre del colegio (puede estar en attributes o directamente)
-            const nombre = c.attributes?.colegio_nombre || (c as any).colegio_nombre || `Colegio ${c.id}`;
+            // Extraer el nombre del colegio (Strapi v5: directamente en el objeto)
+            const nombre = c.colegio_nombre || `Colegio ${c.id}`;
             return {
                 value: c.id.toString(),
                 label: nombre.trim()

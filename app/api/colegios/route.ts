@@ -75,34 +75,41 @@ export async function GET() {
     // Extraer el array de colegios (ya tenemos todos)
     const colegiosRaw = allColegios;
     
-    // Normalizar los datos: Strapi puede retornar con o sin "attributes"
-    // Convertimos a la estructura esperada: { id, attributes: { ... } }
+    // Normalizar los datos para Strapi v5: Los datos están directamente en el objeto
+    // Convertimos a la estructura esperada: { id, rbd, colegio_nombre, ... }
     const colegiosNormalizados: Colegio[] = colegiosRaw.map((colegio: any) => {
-      // Si ya tiene la estructura con attributes, retornarlo tal cual
-      if (colegio.attributes && typeof colegio.attributes === 'object') {
+      // Si ya tiene la estructura v5 (sin attributes), retornarlo tal cual
+      if (colegio.id && colegio.colegio_nombre && !colegio.attributes) {
         return colegio;
       }
       
-      // Si no tiene attributes, los campos están directamente en el objeto
-      // Extraemos id y el resto va a attributes
-      const { id, ...resto } = colegio;
+      // Si viene con estructura v4 (con attributes), extraer los datos
+      if (colegio.attributes && typeof colegio.attributes === 'object') {
+        return {
+          id: colegio.id,
+          rbd: colegio.attributes.rbd || colegio.rbd,
+          colegio_nombre: colegio.attributes.colegio_nombre || colegio.colegio_nombre || '',
+          dependencia: colegio.attributes.dependencia || colegio.dependencia || '',
+          comuna: colegio.attributes.comuna || colegio.comuna || '',
+          region: colegio.attributes.region || colegio.region || '',
+        };
+      }
       
+      // Si no tiene attributes, los campos están directamente en el objeto
       return {
-        id: id || colegio.id,
-        attributes: {
-          rbd: resto.rbd || colegio.rbd,
-          colegio_nombre: resto.colegio_nombre || colegio.colegio_nombre || '',
-          dependencia: resto.dependencia || colegio.dependencia || '',
-          comuna: resto.comuna || colegio.comuna || '',
-          region: resto.region || colegio.region || '',
-        },
+        id: colegio.id,
+        rbd: colegio.rbd || 0,
+        colegio_nombre: colegio.colegio_nombre || '',
+        dependencia: colegio.dependencia || '',
+        comuna: colegio.comuna || '',
+        region: colegio.region || '',
       };
     }).filter((colegio: Colegio) => {
       // Filtrar solo colegios válidos
       return colegio && 
              typeof colegio.id !== 'undefined' && 
-             colegio.attributes && 
-             colegio.attributes.colegio_nombre;
+             colegio.colegio_nombre &&
+             colegio.colegio_nombre.trim().length > 0;
     });
     
     // Retornar los datos normalizados al cliente
