@@ -285,22 +285,6 @@ export default function GeneratorPage() {
                Formulario de Registro de Apoderados y Alumnos.
              </p>
            </div>
-           
-           {/* Botón de Acción Principal (Móvil y Desktop) */}
-           <button 
-             onClick={handleRegister}
-             disabled={isRegistering}
-             className="bg-primary hover:bg-primary-dark disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center gap-2"
-           >
-             {isRegistering ? (
-               <>
-                 <span className="animate-spin">⏳</span>
-                 <span>Registrando...</span>
-               </>
-             ) : (
-               <span>📝 Registrar</span>
-             )}
-           </button>
         </div>
 
         {/* Alerta de validación */}
@@ -402,6 +386,24 @@ export default function GeneratorPage() {
                     telefonoApoderado={parentData.phone}
                     qrUrl={qrUrl}
                 />
+
+                {/* Botón de Acción Principal */}
+                <div className="mt-6 flex justify-center">
+                  <button 
+                    onClick={handleRegister}
+                    disabled={isRegistering}
+                    className="bg-primary hover:bg-primary-dark disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center gap-2 w-full md:w-auto"
+                  >
+                    {isRegistering ? (
+                      <>
+                        <span className="animate-spin">⏳</span>
+                        <span>Registrando...</span>
+                      </>
+                    ) : (
+                      <span>📝 Registrar</span>
+                    )}
+                  </button>
+                </div>
 
                 {/* Mensaje de registro */}
                 {registerMessage && (
