@@ -377,32 +377,35 @@ export default function GeneratorPage() {
 
             {/* COLUMNA DERECHA: Vista Previa (5 cols) */}
             <div className="lg:col-span-5">
-                <LabelPreview 
-                    nombreAlumno={studentFullName}
-                    curso={studentData.course}
-                    letra={studentData.letter}
-                    colegio={colegioNombre}
-                    rutApoderado={parentData.rut}
-                    telefonoApoderado={parentData.phone}
-                    qrUrl={qrUrl}
-                />
+                {/* Contenedor sticky que incluye la vista previa y el botón */}
+                <div className="sticky top-6 space-y-6">
+                    <LabelPreview 
+                        nombreAlumno={studentFullName}
+                        curso={studentData.course}
+                        letra={studentData.letter}
+                        colegio={colegioNombre}
+                        rutApoderado={parentData.rut}
+                        telefonoApoderado={parentData.phone}
+                        qrUrl={qrUrl}
+                    />
 
-                {/* Botón de Acción Principal */}
-                <div className="mt-6 flex justify-center">
-                  <button 
-                    onClick={handleRegister}
-                    disabled={isRegistering}
-                    className="bg-primary hover:bg-primary-dark disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center gap-2 w-full md:w-auto"
-                  >
-                    {isRegistering ? (
-                      <>
-                        <span className="animate-spin">⏳</span>
-                        <span>Registrando...</span>
-                      </>
-                    ) : (
-                      <span>📝 Registrar</span>
-                    )}
-                  </button>
+                    {/* Botón de Acción Principal */}
+                    <div className="flex justify-center">
+                      <button 
+                        onClick={handleRegister}
+                        disabled={isRegistering}
+                        className="bg-primary hover:bg-primary-dark disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center gap-2 w-full md:w-auto"
+                      >
+                        {isRegistering ? (
+                          <>
+                            <span className="animate-spin">⏳</span>
+                            <span>Registrando...</span>
+                          </>
+                        ) : (
+                          <span>📝 Registrar</span>
+                        )}
+                      </button>
+                    </div>
                 </div>
 
                 {/* Mensaje de registro */}

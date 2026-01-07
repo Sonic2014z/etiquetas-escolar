@@ -23,7 +23,7 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
     const colegioLine2 = colegioParts.slice(Math.ceil(colegioParts.length / 2)).join(' ');
 
     return (
-        <div className="sticky top-6">
+        <div>
             <h2 className="text-lg font-semibold text-foreground-secondary mb-4 hidden lg:block">
                 Vista Previa
             </h2>
