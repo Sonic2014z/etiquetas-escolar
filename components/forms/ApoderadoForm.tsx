@@ -44,7 +44,7 @@ export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApel
         <Card title="Datos del Apoderado" variant="default">
             <div className="space-y-4">
                 <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-foreground-secondary">Nombres *</label>
+                    <label className="text-sm font-medium text-foreground-secondary">Nombres <strong className="text-error">*</strong></label>
                     <input
                         type="text"
                         value={nombres}
@@ -58,7 +58,7 @@ export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApel
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1">
-                        <label className="text-sm font-medium text-foreground-secondary">Primer Apellido *</label>
+                        <label className="text-sm font-medium text-foreground-secondary">Primer Apellido <strong className="text-error">*</strong></label>
                         <input
                             type="text"
                             value={primerApellido}
@@ -71,7 +71,7 @@ export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApel
                     </div>
 
                     <div className="flex flex-col gap-1">
-                        <label className="text-sm font-medium text-foreground-secondary">Segundo Apellido *</label>
+                        <label className="text-sm font-medium text-foreground-secondary">Segundo Apellido</label>
                         <input
                             type="text"
                             value={segundoApellido}
@@ -86,7 +86,7 @@ export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApel
 
                 <div className="flex flex-col gap-1">
                     <div className="flex justify-between items-center">
-                        <label className="text-sm font-medium text-foreground-secondary">RUT Apoderado *</label>
+                        <label className="text-sm font-medium text-foreground-secondary">RUT Apoderado</label>
                         {isRutValid === true && <span className="text-xs font-bold text-success">Válido</span>}
                         {isRutValid === false && <span className="text-xs font-bold text-error">Inválido</span>}
                     </div>
@@ -102,7 +102,7 @@ export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApel
                 </div>
 
                 <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-foreground-secondary">Correo Electrónico Apoderado *</label>
+                    <label className="text-sm font-medium text-foreground-secondary">Correo Electrónico Apoderado <strong className="text-error">*</strong></label>
                     <input
                         type="email"
                         value={email}
@@ -114,7 +114,7 @@ export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApel
                 </div>
 
                 <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-foreground-secondary">Teléfono Apoderado *</label>
+                    <label className="text-sm font-medium text-foreground-secondary">Teléfono Apoderado <strong className="text-error">*</strong></label>
                     <input
                         type="text"
                         value={phone}

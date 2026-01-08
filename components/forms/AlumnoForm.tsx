@@ -55,7 +55,7 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
         <Card title="Datos del Alumno" variant="default">
             <div className="space-y-4">
                 <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-foreground-secondary">Nombres *</label>
+                    <label className="text-sm font-medium text-foreground-secondary">Nombres <strong className="text-error">*</strong></label>
                     <input 
                         type="text"
                         value={nombres}
@@ -69,7 +69,7 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1">
-                        <label className="text-sm font-medium text-foreground-secondary">Primer Apellido *</label>
+                        <label className="text-sm font-medium text-foreground-secondary">Primer Apellido <strong className="text-error">*</strong></label>
                         <input
                             type="text"
                             value={primerApellido}
@@ -82,7 +82,7 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
                     </div>
 
                     <div className="flex flex-col gap-1">
-                        <label className="text-sm font-medium text-foreground-secondary">Segundo Apellido *</label>
+                        <label className="text-sm font-medium text-foreground-secondary">Segundo Apellido</label>
                         <input
                             type="text"
                             value={segundoApellido}
@@ -97,8 +97,9 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
 
                 {/* Campo Colegio */}
                 <div className="flex flex-col gap-1">
+                    <label className="text-sm font-medium text-foreground-secondary">Colegio <strong className="text-error">*</strong></label>
                     <SearchableSelect
-                        label="Colegio *"
+                        label=""
                         placeholder={loadingColegios ? "Cargando datos..." : "Buscar colegio..."}
                         options={colegioOptions}
                         value={colegio}
@@ -109,7 +110,7 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
 
                 <div className="grid grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1">
-                        <label className="text-sm font-medium text-foreground-secondary">Curso *</label>
+                        <label className="text-sm font-medium text-foreground-secondary">Curso <strong className="text-error">*</strong></label>
                         <select
                             value={curso}
                             onChange={(e) => onCursoChange(e.target.value)}
@@ -137,7 +138,7 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
                     </div>
 
                     <div className="flex flex-col gap-1">
-                        <label className="text-sm font-bold text-foreground-secondary">Letra *</label>
+                        <label className="text-sm font-medium text-foreground-secondary">Letra <strong className="text-error">*</strong></label>
                         <select
                             value={letra}
                             onChange={(e) => onLetraChange(e.target.value)}
