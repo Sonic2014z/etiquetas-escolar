@@ -53,11 +53,16 @@ export async function createApoderado(data: {
   uid: string;
 }): Promise<Apoderado> {
   try {
+    // Limpiar RUT solo si está presente, si no, enviar string vacío
+    const cleanRut = data.rut && data.rut.trim() 
+      ? data.rut.replace(/[^0-9kK]/g, '') 
+      : "";
+    
     const payload: any = {
       nombres: data.nombres,
       primer_apellido: data.primer_apellido,
       segundo_apellido: data.segundo_apellido || "",
-      rut: data.rut.replace(/[^0-9kK]/g, ''), // Limpiar RUT
+      rut: cleanRut,
       telefono: data.telefono,
       uid: data.uid,
     };

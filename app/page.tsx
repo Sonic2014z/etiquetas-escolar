@@ -23,14 +23,14 @@ export default function GeneratorPage() {
     email: ""
   });
 
-  const [studentData, setStudentData] = useState<StudentData>({
+  const [studentsData, setStudentsData] = useState<StudentData[]>([{
     nombres: "",
     primerApellido: "",
     segundoApellido: "",
     course: "", // Iniciamos vacío para obligar selección
     letter: "",
     colegio: ""
-  });
+  }]);
 
   // --- 2. ESTADO DE VALIDACIÓN ---
   const [isRutValid, setIsRutValid] = useState<boolean | null>(null);
@@ -77,30 +77,68 @@ export default function GeneratorPage() {
   };
 
   // --- 4. HANDLERS ALUMNO ---
-  const handleStudentChange = (field: keyof StudentData, value: string) => {
-    setStudentData((prev: StudentData) => ({ ...prev, [field]: value }));
+  // Agregar un nuevo formulario de alumno vacío
+  const addStudentForm = () => {
+    setStudentsData(prev => [...prev, {
+      nombres: "",
+      primerApellido: "",
+      segundoApellido: "",
+      course: "",
+      letter: "",
+      colegio: ""
+    }]);
+    
+    // Hacer scroll suave hacia el nuevo formulario después de un pequeño delay
+    setTimeout(() => {
+      const newFormElement = document.getElementById(`student-form-${studentsData.length}`);
+      if (newFormElement) {
+        newFormElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
+  // Eliminar un formulario de alumno por índice
+  const removeStudentForm = (index: number) => {
+    if (studentsData.length > 1) {
+      setStudentsData(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  // Actualizar un alumno específico por índice
+  const handleStudentChange = (index: number, field: keyof StudentData, value: string) => {
+    setStudentsData(prev => prev.map((student, i) => 
+      i === index ? { ...student, [field]: value } : student
+    ));
   };
 
   // --- 5. LÓGICA DE NEGOCIO (QR & PDF) ---
   const whatsappNumber = getWhatsAppNumber(parentData.phone);
   const isPhoneValid = whatsappNumber.length === 11; // 569XXXXXXXX
 
-  // Construimos el mensaje predefinido
-  const message = `Hola ${parentData.nombres}, encontré un útil escolar perteneciente a ${studentData.nombres} del curso ${studentData.course} ${studentData.letter}.`;
-  
-  // URL final del QR (solo si hay teléfono válido)
-  const qrUrl = isPhoneValid 
-    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
-    : undefined;
-
-  // Nombre completo para la vista previa
-  const studentFullName = `${studentData.nombres} ${studentData.primerApellido} ${studentData.segundoApellido}`.trim();
-  
-  // Obtener el nombre del colegio seleccionado
-  const colegioSeleccionado = colegios.find(
-    (c) => c.id.toString() === studentData.colegio
-  );
-  const colegioNombre = colegioSeleccionado?.colegio_nombre || "Seleccione un colegio";
+  // Generar datos para cada vista previa de alumno
+  const studentsPreviewData = studentsData.map((student) => {
+    const studentFullName = `${student.nombres} ${student.primerApellido} ${student.segundoApellido}`.trim();
+    const colegioSeleccionado = colegios.find(
+      (c) => c.id.toString() === student.colegio
+    );
+    const colegioNombre = colegioSeleccionado?.colegio_nombre || "Seleccione un colegio";
+    
+    // Construir mensaje específico para este alumno
+    const message = `Hola ${parentData.nombres}, encontré un útil escolar perteneciente a ${student.nombres} ${student.primerApellido} ${student.segundoApellido} del curso ${student.course} ${student.letter}.`;
+    
+    // URL final del QR (solo si hay teléfono válido)
+    const qrUrl = isPhoneValid 
+      ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
+      : undefined;
+    
+    return {
+      studentFullName,
+      curso: student.course,
+      letra: student.letter,
+      colegioNombre,
+      qrUrl,
+    };
+  });
 
   // Función para limpiar el formulario
   const resetForm = () => {
@@ -112,14 +150,14 @@ export default function GeneratorPage() {
       phone: "",
       email: ""
     });
-    setStudentData({
+    setStudentsData([{
       nombres: "",
       primerApellido: "",
       segundoApellido: "",
       course: "",
       letter: "",
       colegio: ""
-    });
+    }]);
     setIsRutValid(null);
     setFormErrors({});
   };
@@ -160,40 +198,44 @@ export default function GeneratorPage() {
       errors['segundoApellido'] = "Requerido";
       missingFields.push(fieldNames['segundoApellido']);
     }
-    if (isRutValid === false) {
+    // RUT ya no es obligatorio, solo validamos si está presente
+    if (parentData.rut && isRutValid === false) {
       errors['rut'] = "RUT Inválido";
-    } else if (!parentData.rut) {
-      errors['rut'] = "Requerido";
-      missingFields.push(fieldNames['rut']);
+      missingFields.push(fieldNames['rut'] + " (inválido)");
     }
     if (!parentData.phone) {
       errors['phone'] = "Teléfono requerido";
       missingFields.push(fieldNames['phone']);
     }
-    if (!studentData.nombres) {
-      errors['nombresAlumno'] = "Requerido";
-      missingFields.push(fieldNames['nombresAlumno']);
-    }
-    if (!studentData.primerApellido) {
-      errors['primerApellidoAlumno'] = "Requerido";
-      missingFields.push(fieldNames['primerApellidoAlumno']);
-    }
-    if (!studentData.segundoApellido) {
-      errors['segundoApellidoAlumno'] = "Requerido";
-      missingFields.push(fieldNames['segundoApellidoAlumno']);
-    }
-    if (!studentData.course) {
-      errors['course'] = "Selecciona un curso";
-      missingFields.push(fieldNames['course']);
-    }
-    if (!studentData.letter) {
-      errors['letra'] = "Falta letra";
-      missingFields.push(fieldNames['letra']);
-    }
-    if (!studentData.colegio) {
-      errors['colegio'] = "Selecciona un colegio";
-      missingFields.push(fieldNames['colegio']);
-    }
+    // Validar cada alumno
+    studentsData.forEach((student, index) => {
+      const studentNumber = studentsData.length > 1 ? ` ${index + 1}` : '';
+      
+      if (!student.nombres) {
+        errors[`student_${index}_nombres`] = "Requerido";
+        missingFields.push(`Alumno${studentNumber}: Nombres`);
+      }
+      if (!student.primerApellido) {
+        errors[`student_${index}_primerApellido`] = "Requerido";
+        missingFields.push(`Alumno${studentNumber}: Primer apellido`);
+      }
+      if (!student.segundoApellido) {
+        errors[`student_${index}_segundoApellido`] = "Requerido";
+        missingFields.push(`Alumno${studentNumber}: Segundo apellido`);
+      }
+      if (!student.course) {
+        errors[`student_${index}_course`] = "Selecciona un curso";
+        missingFields.push(`Alumno${studentNumber}: Curso`);
+      }
+      if (!student.letter) {
+        errors[`student_${index}_letra`] = "Falta letra";
+        missingFields.push(`Alumno${studentNumber}: Letra`);
+      }
+      if (!student.colegio) {
+        errors[`student_${index}_colegio`] = "Selecciona un colegio";
+        missingFields.push(`Alumno${studentNumber}: Colegio`);
+      }
+    });
 
     setFormErrors(errors);
     setRegisterMessage(null);
@@ -230,36 +272,75 @@ export default function GeneratorPage() {
             phone: parentData.phone,
             email: parentData.email,
           },
-          studentData: {
-            nombres: studentData.nombres,
-            primerApellido: studentData.primerApellido,
-            segundoApellido: studentData.segundoApellido,
-            course: studentData.course,
-            letter: studentData.letter,
-            colegio: colegioNombre, // Enviamos el nombre del colegio como string
-          },
+          studentsData: studentsData.map((student) => {
+            const colegioSeleccionado = colegios.find(
+              (c) => c.id.toString() === student.colegio
+            );
+            const colegioNombre = colegioSeleccionado?.colegio_nombre || "";
+            
+            return {
+              nombres: student.nombres,
+              primerApellido: student.primerApellido,
+              segundoApellido: student.segundoApellido,
+              course: student.course,
+              letter: student.letter,
+              colegio: colegioNombre, // Enviamos el nombre del colegio como string
+            };
+          }),
         }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || result.message || 'Error al registrar');
+        // Construir mensaje de error detallado
+        let errorMessage = result.error || result.message || 'Error al registrar';
+        
+        if (result.detalles && Array.isArray(result.detalles)) {
+          errorMessage += '\n\nDetalles:\n' + result.detalles.join('\n');
+        } else if (result.detalles && result.detalles.alumnosFallidos && result.detalles.alumnosFallidos.length > 0) {
+          errorMessage += '\n\nAlumnos que fallaron:\n';
+          result.detalles.alumnosFallidos.forEach((alumno: any) => {
+            errorMessage += `- ${alumno.nombre}: ${alumno.error}\n`;
+          });
+        }
+        
+        throw new Error(errorMessage);
       }
 
-      // Éxito
-      setRegisterMessage({
-        type: 'success',
-        text: result.message || 'Registro completado exitosamente',
-      });
+      // Manejar éxito parcial o completo
+      if (result.partial) {
+        // Éxito parcial: algunos alumnos se registraron, otros fallaron
+        let mensaje = result.message || 'Registro parcial completado';
+        
+        if (result.data && result.data.alumnosFallidos && result.data.alumnosFallidos.length > 0) {
+          mensaje += '\n\nAlumnos que fallaron:\n';
+          result.data.alumnosFallidos.forEach((alumno: any) => {
+            mensaje += `- ${alumno.nombre}: ${alumno.error}\n`;
+          });
+        }
+        
+        setRegisterMessage({
+          type: 'error', // Mostrar como error para que el usuario vea que hay problemas
+          text: mensaje,
+        });
+        
+        // No limpiar el formulario en caso de éxito parcial para que el usuario pueda corregir
+      } else {
+        // Éxito completo
+        setRegisterMessage({
+          type: 'success',
+          text: result.message || 'Registro completado exitosamente',
+        });
 
-      // Limpiar el formulario después de un registro exitoso
-      resetForm();
+        // Limpiar el formulario después de un registro exitoso completo
+        resetForm();
+      }
 
-      // Ocultar el mensaje después de 5 segundos
+      // Ocultar el mensaje después de 8 segundos (más tiempo para mensajes parciales)
       setTimeout(() => {
         setRegisterMessage(null);
-      }, 5000);
+      }, 8000);
 
     } catch (error: any) {
       console.error('Error al registrar:', error);
@@ -349,48 +430,102 @@ export default function GeneratorPage() {
                     }}
                 />
                 
-                <AlumnoForm 
-                    nombres={studentData.nombres}
-                    primerApellido={studentData.primerApellido}
-                    segundoApellido={studentData.segundoApellido}
-                    curso={studentData.course}
-                    letra={studentData.letter}
-                    colegio={studentData.colegio}
-                    colegios={colegios}
-                    loadingColegios={loadingColegios}
-                    onNombresChange={(val) => handleStudentChange('nombres', val)}
-                    onPrimerApellidoChange={(val) => handleStudentChange('primerApellido', val)}
-                    onSegundoApellidoChange={(val) => handleStudentChange('segundoApellido', val)}
-                    onCursoChange={(val) => handleStudentChange('course', val)}
-                    onLetraChange={(val) => handleStudentChange('letter', val)}
-                    onColegioChange={(val) => handleStudentChange('colegio', val)}
-                    errors={{ 
-                        nombres: formErrors['nombresAlumno'],
-                        primerApellido: formErrors['primerApellidoAlumno'],
-                        segundoApellido: formErrors['segundoApellidoAlumno'],
-                        curso: formErrors['course'], 
-                        letra: formErrors['letra'],
-                        colegio: formErrors['colegio']
-                    }}
-                />
+                {/* Formularios de Alumnos */}
+                {studentsData.map((student, index) => (
+                  <div key={index} id={`student-form-${index}`} className="relative">
+                    {studentsData.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeStudentForm(index)}
+                        className="absolute -top-2 -right-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg transition-colors"
+                        aria-label={`Eliminar alumno ${index + 1}`}
+                        title="Eliminar este alumno"
+                      >
+                        <span className="text-lg">×</span>
+                      </button>
+                    )}
+                    <div className="mb-2">
+                      <h3 className="text-sm font-semibold text-foreground-secondary">
+                        {studentsData.length > 1 ? `Alumno ${index + 1}` : 'Datos del Alumno'}
+                      </h3>
+                    </div>
+                    <AlumnoForm 
+                        nombres={student.nombres}
+                        primerApellido={student.primerApellido}
+                        segundoApellido={student.segundoApellido}
+                        curso={student.course}
+                        letra={student.letter}
+                        colegio={student.colegio}
+                        colegios={colegios}
+                        loadingColegios={loadingColegios}
+                        onNombresChange={(val) => handleStudentChange(index, 'nombres', val)}
+                        onPrimerApellidoChange={(val) => handleStudentChange(index, 'primerApellido', val)}
+                        onSegundoApellidoChange={(val) => handleStudentChange(index, 'segundoApellido', val)}
+                        onCursoChange={(val) => handleStudentChange(index, 'course', val)}
+                        onLetraChange={(val) => handleStudentChange(index, 'letter', val)}
+                        onColegioChange={(val) => handleStudentChange(index, 'colegio', val)}
+                        errors={{ 
+                            nombres: formErrors[`student_${index}_nombres`],
+                            primerApellido: formErrors[`student_${index}_primerApellido`],
+                            segundoApellido: formErrors[`student_${index}_segundoApellido`],
+                            curso: formErrors[`student_${index}_course`], 
+                            letra: formErrors[`student_${index}_letra`],
+                            colegio: formErrors[`student_${index}_colegio`]
+                        }}
+                    />
+                  </div>
+                ))}
+
+                {/* Botón para agregar más alumnos */}
+                <div className="flex justify-center mt-4">
+                  <button
+                    type="button"
+                    onClick={addStudentForm}
+                    className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg shadow-md transition-colors flex items-center gap-2"
+                  >
+                    <span className="text-xl">+</span>
+                    <span>Agregar otro alumno</span>
+                  </button>
+                </div>
             </div>
 
-            {/* COLUMNA DERECHA: Vista Previa (5 cols) */}
+            {/* COLUMNA DERECHA: Vistas Previas (5 cols) */}
             <div className="lg:col-span-5">
-                {/* Contenedor sticky que incluye la vista previa y el botón */}
+                {/* Contenedor sticky que incluye las vistas previas y el botón */}
                 <div className="sticky top-6 space-y-6">
-                    <LabelPreview 
-                        nombreAlumno={studentFullName}
-                        curso={studentData.course}
-                        letra={studentData.letter}
-                        colegio={colegioNombre}
-                        rutApoderado={parentData.rut}
-                        telefonoApoderado={parentData.phone}
-                        qrUrl={qrUrl}
-                    />
+                    {/* Título general de vistas previas */}
+                    {studentsData.length > 1 && (
+                      <div className="mb-4">
+                        <h2 className="text-lg font-semibold text-foreground-secondary">
+                          Vistas Previas ({studentsData.length} {studentsData.length === 1 ? 'etiqueta' : 'etiquetas'})
+                        </h2>
+                      </div>
+                    )}
+                    
+                    {/* Vistas previas para cada alumno */}
+                    {studentsPreviewData.map((previewData, index) => (
+                      <div key={index} className="space-y-2">
+                        {studentsData.length > 1 && (
+                          <div className="mb-2">
+                            <h3 className="text-sm font-semibold text-foreground-secondary">
+                              Etiqueta {index + 1} - {studentsData[index].nombres} {studentsData[index].primerApellido}
+                            </h3>
+                          </div>
+                        )}
+                        <LabelPreview 
+                            nombreAlumno={previewData.studentFullName}
+                            curso={previewData.curso}
+                            letra={previewData.letra}
+                            colegio={previewData.colegioNombre}
+                            rutApoderado={parentData.rut}
+                            telefonoApoderado={parentData.phone}
+                            qrUrl={previewData.qrUrl}
+                        />
+                      </div>
+                    ))}
 
                     {/* Botón de Acción Principal */}
-                    <div className="flex justify-center">
+                    <div className="flex justify-center pt-4">
                       <button 
                         onClick={handleRegister}
                         disabled={isRegistering}
@@ -402,7 +537,7 @@ export default function GeneratorPage() {
                             <span>Registrando...</span>
                           </>
                         ) : (
-                          <span>📝 Registrar</span>
+                          <span>📝 Registrar {studentsData.length > 1 ? `(${studentsData.length} alumnos)` : ''}</span>
                         )}
                       </button>
                     </div>
@@ -415,10 +550,13 @@ export default function GeneratorPage() {
                       ? 'bg-green-100 text-green-800 border border-green-300' 
                       : 'bg-red-100 text-red-800 border border-red-300'
                   }`}>
-                    <p className="font-semibold">
+                    <div className="font-semibold mb-2">
                       {registerMessage.type === 'success' ? '✓ ' : '✗ '}
+                      {registerMessage.type === 'success' ? 'Registro Exitoso' : 'Error en el Registro'}
+                    </div>
+                    <div className="text-sm whitespace-pre-line">
                       {registerMessage.text}
-                    </p>
+                    </div>
                   </div>
                 )}
 
