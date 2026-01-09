@@ -54,3 +54,14 @@ export interface StrapiCollectionResponse<T> {
         };
     };
 }
+
+// Tipo para Etiquetas - QR
+export interface EtiquetaQR {
+    id: number;
+    documentId: string;
+    hash: string;
+    nombreAlumno: string;
+    cursoAlumno: string;
+    telefonoApoderado: string;
+    nombreApoderado: string;
+}

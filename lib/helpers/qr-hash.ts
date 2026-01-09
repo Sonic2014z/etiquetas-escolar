@@ -74,8 +74,19 @@ export function generateIntermediateQRUrl(data: QRData, baseUrl?: string): strin
   // Generar hash determinístico muy corto (8 caracteres)
   const hash = generateQRHash(data).substring(0, 8);
   
-  // Usar baseUrl si está disponible, sino usar window.location.origin (solo en cliente)
-  const origin = baseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
+  // Determinar la URL base:
+  // 1. Usar baseUrl si se proporciona
+  // 2. Si no, usar variable de entorno NEXT_PUBLIC_APP_URL
+  // 3. Si no, usar window.location.origin (solo en cliente)
+  let origin = baseUrl;
+  if (!origin && typeof window !== 'undefined') {
+    origin = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+  }
+  
+  // Si aún no hay origin, usar string vacío (se generará relativa)
+  if (!origin) {
+    origin = '';
+  }
   
   // URL muy corta: solo el hash
   return `${origin}/qr/${hash}`;

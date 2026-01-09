@@ -334,8 +334,10 @@ export default function GeneratorPage() {
     // Generar URL intermediaria del QR si existe qrUrl
     let finalQrUrl = previewData.qrUrl;
     if (finalQrUrl && parentData.phone) {
-      // Obtener la URL base (usar window.location.origin en cliente)
-      const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+      // Obtener la URL base: priorizar variable de entorno, sino usar window.location.origin
+      const baseUrl = typeof window !== 'undefined' 
+        ? (process.env.NEXT_PUBLIC_APP_URL || window.location.origin)
+        : '';
       
       // Preparar datos para el QR
       const qrData = {
@@ -351,11 +353,17 @@ export default function GeneratorPage() {
       // Extraer el hash de la URL
       const hash = finalQrUrl.split('/qr/')[1];
       
-      // Almacenar los datos en el servidor (async, no bloquea)
-      fetch(`${baseUrl}/qr/${hash}`, {
+      // Almacenar los datos en Strapi (async, no bloquea)
+      fetch('/api/qr-codes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(qrData),
+        body: JSON.stringify({
+          hash: hash,
+          nombreAlumno: qrData.studentName,
+          cursoAlumno: qrData.studentGrade,
+          telefonoApoderado: qrData.parentPhone,
+          nombreApoderado: qrData.parentName,
+        }),
       }).catch(err => console.error('Error storing QR data:', err));
     }
     

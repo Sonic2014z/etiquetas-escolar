@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { regenerateWhatsAppUrl, type QRData } from '@/lib/helpers/qr-hash';
-
-// Almacenamiento temporal en memoria (Map)
-// En producción, considera usar Redis o una base de datos para persistencia
-const qrDataCache = new Map<string, QRData>();
+import { findQRByHash } from '@/lib/api/qr-codes';
 
 /**
  * Ruta de redirección para QRs con URL intermediaria
@@ -16,15 +13,23 @@ export async function GET(
   try {
     const { id } = await params;
     
-    // Buscar los datos en el cache
-    const data = qrDataCache.get(id);
+    // Buscar los datos en Strapi
+    const qrRecord = await findQRByHash(id);
     
-    if (!data) {
+    if (!qrRecord) {
       return NextResponse.json(
-        { error: 'QR code not found or expired. Please generate a new QR code.' },
+        { error: 'QR code not found. Please generate a new QR code.' },
         { status: 404 }
       );
     }
+    
+    // Convertir datos de Strapi al formato QRData
+    const data: QRData = {
+      studentName: qrRecord.nombreAlumno,
+      studentGrade: qrRecord.cursoAlumno,
+      parentPhone: qrRecord.telefonoApoderado,
+      parentName: qrRecord.nombreApoderado,
+    };
     
     // Regenerar URL de WhatsApp desde los datos
     const whatsappUrl = regenerateWhatsAppUrl(data);
@@ -36,31 +41,6 @@ export async function GET(
     return NextResponse.json(
       { error: 'Invalid QR code' },
       { status: 400 }
-    );
-  }
-}
-
-/**
- * Endpoint para almacenar datos del QR en el cache
- * POST /qr/[id] -> almacena los datos
- */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const data: QRData = await request.json();
-    
-    // Almacenar en cache (expira después de 1 año - tiempo suficiente para etiquetas)
-    qrDataCache.set(id, data);
-    
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error storing QR data:', error);
-    return NextResponse.json(
-      { error: 'Failed to store QR data' },
-      { status: 500 }
     );
   }
 }
