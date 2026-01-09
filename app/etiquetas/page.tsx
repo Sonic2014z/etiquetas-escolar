@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Download } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import Image from 'next/image';
 import type { ParentData, StudentData } from "@/types/label";
 
 interface StudentInfo {
@@ -127,9 +128,9 @@ function EtiquetasContent() {
       </div>
 
       {/* Sheet Container */}
-      <div className="bg-white p-8 print:p-0">
+      <div className="bg-white p-8 print:p-3">
         {/* Main ID Cards Grid - 3 columns x 7 rows = 21 cards */}
-        <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="grid grid-cols-3 gap-2 mb-3 print:gap-1.5 print:mb-2">
           {Array.from({ length: 21 }).map((_, idx) => {
             const colorIndex = Math.floor(idx / 3) % colors.length;
             return (
@@ -144,35 +145,44 @@ function EtiquetasContent() {
         </div>
 
         {/* Simple Name Labels Grid - 4 columns x 4 rows = 16 labels */}
-        <div className="grid grid-cols-4 gap-1 mb-4">
-          {Array.from({ length: 16 }).map((_, idx) => (
-            <SimpleLabel
-              key={idx}
-              grade={studentData.grade}
-              name={studentData.name}
-              highlight={idx % 4 === 2}
-            />
-          ))}
+        <div className="grid grid-cols-4 gap-1 mb-3 print:gap-1 print:mb-2">
+          {Array.from({ length: 16 }).map((_, idx) => {
+            // Cada fila (4 etiquetas) tiene el mismo color
+            const rowIndex = Math.floor(idx / 4);
+            const colorIndex = rowIndex % colors.length;
+            const colorData = colors[colorIndex];
+            
+            return (
+              <SimpleLabel
+                key={idx}
+                grade={studentData.grade}
+                name={studentData.name}
+                highlight={false}
+                color={colorData.class}
+                colorHex={colorData.hex}
+              />
+            );
+          })}
         </div>
 
         {/* Subject Labels Section */}
-        <div className="space-y-1 mb-6">
+        <div className="space-y-1 mb-4 print:space-y-1 print:mb-3">
           {/* Row 1 */}
-          <div className="grid grid-cols-5 gap-1">
+          <div className="grid grid-cols-5 gap-1 print:gap-1">
             {subjects.map((subject, idx) => (
               <SubjectLabel key={idx} subject={subject.name} color={subject.color} colorHex={subject.hex} />
             ))}
           </div>
           
           {/* Row 2 */}
-          <div className="grid grid-cols-5 gap-1">
+          <div className="grid grid-cols-5 gap-1 print:gap-1">
             {subjects2.map((subject, idx) => (
               <SubjectLabel key={idx} subject={subject.name} color={subject.color} colorHex={subject.hex} />
             ))}
           </div>
 
           {/* Row 3 */}
-          <div className="grid grid-cols-5 gap-1">
+          <div className="grid grid-cols-5 gap-1 print:gap-1">
             {subjects3.map((subject, idx) => (
               <SubjectLabel key={idx} subject={subject.name} color={subject.color} colorHex={subject.hex} />
             ))}
@@ -182,7 +192,7 @@ function EtiquetasContent() {
           </div>
 
           {/* Row 4 */}
-          <div className="grid grid-cols-5 gap-1">
+          <div className="grid grid-cols-5 gap-1 print:gap-1">
             {subjects4.map((subject, idx) => (
               <SubjectLabel key={idx} subject={subject.name} color={subject.color} colorHex={subject.hex} />
             ))}
@@ -192,7 +202,7 @@ function EtiquetasContent() {
           </div>
 
           {/* Row 5 */}
-          <div className="grid grid-cols-5 gap-1">
+          <div className="grid grid-cols-5 gap-1 print:gap-1">
             {subjects5.map((subject, idx) => (
               <SubjectLabel key={idx} subject={subject.name} color={subject.color} colorHex={subject.hex} />
             ))}
@@ -203,22 +213,28 @@ function EtiquetasContent() {
         </div>
 
         {/* Footer Section */}
-        <div className="border-t pt-4 flex items-start justify-between">
+        <div className="border-t pt-3 print:pt-2 flex items-start justify-between">
           <div>
-            <h2 className="text-3xl font-bold mb-2">
+            <h2 className="text-3xl font-bold mb-2 print:text-2xl print:mb-1.5">
               Gracias por confiar<br />en Librería Escolar.
             </h2>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 print:text-xs print:mb-1">
               Etiquetas con QR: Si se pierde, te avisan.
             </p>
-            <div className="mt-3 text-xs text-gray-700">
+            <div className="mt-3 text-xs text-gray-700 print:mt-2 print:text-xs">
               <p>Orden n°: {studentData.orderNumber}</p>
               <p>Apoderado: {studentData.guardian}</p>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-blue-700 font-bold text-2xl">escolar</div>
-            <div className="text-gray-600 text-sm italic">Librería</div>
+          <div className="text-right flex flex-col items-end">
+            <Image
+              src="/logo.png"
+              alt="Librería Escolar"
+              width={150}
+              height={60}
+              className="object-contain print:block"
+              style={{ maxWidth: '150px', height: 'auto' }}
+            />
           </div>
         </div>
       </div>
@@ -231,42 +247,32 @@ function StudentCard({ student, color, colorHex }: { student: StudentInfo; color
   const qrData = student.qrUrl || `${student.name}|${student.grade}|${student.school}|${student.orderNumber}`;
   
   return (
-    <div className="border border-gray-300 rounded overflow-hidden bg-white">
-      <div className="flex gap-2 p-2">
+    <div className="border border-gray-300 rounded overflow-hidden bg-white print:border-gray-300">
+      <div className="flex gap-2 p-2 print:gap-1.5 print:p-1.5">
         {/* QR Code Section */}
         <div 
-          className={`${color} p-1 rounded flex-shrink-0 relative`}
+          className={`${color} p-2 rounded shrink-0 relative print:p-1.5`}
           style={{ backgroundColor: colorHex }}
         >
-          <div className="bg-white p-1">
-            <QRCodeSVG value={qrData} size={60} />
+          <div className="bg-white p-1 print:p-1">
+            <QRCodeSVG value={qrData} size={55} className="print:w-[50px] print:h-[50px]" />
           </div>
           <div className="absolute left-0 top-0 bottom-0 flex items-center">
-            <div
-              className="text-white text-[6px] font-bold tracking-tight"
-              style={{
-                writingMode: 'vertical-rl',
-                transform: 'rotate(180deg)',
-                padding: '2px'
-              }}
-            >
-              PORTA ESTO
-            </div>
           </div>
         </div>
 
         {/* Info Section */}
-        <div className="flex-1 flex flex-col justify-between py-1 min-w-0">
+        <div className="flex-1 flex flex-col justify-between py-1 min-w-0 print:py-0.5">
           <div>
-            <h3 className="text-[10px] font-bold leading-tight">{student.name}</h3>
-            <p className="text-[9px] leading-tight">{student.grade}</p>
+            <h3 className="text-[10px] font-bold leading-tight print:text-[9px]">{student.name}</h3>
+            <p className="text-[9px] leading-tight print:text-[8px]">{student.grade}</p>
           </div>
-          <div className="text-[7px] text-gray-600 leading-tight">
+          <div className="text-[7px] text-gray-600 leading-tight print:text-[6px]">
             <p>{student.school}</p>
             <p>{student.location} {student.year}</p>
           </div>
           <div className="text-right">
-            <span className="text-blue-700 font-bold text-[10px]">escolar</span>
+            <span className="text-blue-700 font-bold text-[10px] print:text-[9px]">escolar</span>
           </div>
         </div>
       </div>
@@ -274,16 +280,26 @@ function StudentCard({ student, color, colorHex }: { student: StudentInfo; color
   );
 }
 
-function SimpleLabel({ grade, name, highlight }: { grade: string; name: string; highlight: boolean }) {
+function SimpleLabel({ grade, name, highlight, color, colorHex }: { grade: string; name: string; highlight: boolean; color?: string; colorHex?: string }) {
   return (
-    <div className="border border-gray-300 px-2 py-1.5 text-[9px] flex items-center gap-2">
-      <span 
-        className={highlight ? 'bg-yellow-300 px-1' : ''}
-        style={highlight ? { backgroundColor: '#fde047' } : {}}
-      >
-        {grade}
-      </span>
-      <span className="font-semibold">{name}</span>
+    <div className="border border-gray-300 rounded overflow-hidden flex items-center text-[9px] print:text-[8px] print:border-gray-300">
+      {/* Franja vertical de color */}
+      {colorHex && (
+        <div 
+          className={`${color || ''} w-2 shrink-0 print:w-1.5`}
+          style={{ backgroundColor: colorHex, minHeight: '100%' }}
+        />
+      )}
+      {/* Contenido de texto */}
+      <div className="px-2 py-1.5 flex items-center gap-2 flex-1 print:px-1.5 print:py-1 print:gap-1">
+        <span 
+          className={highlight ? 'bg-yellow-300 px-1' : ''}
+          style={highlight ? { backgroundColor: '#fde047' } : {}}
+        >
+          {grade}
+        </span>
+        <span className="font-semibold">{name}</span>
+      </div>
     </div>
   );
 }
@@ -291,10 +307,10 @@ function SimpleLabel({ grade, name, highlight }: { grade: string; name: string; 
 function SubjectLabel({ subject, color, colorHex }: { subject: string; color: string; colorHex: string }) {
   return (
     <div 
-      className={`${color} text-white text-center py-1.5 flex items-center justify-center px-2`}
+      className={`${color} text-white text-center py-1.5 flex items-center justify-center px-2 print:py-1 print:px-1.5`}
       style={{ backgroundColor: colorHex }}
     >
-      <span className="text-sm font-bold">{subject}</span>
+      <span className="text-sm font-bold print:text-xs">{subject}</span>
     </div>
   );
 }

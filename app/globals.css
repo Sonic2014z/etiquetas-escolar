@@ -131,6 +131,11 @@
     margin: 0;
   }
   
+  /* Asegurar que el contenedor principal tenga el margen adecuado */
+  .etiquetas-print-page > div:last-child {
+    padding: 12px !important;
+  }
+  
   * {
     /* Forzar impresión a color */
     -webkit-print-color-adjust: exact !important;
@@ -201,6 +206,15 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
+  }
+  
+  /* Asegurar que las imágenes se impriman correctamente */
+  .etiquetas-print-page img {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    max-width: 100% !important;
+    height: auto !important;
   }
   
   /* Estilos legacy para etiqueta-qr (mantener compatibilidad con LabelPreview) */
