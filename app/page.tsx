@@ -9,6 +9,7 @@ import { Logo } from "@/components/ui/Logo";
 import { validateRut } from "@/lib/validations/rut";
 import { formatRutOnType } from "@/lib/formatters/rut";
 import { getWhatsAppNumber } from "@/lib/helpers/common";
+import { generateIntermediateQRUrl } from "@/lib/helpers/qr-hash";
 import { Colegio } from "@/types/strapi";
 import { getColegios } from "@/lib/api/colegios";
 import dynamic from "next/dynamic";
@@ -33,10 +34,6 @@ export default function GeneratorPage() {
     colegio: ""
   }]);
 
-  const DownloadPdfButton = dynamic(
-    () => import("@/components/label/DownloadPdfButton"),
-    { ssr: false, loading: () => <p>Cargando generador...</p> }
-  );
 
   // --- 2. ESTADO DE VALIDACIÓN ---
   const [isRutValid, setIsRutValid] = useState<boolean | null>(null);
@@ -270,6 +267,31 @@ export default function GeneratorPage() {
           text: result.message || 'Registro completado exitosamente',
         });
 
+        // Abrir página de etiquetas para cada alumno registrado exitosamente
+        if (result.data && result.data.alumnosExitosos && result.data.alumnosExitosos.length > 0) {
+          // Esperar un momento antes de abrir las ventanas para que el usuario vea el mensaje
+          setTimeout(() => {
+            result.data.alumnosExitosos.forEach((alumno: any, index: number) => {
+              // Buscar los datos del alumno en studentsData
+              const studentData = studentsData.find(
+                s => `${s.nombres} ${s.primerApellido} ${s.segundoApellido}`.trim() === alumno.nombre
+              );
+              
+              if (studentData) {
+                // Usar la misma lógica que DownloadPdfButton pero con URL intermediaria
+                openEtiquetasPage(studentData, index);
+              }
+            });
+          }, 1000);
+        } else {
+          // Si no hay información de alumnos exitosos, abrir para todos los alumnos
+          setTimeout(() => {
+            studentsData.forEach((student, index) => {
+              openEtiquetasPage(student, index);
+            });
+          }, 1000);
+        }
+
         // Limpiar el formulario después de un registro exitoso completo
         resetForm();
       }
@@ -290,6 +312,70 @@ export default function GeneratorPage() {
     }
   };
 
+  // Función para abrir la página de etiquetas
+  const openEtiquetasPage = (student: StudentData, index: number) => {
+    const currentYear = new Date().getFullYear();
+    const studentFullName = `${student.nombres} ${student.primerApellido} ${student.segundoApellido}`.trim();
+    const courseText = `${student.course} ${student.letter}`;
+    const parentFullName = `${parentData.nombres} ${parentData.primerApellido}`;
+    
+    // Obtener datos de la vista previa
+    const previewData = studentsPreviewData[index];
+    if (!previewData) return;
+    
+    // Dividir el nombre del colegio si es necesario
+    const colegioParts = previewData.colegioNombre.split(' ');
+    const colegioLine1 = colegioParts.slice(0, Math.ceil(colegioParts.length / 2)).join(' ');
+    const colegioLine2 = colegioParts.slice(Math.ceil(colegioParts.length / 2)).join(' ');
+    
+    // Generar número de orden
+    const orderNumber = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+    
+    // Generar URL intermediaria del QR si existe qrUrl
+    let finalQrUrl = previewData.qrUrl;
+    if (finalQrUrl && parentData.phone) {
+      // Obtener la URL base (usar window.location.origin en cliente)
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+      
+      // Generar URL intermediaria usando los datos (ya incluye query params)
+      finalQrUrl = generateIntermediateQRUrl({
+        studentName: studentFullName,
+        studentGrade: courseText,
+        parentPhone: parentData.phone,
+        parentName: parentData.nombres,
+      }, baseUrl);
+    }
+    
+    // Construir URL con query params
+    const params = new URLSearchParams({
+      studentName: studentFullName,
+      studentGrade: courseText,
+      studentSchool: colegioLine1,
+      studentLocation: colegioLine2,
+      studentYear: currentYear.toString(),
+      orderNumber: orderNumber,
+      guardian: parentFullName,
+      ...(finalQrUrl && { qrUrl: finalQrUrl }),
+    });
+    
+    // Guardar también en sessionStorage como backup
+    const etiquetasData = {
+      name: studentFullName,
+      grade: courseText,
+      school: colegioLine1,
+      location: colegioLine2,
+      year: currentYear.toString(),
+      orderNumber: orderNumber,
+      guardian: parentFullName,
+      qrUrl: finalQrUrl,
+    };
+    sessionStorage.setItem('etiquetasData', JSON.stringify(etiquetasData));
+    
+    // Abrir en nueva ventana para imprimir
+    const url = `/etiquetas?${params.toString()}`;
+    window.open(url, '_blank');
+  };
+
   // Función para validar campos obligatorios
   const validateRequiredFields = (): { errors: { [key: string]: string }; missingFields: string[] } => {
     const errors: { [key: string]: string } = {};
@@ -299,12 +385,10 @@ export default function GeneratorPage() {
     const fieldNames: { [key: string]: string } = {
       'nombres': 'Nombres del apoderado',
       'primerApellido': 'Primer apellido del apoderado',
-      'segundoApellido': 'Segundo apellido del apoderado',
       'rut': 'RUT del apoderado',
       'phone': 'Teléfono del apoderado',
       'nombresAlumno': 'Nombres del alumno',
       'primerApellidoAlumno': 'Primer apellido del alumno',
-      'segundoApellidoAlumno': 'Segundo apellido del alumno',
       'course': 'Curso del alumno',
       'letra': 'Letra del curso',
       'colegio': 'Colegio del alumno',
@@ -318,10 +402,7 @@ export default function GeneratorPage() {
       errors['primerApellido'] = "Requerido";
       missingFields.push(fieldNames['primerApellido']);
     }
-    if (!parentData.segundoApellido) {
-      errors['segundoApellido'] = "Requerido";
-      missingFields.push(fieldNames['segundoApellido']);
-    }
+    // Segundo apellido es opcional, no se valida
     // RUT ya no es obligatorio, solo validamos si está presente
     if (parentData.rut && isRutValid === false) {
       errors['rut'] = "RUT Inválido";
@@ -343,10 +424,7 @@ export default function GeneratorPage() {
         errors[`student_${index}_primerApellido`] = "Requerido";
         missingFields.push(`Alumno${studentNumber}: Primer apellido`);
       }
-      if (!student.segundoApellido) {
-        errors[`student_${index}_segundoApellido`] = "Requerido";
-        missingFields.push(`Alumno${studentNumber}: Segundo apellido`);
-      }
+      // Segundo apellido es opcional, no se valida
       if (!student.course) {
         errors[`student_${index}_course`] = "Selecciona un curso";
         missingFields.push(`Alumno${studentNumber}: Curso`);
@@ -678,15 +756,6 @@ export default function GeneratorPage() {
                             qrUrl={previewData.qrUrl}
                         />
                         
-                        {/* Botón de descarga PDF */}
-                        <div className="mt-3">
-                          <DownloadPdfButton 
-                            student={studentsData[index]}
-                            parent={parentData}
-                            colegioNombre={previewData.colegioNombre}
-                            qrUrl={previewData.qrUrl}
-                          />
-                        </div>
                       </div>
                     ))}
 
