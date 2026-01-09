@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, memo } from "react";
 import { useSearchParams } from "next/navigation";
 import { Download } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -29,35 +29,40 @@ const colors = [
   { class: 'bg-yellow-500', hex: '#eab308' }
 ];
 
-const subjects = [
-  { name: 'Matemática', color: 'bg-blue-700', hex: '#1d4ed8' },
-  { name: 'Lenguaje', color: 'bg-pink-600', hex: '#db2777' },
-  { name: 'Historia', color: 'bg-orange-500', hex: '#f97316' },
-  { name: 'Ciencias', color: 'bg-yellow-400', hex: '#facc15' },
-  { name: 'Artes', color: 'bg-blue-700', hex: '#1d4ed8' },
-];
-
-const subjects2 = [
-  { name: 'Matemática', color: 'bg-blue-700', hex: '#1d4ed8' },
-  { name: 'Lenguaje', color: 'bg-pink-600', hex: '#db2777' },
-  { name: 'Historia', color: 'bg-orange-500', hex: '#f97316' },
-  { name: 'Ciencias', color: 'bg-yellow-400', hex: '#facc15' },
-  { name: 'Música', color: 'bg-blue-700', hex: '#1d4ed8' },
-];
-
-const subjects3 = [
-  { name: 'Biología', color: 'bg-blue-700', hex: '#1d4ed8' },
-  { name: 'Física', color: 'bg-pink-600', hex: '#db2777' },
-];
-
-const subjects4 = [
-  { name: 'Biología', color: 'bg-blue-700', hex: '#1d4ed8' },
-  { name: 'Física', color: 'bg-pink-600', hex: '#db2777' },
-];
-
-const subjects5 = [
-  { name: 'Química', color: 'bg-blue-700', hex: '#1d4ed8' },
-  { name: 'Química', color: 'bg-pink-600', hex: '#db2777' },
+// Configuración consolidada de asignaturas por fila
+// Cada fila tiene un array de asignaturas con sus colores
+const subjectRows = [
+  // Fila 1: 5 asignaturas
+  [
+    { name: 'Matemática', color: 'bg-blue-700', hex: '#1d4ed8' },
+    { name: 'Lenguaje', color: 'bg-pink-600', hex: '#db2777' },
+    { name: 'Historia', color: 'bg-orange-500', hex: '#f97316' },
+    { name: 'Ciencias', color: 'bg-yellow-400', hex: '#facc15' },
+    { name: 'Artes', color: 'bg-blue-700', hex: '#1d4ed8' },
+  ],
+  // Fila 2: 5 asignaturas
+  [
+    { name: 'Matemática', color: 'bg-blue-700', hex: '#1d4ed8' },
+    { name: 'Lenguaje', color: 'bg-pink-600', hex: '#db2777' },
+    { name: 'Historia', color: 'bg-orange-500', hex: '#f97316' },
+    { name: 'Ciencias', color: 'bg-yellow-400', hex: '#facc15' },
+    { name: 'Música', color: 'bg-blue-700', hex: '#1d4ed8' },
+  ],
+  // Fila 3: 2 asignaturas + 3 espacios vacíos
+  [
+    { name: 'Biología', color: 'bg-blue-700', hex: '#1d4ed8' },
+    { name: 'Física', color: 'bg-pink-600', hex: '#db2777' },
+  ],
+  // Fila 4: 2 asignaturas + 3 espacios vacíos
+  [
+    { name: 'Biología', color: 'bg-blue-700', hex: '#1d4ed8' },
+    { name: 'Física', color: 'bg-pink-600', hex: '#db2777' },
+  ],
+  // Fila 5: 2 asignaturas + 3 espacios vacíos
+  [
+    { name: 'Química', color: 'bg-blue-700', hex: '#1d4ed8' },
+    { name: 'Química', color: 'bg-pink-600', hex: '#db2777' },
+  ],
 ];
 
 function EtiquetasContent() {
@@ -150,9 +155,10 @@ function EtiquetasContent() {
       <div className="mb-4 print:hidden">
         <button
           onClick={handlePrint}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          aria-label="Descargar o imprimir el PDF de las etiquetas"
         >
-          <Download className="w-4 h-4" />
+          <Download className="w-4 h-4" aria-hidden="true" />
           Descargar PDF
         </button>
       </div>
@@ -197,49 +203,22 @@ function EtiquetasContent() {
 
         {/* Subject Labels Section */}
         <div className="space-y-0.5 mb-3 print:space-y-0.5 print:mb-2">
-          {/* Row 1 */}
-          <div className="grid grid-cols-5 gap-0.5 print:gap-0.5">
-            {subjects.map((subject, idx) => (
-              <SubjectLabel key={idx} subject={subject.name} color={subject.color} colorHex={subject.hex} />
-            ))}
-          </div>
-          
-          {/* Row 2 */}
-          <div className="grid grid-cols-5 gap-0.5 print:gap-0.5">
-            {subjects2.map((subject, idx) => (
-              <SubjectLabel key={idx} subject={subject.name} color={subject.color} colorHex={subject.hex} />
-            ))}
-          </div>
-
-          {/* Row 3 */}
-          <div className="grid grid-cols-5 gap-0.5 print:gap-0.5">
-            {subjects3.map((subject, idx) => (
-              <SubjectLabel key={idx} subject={subject.name} color={subject.color} colorHex={subject.hex} />
-            ))}
-            <div></div>
-            <div></div>
-            <div></div>
-          </div>
-
-          {/* Row 4 */}
-          <div className="grid grid-cols-5 gap-0.5 print:gap-0.5">
-            {subjects4.map((subject, idx) => (
-              <SubjectLabel key={idx} subject={subject.name} color={subject.color} colorHex={subject.hex} />
-            ))}
-            <div></div>
-            <div></div>
-            <div></div>
-          </div>
-
-          {/* Row 5 */}
-          <div className="grid grid-cols-5 gap-0.5 print:gap-0.5">
-            {subjects5.map((subject, idx) => (
-              <SubjectLabel key={idx} subject={subject.name} color={subject.color} colorHex={subject.hex} />
-            ))}
-            <div></div>
-            <div></div>
-            <div></div>
-          </div>
+          {subjectRows.map((row, rowIndex) => (
+            <div key={rowIndex} className="grid grid-cols-5 gap-0.5 print:gap-0.5">
+              {row.map((subject, idx) => (
+                <SubjectLabel 
+                  key={`${rowIndex}-${idx}`} 
+                  subject={subject.name} 
+                  color={subject.color} 
+                  colorHex={subject.hex} 
+                />
+              ))}
+              {/* Agregar espacios vacíos si la fila tiene menos de 5 asignaturas */}
+              {Array.from({ length: 5 - row.length }).map((_, idx) => (
+                <div key={`empty-${idx}`} aria-hidden="true" />
+              ))}
+            </div>
+          ))}
         </div>
 
         {/* Footer Section */}
@@ -259,11 +238,12 @@ function EtiquetasContent() {
           <div className="text-right flex flex-col items-end">
             <Image
               src="/logo.png"
-              alt="Librería Escolar"
+              alt="Logo de Librería Escolar"
               width={100}
               height={40}
               className="object-contain print:block"
               style={{ maxWidth: '100px', height: 'auto' }}
+              loading="lazy"
             />
           </div>
         </div>
@@ -272,7 +252,7 @@ function EtiquetasContent() {
   );
 }
 
-function StudentCard({ student, color, colorHex }: { student: StudentInfo; color: string; colorHex: string }) {
+const StudentCard = memo(function StudentCard({ student, color, colorHex }: { student: StudentInfo; color: string; colorHex: string }) {
   // Generar datos para el QR
   const qrData = student.qrUrl || `${student.name}|${student.grade}|${student.school}|${student.orderNumber}`;
   
@@ -401,9 +381,9 @@ function StudentCard({ student, color, colorHex }: { student: StudentInfo; color
       </div>
     </div>
   );
-}
+});
 
-function SimpleLabel({ grade, name, highlight, color, colorHex }: { grade: string; name: string; highlight: boolean; color?: string; colorHex?: string }) {
+const SimpleLabel = memo(function SimpleLabel({ grade, name, highlight, color, colorHex }: { grade: string; name: string; highlight: boolean; color?: string; colorHex?: string }) {
   // Extraer curso y letra del grade de forma consistente con StudentCard
   // El formato puede ser: "4° Básico A", "3° Medio B", "4° Básico", etc.
   let curso = grade || "";
@@ -447,9 +427,9 @@ function SimpleLabel({ grade, name, highlight, color, colorHex }: { grade: strin
       </div>
     </div>
   );
-}
+});
 
-function SubjectLabel({ subject, color, colorHex }: { subject: string; color: string; colorHex: string }) {
+const SubjectLabel = memo(function SubjectLabel({ subject, color, colorHex }: { subject: string; color: string; colorHex: string }) {
   return (
     <div 
       className={`${color} text-white text-center py-1 flex items-center justify-center px-1 print:py-0.5 print:px-1`}
@@ -458,7 +438,7 @@ function SubjectLabel({ subject, color, colorHex }: { subject: string; color: st
       <span className="text-[8px] font-bold print:text-[8px]">{subject}</span>
     </div>
   );
-}
+});
 
 export default function EtiquetasPage() {
   return (

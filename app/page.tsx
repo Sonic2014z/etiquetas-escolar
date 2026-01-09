@@ -363,7 +363,8 @@ export default function GeneratorPage() {
         
         // Almacenar los datos en Strapi (async, no bloquea)
         // Nota: Este fetch es silencioso y no bloquea el flujo principal
-        fetch('/api/qr-codes', {
+        // Se podría agregar un estado de loading aquí si se necesita feedback visual
+        const saveQRPromise = fetch('/api/qr-codes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -382,7 +383,8 @@ export default function GeneratorPage() {
         })
         .then(data => {
           // QR guardado exitosamente (silencioso, no interrumpe el flujo)
-          // En el futuro se podría agregar un indicador visual sutil
+          // En el futuro se podría agregar un indicador visual sutil aquí
+          return { success: true, data };
         })
         .catch(err => {
           // Error al guardar QR (no crítico, el QR sigue funcionando)
@@ -390,7 +392,11 @@ export default function GeneratorPage() {
           if (process.env.NODE_ENV === 'development') {
             console.error('Error storing QR data in Strapi (non-critical):', err);
           }
+          return { success: false, error: err };
         });
+        
+        // Guardar la promesa para posible uso futuro (ej: mostrar loading state)
+        // Por ahora se ignora silenciosamente
       } else {
         // Error al extraer hash (no crítico, el QR seguirá funcionando con la URL completa)
         if (process.env.NODE_ENV === 'development') {
