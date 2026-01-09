@@ -128,9 +128,9 @@ function EtiquetasContent() {
       </div>
 
       {/* Sheet Container */}
-      <div className="bg-white p-8 print:p-3">
+      <div className="bg-white p-8 print:p-2">
         {/* Main ID Cards Grid - 3 columns x 7 rows = 21 cards */}
-        <div className="grid grid-cols-3 gap-2 mb-3 print:gap-1.5 print:mb-2">
+        <div className="grid grid-cols-3 gap-1.5 mb-2 print:gap-1 print:mb-1.5 print:grid-cols-3">
           {Array.from({ length: 21 }).map((_, idx) => {
             const colorIndex = Math.floor(idx / 3) % colors.length;
             return (
@@ -145,7 +145,7 @@ function EtiquetasContent() {
         </div>
 
         {/* Simple Name Labels Grid - 4 columns x 4 rows = 16 labels */}
-        <div className="grid grid-cols-4 gap-1 mb-3 print:gap-1 print:mb-2">
+        <div className="grid grid-cols-4 gap-0.5 mb-2 print:gap-0.5 print:mb-1.5">
           {Array.from({ length: 16 }).map((_, idx) => {
             // Cada fila (4 etiquetas) tiene el mismo color
             const rowIndex = Math.floor(idx / 4);
@@ -166,23 +166,23 @@ function EtiquetasContent() {
         </div>
 
         {/* Subject Labels Section */}
-        <div className="space-y-1 mb-4 print:space-y-1 print:mb-3">
+        <div className="space-y-0.5 mb-3 print:space-y-0.5 print:mb-2">
           {/* Row 1 */}
-          <div className="grid grid-cols-5 gap-1 print:gap-1">
+          <div className="grid grid-cols-5 gap-0.5 print:gap-0.5">
             {subjects.map((subject, idx) => (
               <SubjectLabel key={idx} subject={subject.name} color={subject.color} colorHex={subject.hex} />
             ))}
           </div>
           
           {/* Row 2 */}
-          <div className="grid grid-cols-5 gap-1 print:gap-1">
+          <div className="grid grid-cols-5 gap-0.5 print:gap-0.5">
             {subjects2.map((subject, idx) => (
               <SubjectLabel key={idx} subject={subject.name} color={subject.color} colorHex={subject.hex} />
             ))}
           </div>
 
           {/* Row 3 */}
-          <div className="grid grid-cols-5 gap-1 print:gap-1">
+          <div className="grid grid-cols-5 gap-0.5 print:gap-0.5">
             {subjects3.map((subject, idx) => (
               <SubjectLabel key={idx} subject={subject.name} color={subject.color} colorHex={subject.hex} />
             ))}
@@ -192,7 +192,7 @@ function EtiquetasContent() {
           </div>
 
           {/* Row 4 */}
-          <div className="grid grid-cols-5 gap-1 print:gap-1">
+          <div className="grid grid-cols-5 gap-0.5 print:gap-0.5">
             {subjects4.map((subject, idx) => (
               <SubjectLabel key={idx} subject={subject.name} color={subject.color} colorHex={subject.hex} />
             ))}
@@ -202,7 +202,7 @@ function EtiquetasContent() {
           </div>
 
           {/* Row 5 */}
-          <div className="grid grid-cols-5 gap-1 print:gap-1">
+          <div className="grid grid-cols-5 gap-0.5 print:gap-0.5">
             {subjects5.map((subject, idx) => (
               <SubjectLabel key={idx} subject={subject.name} color={subject.color} colorHex={subject.hex} />
             ))}
@@ -213,15 +213,15 @@ function EtiquetasContent() {
         </div>
 
         {/* Footer Section */}
-        <div className="border-t pt-3 print:pt-2 flex items-start justify-between">
+        <div className="border-t pt-2 print:pt-1.5 flex items-start justify-between">
           <div>
-            <h2 className="text-3xl font-bold mb-2 print:text-2xl print:mb-1.5">
+            <h2 className="text-xl font-bold mb-1 print:text-lg print:mb-1">
               Gracias por confiar<br />en Librería Escolar.
             </h2>
-            <p className="text-sm text-gray-600 print:text-xs print:mb-1">
+            <p className="text-[9px] text-gray-600 print:text-[8px] print:mb-0.5">
               Etiquetas con QR: Si se pierde, te avisan.
             </p>
-            <div className="mt-3 text-xs text-gray-700 print:mt-2 print:text-xs">
+            <div className="mt-1.5 text-[8px] text-gray-700 print:mt-1 print:text-[8px]">
               <p>Orden n°: {studentData.orderNumber}</p>
               <p>Apoderado: {studentData.guardian}</p>
             </div>
@@ -230,10 +230,10 @@ function EtiquetasContent() {
             <Image
               src="/logo.png"
               alt="Librería Escolar"
-              width={150}
-              height={60}
+              width={100}
+              height={40}
               className="object-contain print:block"
-              style={{ maxWidth: '150px', height: 'auto' }}
+              style={{ maxWidth: '100px', height: 'auto' }}
             />
           </div>
         </div>
@@ -246,33 +246,101 @@ function StudentCard({ student, color, colorHex }: { student: StudentInfo; color
   // Generar datos para el QR
   const qrData = student.qrUrl || `${student.name}|${student.grade}|${student.school}|${student.orderNumber}`;
   
+  // Dividir el nombre del colegio en dos líneas si es muy largo
+  const colegioParts = student.school ? student.school.split(' ') : [];
+  const colegioLine1 = colegioParts.slice(0, Math.ceil(colegioParts.length / 2)).join(' ');
+  const colegioLine2 = colegioParts.slice(Math.ceil(colegioParts.length / 2)).join(' ');
+  
+  // Extraer curso y letra del grade (ej: "3°A" -> curso: "3°", letra: "A")
+  const gradeMatch = student.grade.match(/^(\d+°)\s*([A-Z]?)$/);
+  const curso = gradeMatch ? gradeMatch[1] : student.grade.split(' ')[0] || "Curso";
+  const letra = gradeMatch ? gradeMatch[2] : student.grade.split(' ')[1] || "?";
+  
   return (
-    <div className="border border-gray-300 rounded overflow-hidden bg-white print:border-gray-300">
-      <div className="flex gap-2 p-2 print:gap-1.5 print:p-1.5">
-        {/* QR Code Section */}
-        <div 
-          className={`${color} p-2 rounded shrink-0 relative print:p-1.5`}
-          style={{ backgroundColor: colorHex }}
-        >
-          <div className="bg-white p-1 print:p-1">
-            <QRCodeSVG value={qrData} size={55} className="print:w-[50px] print:h-[50px]" />
-          </div>
-          <div className="absolute left-0 top-0 bottom-0 flex items-center">
-          </div>
+    <div 
+      className="bg-white border border-black rounded overflow-hidden flex flex-row relative print:border-black w-full"
+      style={{ 
+        aspectRatio: '2.3/1',
+        height: '100px',
+        maxWidth: '100%'
+      }}
+    >
+      {/* Borde izquierdo rosa/fucsia con texto "DEVOLVER AQUI" y QR Code */}
+      <div 
+        className="bg-[#ec4899] w-24 flex flex-row items-center justify-center gap-1.5 p-1.5 relative shrink-0 h-full print:w-24 print:p-1.5"
+        style={{ backgroundColor: '#ec4899' }}
+      >
+        {/* Texto vertical "DEVOLVER AQUI" a la izquierda */}
+        <div className="shrink-0 flex items-center justify-center">
+          <span 
+            className="text-white font-bold text-[6px] tracking-wider whitespace-nowrap print:text-[6px]"
+            style={{ 
+              writingMode: 'vertical-rl',
+              textOrientation: 'mixed',
+              transform: 'rotate(180deg)'
+            }}
+          >
+            DEVOLVER AQUI
+          </span>
         </div>
+        
+        {/* QR Code centrado junto con el texto */}
+        <div className="shrink-0">
+          {qrData ? (
+            <div className="border border-white/30 p-0.5 rounded bg-white print:p-0.5" style={{ borderColor: 'rgba(255, 255, 255, 0.3)' }}>
+              <QRCodeSVG 
+                value={qrData}
+                size={60}
+                level="H"
+                fgColor="#000000"
+                bgColor="#ffffff"
+                className="print:w-[60px] print:h-[60px]"
+              />
+            </div>
+          ) : (
+            <div className="w-[62px] h-[62px] bg-white/20 border border-dashed border-white/50 rounded flex items-center justify-center text-center p-0.5 print:w-[62px] print:h-[62px]">
+              <span className="text-[6px] text-white font-medium print:text-[6px]">Faltan datos</span>
+            </div>
+          )}
+        </div>
+      </div>
 
-        {/* Info Section */}
-        <div className="flex-1 flex flex-col justify-between py-1 min-w-0 print:py-0.5">
-          <div>
-            <h3 className="text-[10px] font-bold leading-tight print:text-[9px]">{student.name}</h3>
-            <p className="text-[9px] leading-tight print:text-[8px]">{student.grade}</p>
+      {/* Contenido principal - área blanca */}
+      <div className="flex-1 flex flex-col items-start p-2 print:p-2">
+        {/* Información del alumno y colegio */}
+        <div className="flex-1 min-w-0 flex flex-col justify-start w-full h-full">
+          {/* Nombre del alumno - grande y en negrita */}
+          <h3 className="font-bold text-[11px] leading-tight text-black mb-0.5 print:text-[11px] print:mb-0.5">
+            {student.name || "Nombre del Alumno"}
+          </h3>
+
+          {/* Curso y letra con subrayado */}
+          <div className="flex items-baseline gap-1 mb-1 print:mb-1">
+            <span className="text-[9px] font-bold text-black underline print:text-[9px]">
+              {curso} {letra}
+            </span>
           </div>
-          <div className="text-[7px] text-gray-600 leading-tight print:text-[6px]">
-            <p>{student.school}</p>
-            <p>{student.location} {student.year}</p>
-          </div>
-          <div className="text-right">
-            <span className="text-blue-700 font-bold text-[10px] print:text-[9px]">escolar</span>
+
+          {/* Nombre del colegio en dos líneas con año y ESCOLAR */}
+          <div className="flex flex-col gap-0 mt-auto print:mt-auto">
+            <div className="flex items-baseline gap-1 print:gap-1">
+              <div className="flex flex-col">
+                <span className="text-[7px] text-black leading-tight print:text-[7px]">
+                  {colegioLine1 || "Nombre del"}
+                </span>
+                {colegioLine2 && (
+                  <span className="text-[7px] text-black leading-tight print:text-[7px]">
+                    {colegioLine2}
+                  </span>
+                )}
+              </div>
+              <span className="text-[7px] text-black ml-auto print:text-[7px] print:ml-auto">
+                {student.year || new Date().getFullYear()}
+              </span>
+              <span className="text-[7px] font-bold text-black uppercase ml-1 print:text-[7px] print:ml-1">
+                ESCOLAR
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -307,10 +375,10 @@ function SimpleLabel({ grade, name, highlight, color, colorHex }: { grade: strin
 function SubjectLabel({ subject, color, colorHex }: { subject: string; color: string; colorHex: string }) {
   return (
     <div 
-      className={`${color} text-white text-center py-1.5 flex items-center justify-center px-2 print:py-1 print:px-1.5`}
-      style={{ backgroundColor: colorHex }}
+      className={`${color} text-white text-center py-1 flex items-center justify-center px-1 print:py-0.5 print:px-1`}
+      style={{ backgroundColor: colorHex, height: '20px' }}
     >
-      <span className="text-sm font-bold print:text-xs">{subject}</span>
+      <span className="text-[8px] font-bold print:text-[8px]">{subject}</span>
     </div>
   );
 }
