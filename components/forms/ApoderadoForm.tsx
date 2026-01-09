@@ -29,12 +29,20 @@ interface ApoderadoFormProps {
     };
 }
 
-export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApellido, email, onRutChange, onPhoneChange, onNombresChange, onPrimerApellidoChange, onSegundoApellidoChange, onEmailChange, isRutValid, errors }: ApoderadoFormProps) {
+export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApellido, email, onRutChange, onPhoneChange, onNombresChange, onPrimerApellidoChange, onSegundoApellidoChange, onEmailChange, isRutValid, isEmailValid, errors }: ApoderadoFormProps) {
     const getRutInputClass = () => {
         const base = "w-full p-2 rounded-md border transition-all focus:outline-none focus:ring-2 focus:ring-primary";
 
         if (isRutValid === true) return `${base} border-success focus:ring-success text-success-700 bg-success-50`;
         if (isRutValid === false) return `${base} border-error focus:ring-error text-error-700 bg-error-50`;
+        return `${base} border-border bg-background-secondary text-foreground focus:ring-primary`;
+    };
+
+    const getEmailInputClass = () => {
+        const base = "w-full p-2 rounded-md border transition-all focus:outline-none focus:ring-2 focus:ring-primary";
+
+        if (isEmailValid === true) return `${base} border-success focus:ring-success text-success-700 bg-success-50`;
+        if (isEmailValid === false) return `${base} border-error focus:ring-error text-error-700 bg-error-50`;
         return `${base} border-border bg-background-secondary text-foreground focus:ring-primary`;
     };
 
@@ -102,13 +110,17 @@ export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApel
                 </div>
 
                 <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-foreground-secondary">Correo Electrónico Apoderado <strong className="text-error">*</strong></label>
+                    <div className="flex justify-between items-center">
+                        <label className="text-sm font-medium text-foreground-secondary">Correo Electrónico Apoderado <strong className="text-error">*</strong></label>
+                        {isEmailValid === true && <span className="text-xs font-bold text-success">Válido</span>}
+                        {isEmailValid === false && <span className="text-xs font-bold text-error">Inválido</span>}
+                    </div>
                     <input
                         type="email"
                         value={email}
                         onChange={(e) => onEmailChange?.(e.target.value)}
                         placeholder="Ej: juan.perez@gmail.com"
-                        className={baseInputClass}
+                        className={getEmailInputClass()}
                     />
                     {errors?.email && <p className="text-xs text-error mt-1 animate-pulse">{errors.email}</p>}
                 </div>

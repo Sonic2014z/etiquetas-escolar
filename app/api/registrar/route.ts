@@ -5,6 +5,7 @@ import { generateUID } from "@/lib/helpers/uid";
 import { validateRut } from "@/lib/validations/rut";
 import { cleanRUT } from "@/lib/formatters/rut";
 import { checkRateLimit, getRequestIP } from "@/lib/helpers/rate-limit";
+import { validateEmailWithMessage } from "@/lib/validations/email";
 
 interface AlumnoExitoso {
   documentId: string;
@@ -79,6 +80,17 @@ export async function POST(request: NextRequest) {
         { error: "El teléfono del apoderado es requerido" },
         { status: 400 }
       );
+    }
+    
+    // Validar formato de email si está presente (campo opcional)
+    if (parentData.email && parentData.email.trim() !== '') {
+      const emailValidation = validateEmailWithMessage(parentData.email);
+      if (!emailValidation.valid) {
+        return NextResponse.json(
+          { error: emailValidation.error || "El formato del email no es válido" },
+          { status: 400 }
+        );
+      }
     }
     
     // Validar RUT solo si está presente (ya no es obligatorio)

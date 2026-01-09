@@ -52,13 +52,19 @@ export function capitalizeFirstLetter(str: string): string {
 }
 
 export function validateEmail(email: string): boolean {
-    // Verificación básica: debe ser un string y no estar vacío.
-    if (!email || typeof email !== 'string') return false;
-
-    // Verificación básica: debe tener un @ y un .
-    if (!email.includes('@') || !email.includes('.')) return false;
-
-    return true; // Si pasa todas las verificaciones, el email es válido.
+    // Si el email está vacío o es solo espacios, es válido (campo opcional)
+    if (!email || email.trim() === '') {
+        return true;
+    }
+    
+    // Regex para validar formato básico de email
+    // Formato: usuario@dominio.extension
+    // - usuario: puede contener letras, números, puntos, guiones, guiones bajos, y signos + y %
+    // - dominio: puede contener letras, números, puntos y guiones
+    // - extension: debe tener al menos 2 letras (ej: .com, .cl, .org)
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    
+    return emailRegex.test(email.trim());
 }
 
 /**

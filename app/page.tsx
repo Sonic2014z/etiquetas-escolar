@@ -8,7 +8,7 @@ import { LabelPreview } from "@/components/label/LabelPreview";
 import { Logo } from "@/components/ui/Logo";
 import { validateRut } from "@/lib/validations/rut";
 import { formatRutOnType } from "@/lib/formatters/rut";
-import { getWhatsAppNumber } from "@/lib/helpers/common";
+import { getWhatsAppNumber, validateEmail } from "@/lib/helpers/common";
 import { generateIntermediateQRUrl } from "@/lib/helpers/qr-hash";
 import { Colegio } from "@/types/strapi";
 import { getColegios } from "@/lib/api/colegios";
@@ -37,6 +37,7 @@ export default function GeneratorPage() {
 
   // --- 2. ESTADO DE VALIDACIÓN ---
   const [isRutValid, setIsRutValid] = useState<boolean | null>(null);
+  const [isEmailValid, setIsEmailValid] = useState<boolean | null>(null);
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [colegios, setColegios] = useState<Colegio[]>([]);
   const [loadingColegios, setLoadingColegios] = useState(true);
@@ -80,6 +81,15 @@ export default function GeneratorPage() {
         setIsRutValid(validateRut(formatted));
       } else if (formatted.length === 0) {
         setIsRutValid(null);
+      }
+    }
+    
+    // Si estamos editando el email, validamos al vuelo
+    if (field === 'email') {
+      if (value.trim() === '') {
+        setIsEmailValid(null); // Campo vacío, no mostrar validación
+      } else {
+        setIsEmailValid(validateEmail(value));
       }
     }
   };
@@ -729,12 +739,14 @@ export default function GeneratorPage() {
                     onEmailChange={(val: string) => handleParentChange('email', val)}
                     
                     isRutValid={isRutValid}
+                    isEmailValid={isEmailValid}
                     errors={{ 
                       rut: formErrors['rut'],
                       nombres: formErrors['nombres'],
                       primerApellido: formErrors['primerApellido'],
                       segundoApellido: formErrors['segundoApellido'],
-                      phone: formErrors['phone']
+                      phone: formErrors['phone'],
+                      email: formErrors['email']
                     }}
                 />
                 
