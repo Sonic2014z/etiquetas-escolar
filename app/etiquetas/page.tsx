@@ -247,14 +247,37 @@ function StudentCard({ student, color, colorHex }: { student: StudentInfo; color
   const qrData = student.qrUrl || `${student.name}|${student.grade}|${student.school}|${student.orderNumber}`;
   
   // Dividir el nombre del colegio en dos líneas si es muy largo
-  const colegioParts = student.school ? student.school.split(' ') : [];
-  const colegioLine1 = colegioParts.slice(0, Math.ceil(colegioParts.length / 2)).join(' ');
-  const colegioLine2 = colegioParts.slice(Math.ceil(colegioParts.length / 2)).join(' ');
+  // Combinar school y location si location existe
+  const fullSchoolName = student.location 
+    ? `${student.school} ${student.location}`.trim()
+    : (student.school || '');
   
-  // Extraer curso y letra del grade (ej: "3°A" -> curso: "3°", letra: "A")
-  const gradeMatch = student.grade.match(/^(\d+°)\s*([A-Z]?)$/);
-  const curso = gradeMatch ? gradeMatch[1] : student.grade.split(' ')[0] || "Curso";
-  const letra = gradeMatch ? gradeMatch[2] : student.grade.split(' ')[1] || "?";
+  const colegioParts = fullSchoolName ? fullSchoolName.split(' ') : [];
+  // Dividir en dos líneas de manera más inteligente
+  const midPoint = Math.ceil(colegioParts.length / 2);
+  const colegioLine1 = colegioParts.slice(0, midPoint).join(' ');
+  const colegioLine2 = colegioParts.slice(midPoint).join(' ');
+  
+  // Extraer curso y letra del grade
+  // El formato puede ser: "4° Básico A", "3° Medio B", "4° Básico", etc.
+  let curso = student.grade || "Curso";
+  let letra = "";
+  
+  // Buscar si hay una letra al final (después de un espacio)
+  const gradeParts = student.grade ? student.grade.trim().split(/\s+/) : [];
+  if (gradeParts.length > 0) {
+    const lastPart = gradeParts[gradeParts.length - 1];
+    // Si la última parte es una sola letra (A-Z), es la letra del curso
+    if (lastPart.length === 1 && /^[A-Z]$/.test(lastPart)) {
+      letra = lastPart;
+      // El curso es todo lo demás
+      curso = gradeParts.slice(0, -1).join(' ');
+    } else {
+      // No hay letra, el curso es todo el grade
+      curso = student.grade;
+      letra = "";
+    }
+  }
   
   return (
     <div 
@@ -317,29 +340,31 @@ function StudentCard({ student, color, colorHex }: { student: StudentInfo; color
           {/* Curso y letra con subrayado */}
           <div className="flex items-baseline gap-1 mb-1 print:mb-1">
             <span className="text-[9px] font-bold text-black underline print:text-[9px]">
-              {curso} {letra}
+              {curso}{letra ? ` ${letra}` : ''}
             </span>
           </div>
 
           {/* Nombre del colegio en dos líneas con año y ESCOLAR */}
-          <div className="flex flex-col gap-0 mt-auto print:mt-auto">
-            <div className="flex items-baseline gap-1 print:gap-1">
-              <div className="flex flex-col">
-                <span className="text-[7px] text-black leading-tight print:text-[7px]">
+          <div className="flex flex-col gap-0 mt-auto print:mt-auto min-w-0">
+            <div className="flex items-baseline gap-1 print:gap-1 min-w-0">
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="text-[7px] text-black leading-tight print:text-[7px]" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                   {colegioLine1 || "Nombre del"}
                 </span>
-                {colegioLine2 && (
-                  <span className="text-[7px] text-black leading-tight print:text-[7px]">
+                {colegioLine2 && colegioLine2.trim() && (
+                  <span className="text-[7px] text-black leading-tight print:text-[7px]" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                     {colegioLine2}
                   </span>
                 )}
               </div>
-              <span className="text-[7px] text-black ml-auto print:text-[7px] print:ml-auto">
-                {student.year || new Date().getFullYear()}
-              </span>
-              <span className="text-[7px] font-bold text-black uppercase ml-1 print:text-[7px] print:ml-1">
-                ESCOLAR
-              </span>
+              <div className="flex items-baseline gap-1 shrink-0 print:gap-1">
+                <span className="text-[7px] text-black print:text-[7px] whitespace-nowrap">
+                  {student.year || new Date().getFullYear()}
+                </span>
+                <span className="text-[7px] font-bold text-black uppercase print:text-[7px] whitespace-nowrap">
+                  ESCOLAR
+                </span>
+              </div>
             </div>
           </div>
         </div>
