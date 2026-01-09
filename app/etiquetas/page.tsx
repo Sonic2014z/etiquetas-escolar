@@ -267,8 +267,8 @@ function StudentCard({ student, color, colorHex }: { student: StudentInfo; color
     >
       {/* Borde izquierdo rosa/fucsia con texto "DEVOLVER AQUI" y QR Code */}
       <div 
-        className="bg-[#ec4899] w-24 flex flex-row items-center justify-center gap-1.5 p-1.5 relative shrink-0 h-full print:w-24 print:p-1.5"
-        style={{ backgroundColor: '#ec4899' }}
+        className={`${color} w-24 flex flex-row items-center justify-center gap-1.5 p-1.5 relative shrink-0 h-full print:w-24 print:p-1.5`}
+        style={{ backgroundColor: colorHex }}
       >
         {/* Texto vertical "DEVOLVER AQUI" a la izquierda */}
         <div className="shrink-0 flex items-center justify-center">
