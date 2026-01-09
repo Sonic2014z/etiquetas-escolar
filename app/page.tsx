@@ -350,24 +350,29 @@ export default function GeneratorPage() {
       // Generar URL intermediaria (solo hash)
       finalQrUrl = generateIntermediateQRUrl(qrData, baseUrl);
       
-      // Extraer el hash de la URL
-      const hash = finalQrUrl.split('/qr/')[1];
-      
-      // Almacenar los datos en Strapi (async, no bloquea)
-      fetch('/api/qr-codes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          hash: hash,
-          nombreAlumno: qrData.studentName,
-          cursoAlumno: qrData.studentGrade,
-          telefonoApoderado: qrData.parentPhone,
-          nombreApoderado: qrData.parentName,
-        }),
-      }).catch(err => console.error('Error storing QR data:', err));
+      // Extraer el hash de la URL y validar que existe
+      const hashMatch = finalQrUrl.match(/\/qr\/([a-f0-9]+)$/);
+      if (hashMatch && hashMatch[1]) {
+        const hash = hashMatch[1];
+        
+        // Almacenar los datos en Strapi (async, no bloquea)
+        fetch('/api/qr-codes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            hash: hash,
+            nombreAlumno: qrData.studentName,
+            cursoAlumno: qrData.studentGrade,
+            telefonoApoderado: qrData.parentPhone,
+            nombreApoderado: qrData.parentName,
+          }),
+        }).catch(err => console.error('Error storing QR data:', err));
+      } else {
+        console.error('Error: No se pudo extraer el hash de la URL del QR:', finalQrUrl);
+      }
     }
     
-    // Construir URL con query params
+    // Construir URL con query params (incluir índice para identificar estudiante)
     const params = new URLSearchParams({
       studentName: studentFullName,
       studentGrade: courseText,
@@ -376,10 +381,11 @@ export default function GeneratorPage() {
       studentYear: currentYear.toString(),
       orderNumber: orderNumber,
       guardian: parentFullName,
+      studentIndex: index.toString(), // Agregar índice para identificar múltiples estudiantes
       ...(finalQrUrl && { qrUrl: finalQrUrl }),
     });
     
-    // Guardar también en sessionStorage como backup
+    // Guardar también en sessionStorage como backup (con manejo de errores)
     const etiquetasData = {
       name: studentFullName,
       grade: courseText,
@@ -390,7 +396,18 @@ export default function GeneratorPage() {
       guardian: parentFullName,
       qrUrl: finalQrUrl,
     };
-    sessionStorage.setItem('etiquetasData', JSON.stringify(etiquetasData));
+    
+    try {
+      // Usar índice único para cada estudiante para evitar sobrescritura
+      const storageKey = `etiquetasData_${index}_${Date.now()}`;
+      sessionStorage.setItem(storageKey, JSON.stringify(etiquetasData));
+      // También guardar el último como fallback
+      sessionStorage.setItem('etiquetasData', JSON.stringify(etiquetasData));
+    } catch (e) {
+      // sessionStorage puede fallar en modo privado o si está lleno
+      console.warn('No se pudo guardar en sessionStorage:', e);
+      // Continuar sin fallar, los datos están en query params
+    }
     
     // Abrir en nueva ventana para imprimir
     const url = `/etiquetas?${params.toString()}`;

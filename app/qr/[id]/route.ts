@@ -31,8 +31,36 @@ export async function GET(
       parentName: qrRecord.nombreApoderado,
     };
     
-    // Regenerar URL de WhatsApp desde los datos
-    const whatsappUrl = regenerateWhatsAppUrl(data);
+    // Validar que los datos necesarios estén presentes
+    if (!data.parentPhone || !data.studentName || !data.parentName) {
+      return NextResponse.json(
+        { error: 'QR code data is incomplete' },
+        { status: 400 }
+      );
+    }
+    
+    // Regenerar URL de WhatsApp desde los datos (con manejo de errores)
+    let whatsappUrl: string;
+    try {
+      whatsappUrl = regenerateWhatsAppUrl(data);
+    } catch (error: any) {
+      console.error('Error regenerating WhatsApp URL:', error);
+      return NextResponse.json(
+        { 
+          error: 'Invalid QR code data. Unable to generate WhatsApp URL.',
+          details: error.message 
+        },
+        { status: 400 }
+      );
+    }
+    
+    // Validar que la URL generada es válida
+    if (!whatsappUrl || !whatsappUrl.startsWith('https://wa.me/')) {
+      return NextResponse.json(
+        { error: 'Invalid WhatsApp URL generated' },
+        { status: 500 }
+      );
+    }
     
     // Redirigir a WhatsApp
     return NextResponse.redirect(whatsappUrl, 302);

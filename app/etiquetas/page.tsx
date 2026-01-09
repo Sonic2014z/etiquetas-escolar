@@ -87,14 +87,38 @@ function EtiquetasContent() {
         qrUrl: qrUrl ? decodeURIComponent(qrUrl) : undefined,
       });
     } else {
-      // Intentar obtener de sessionStorage como fallback
-      const stored = sessionStorage.getItem('etiquetasData');
-      if (stored) {
-        try {
-          setStudentData(JSON.parse(stored));
-        } catch (e) {
-          console.error('Error parsing stored data:', e);
+      // Intentar obtener de sessionStorage como fallback (con manejo de errores)
+      try {
+        // Intentar obtener por índice si existe
+        const studentIndex = searchParams.get('studentIndex');
+        let stored: string | null = null;
+        
+        if (studentIndex) {
+          // Buscar datos específicos del estudiante por índice
+          const keys = Object.keys(sessionStorage);
+          const studentKey = keys.find(key => key.startsWith(`etiquetasData_${studentIndex}_`));
+          if (studentKey) {
+            stored = sessionStorage.getItem(studentKey);
+          }
         }
+        
+        // Si no se encontró por índice, intentar el fallback general
+        if (!stored) {
+          stored = sessionStorage.getItem('etiquetasData');
+        }
+        
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            setStudentData(parsed);
+          } catch (e) {
+            console.error('Error parsing stored data:', e);
+          }
+        }
+      } catch (e) {
+        // sessionStorage puede no estar disponible (modo privado, etc.)
+        console.warn('No se pudo acceder a sessionStorage:', e);
+        // Continuar sin fallar, los datos deberían estar en query params
       }
     }
   }, [searchParams]);
