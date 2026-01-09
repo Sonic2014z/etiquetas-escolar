@@ -71,18 +71,18 @@ function compactEncode(str: string): string {
  * @returns URL intermediaria corta con hash y datos compactos
  */
 export function generateIntermediateQRUrl(data: QRData, baseUrl?: string): string {
-  // Generar hash determinístico corto (12 caracteres)
-  const hash = generateQRHash(data).substring(0, 12);
+  // Generar hash determinístico muy corto (8 caracteres)
+  const hash = generateQRHash(data).substring(0, 8);
   
-  // Codificar datos de forma compacta
-  const n = compactEncode(data.studentName.substring(0, 30)); // Limitar longitud
-  const g = compactEncode(data.studentGrade);
-  const p = data.parentPhone.replace(/\D/g, ''); // Solo números, ya es corto
-  const a = compactEncode(data.parentName.substring(0, 20)); // Limitar longitud
+  // Codificar datos de forma más compacta - limitar más la longitud
+  const n = compactEncode(data.studentName.substring(0, 15)); // Más corto
+  const g = compactEncode(data.studentGrade.substring(0, 10)); // Limitar también
+  const p = data.parentPhone.replace(/\D/g, ''); // Solo números
+  const a = compactEncode(data.parentName.substring(0, 12)); // Más corto
   
   // Usar baseUrl si está disponible, sino usar window.location.origin (solo en cliente)
   const origin = baseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
   
-  // URL corta: hash + datos compactos como query params
+  // URL más corta: hash + datos compactos como query params
   return `${origin}/qr/${hash}?n=${n}&g=${g}&p=${p}&a=${a}`;
 }
