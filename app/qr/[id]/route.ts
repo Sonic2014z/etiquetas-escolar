@@ -43,7 +43,8 @@ export async function GET(
     let whatsappUrl: string;
     try {
       whatsappUrl = regenerateWhatsAppUrl(data);
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       // Error al regenerar URL (log solo en desarrollo)
       if (process.env.NODE_ENV === 'development') {
         console.error('Error regenerating WhatsApp URL:', error);
@@ -51,7 +52,7 @@ export async function GET(
       return NextResponse.json(
         { 
           error: 'Invalid QR code data. Unable to generate WhatsApp URL.',
-          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+          details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
         },
         { status: 400 }
       );

@@ -237,7 +237,7 @@ export default function GeneratorPage() {
           errorMessage += '\n\nDetalles:\n' + result.detalles.join('\n');
         } else if (result.detalles && result.detalles.alumnosFallidos && result.detalles.alumnosFallidos.length > 0) {
           errorMessage += '\n\nAlumnos que fallaron:\n';
-          result.detalles.alumnosFallidos.forEach((alumno: any) => {
+          result.detalles.alumnosFallidos.forEach((alumno: { index: number; nombre: string; error: string }) => {
             errorMessage += `- ${alumno.nombre}: ${alumno.error}\n`;
           });
         }
@@ -252,7 +252,7 @@ export default function GeneratorPage() {
         
         if (result.data && result.data.alumnosFallidos && result.data.alumnosFallidos.length > 0) {
           mensaje += '\n\nAlumnos que fallaron:\n';
-          result.data.alumnosFallidos.forEach((alumno: any) => {
+          result.data.alumnosFallidos.forEach((alumno: { index: number; nombre: string; error: string }) => {
             mensaje += `- ${alumno.nombre}: ${alumno.error}\n`;
           });
         }
@@ -274,7 +274,7 @@ export default function GeneratorPage() {
         if (result.data && result.data.alumnosExitosos && result.data.alumnosExitosos.length > 0) {
           // Esperar un momento antes de abrir las ventanas para que el usuario vea el mensaje
           setTimeout(() => {
-            result.data.alumnosExitosos.forEach((alumno: any, index: number) => {
+            result.data.alumnosExitosos.forEach((alumno: { documentId: string; existia: boolean; index: number; nombre: string }, index: number) => {
               // Buscar los datos del alumno en studentsData
               const studentData = studentsData.find(
                 s => `${s.nombres} ${s.primerApellido} ${s.segundoApellido}`.trim() === alumno.nombre

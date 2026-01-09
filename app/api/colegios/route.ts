@@ -23,9 +23,37 @@ interface StrapiColegiosResponse {
  * Esta ruta actúa como proxy para mantener el token seguro en el servidor
  * Maneja paginación automáticamente para obtener todos los resultados
  */
+interface StrapiColegioRaw {
+  id: number;
+  rbd?: number;
+  colegio_nombre?: string;
+  dependencia?: string;
+  comuna?: string;
+  region?: string;
+  attributes?: {
+    rbd?: number;
+    colegio_nombre?: string;
+    dependencia?: string;
+    comuna?: string;
+    region?: string;
+  };
+}
+
+interface StrapiPaginationResponse {
+  data: StrapiColegioRaw[];
+  meta?: {
+    pagination?: {
+      page: number;
+      pageSize: number;
+      pageCount: number;
+      total: number;
+    };
+  };
+}
+
 export async function GET() {
   try {
-    const allColegios: any[] = [];
+    const allColegios: StrapiColegioRaw[] = [];
     let page = 1;
     let pageSize = 100; // Máximo típico de Strapi (puede ser 100 o 1000 según configuración)
     let totalPages = 1;
@@ -38,7 +66,7 @@ export async function GET() {
       const path = `colegios?${paginationParams}`;
       
       // Llamar a Strapi con paginación
-      const response = await strapi.get<any>(path);
+      const response = await strapi.get<StrapiPaginationResponse>(path);
       
       // Verificar que response tenga la estructura esperada
       if (!response || typeof response !== 'object' || !response.data) {
@@ -69,17 +97,24 @@ export async function GET() {
     
     // Normalizar los datos para Strapi v5: Los datos están directamente en el objeto
     // Convertimos a la estructura esperada: { id, rbd, colegio_nombre, ... }
-    const colegiosNormalizados: Colegio[] = colegiosRaw.map((colegio: any) => {
-      // Si ya tiene la estructura v5 (sin attributes), retornarlo tal cual
+    const colegiosNormalizados: Colegio[] = colegiosRaw.map((colegio: StrapiColegioRaw): Colegio => {
+      // Si ya tiene la estructura v5 (sin attributes), normalizar asegurando que rbd sea number
       if (colegio.id && colegio.colegio_nombre && !colegio.attributes) {
-        return colegio;
+        return {
+          id: colegio.id,
+          rbd: colegio.rbd ?? 0, // Asegurar que rbd sea number, no undefined
+          colegio_nombre: colegio.colegio_nombre,
+          dependencia: colegio.dependencia || '',
+          comuna: colegio.comuna || '',
+          region: colegio.region || '',
+        };
       }
       
       // Si viene con estructura v4 (con attributes), extraer los datos
       if (colegio.attributes && typeof colegio.attributes === 'object') {
         return {
           id: colegio.id,
-          rbd: colegio.attributes.rbd || colegio.rbd,
+          rbd: colegio.attributes.rbd ?? colegio.rbd ?? 0,
           colegio_nombre: colegio.attributes.colegio_nombre || colegio.colegio_nombre || '',
           dependencia: colegio.attributes.dependencia || colegio.dependencia || '',
           comuna: colegio.attributes.comuna || colegio.comuna || '',
@@ -90,7 +125,7 @@ export async function GET() {
       // Si no tiene attributes, los campos están directamente en el objeto
       return {
         id: colegio.id,
-        rbd: colegio.rbd || 0,
+        rbd: colegio.rbd ?? 0,
         colegio_nombre: colegio.colegio_nombre || '',
         dependencia: colegio.dependencia || '',
         comuna: colegio.comuna || '',

@@ -4,9 +4,45 @@ import { findAlumno, createAlumno, verifyAlumnoExists, updateAlumnoWithApoderado
 import { generateUID } from "@/lib/helpers/uid";
 import { validateRut } from "@/lib/validations/rut";
 import { cleanRUT } from "@/lib/formatters/rut";
+import { checkRateLimit, getRequestIP } from "@/lib/helpers/rate-limit";
+
+interface AlumnoExitoso {
+  documentId: string;
+  existia: boolean;
+  index: number;
+  nombre: string;
+}
+
+interface AlumnoFallido {
+  index: number;
+  nombre: string;
+  error: string;
+}
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: verificar límite de requests
+    const clientIP = getRequestIP(request);
+    const rateLimitResult = checkRateLimit(clientIP);
+    
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { 
+          error: 'Demasiadas solicitudes. Por favor, intenta nuevamente más tarde.',
+          retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
+        },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000).toString(),
+            'X-RateLimit-Limit': '10',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString(),
+          }
+        }
+      );
+    }
+    
     const body = await request.json();
     
     // Validar datos del apoderado
@@ -242,9 +278,12 @@ export async function POST(request: NextRequest) {
         // Establecer relaciones bidireccionales
         try {
           await updateAlumnoWithApoderado(alumnoDocumentId, apoderadoDocumentId);
-        } catch (error: any) {
-          console.error(`Error estableciendo relación Alumno ${i + 1} -> Apoderado:`, error);
-          throw new Error(`No se pudo establecer la relación del alumno con el apoderado: ${error.message || 'Error desconocido'}`);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+          if (process.env.NODE_ENV === 'development') {
+            console.error(`Error estableciendo relación Alumno ${i + 1} -> Apoderado:`, error);
+          }
+          throw new Error(`No se pudo establecer la relación del alumno con el apoderado: ${errorMessage}`);
         }
         
         try {
@@ -261,13 +300,16 @@ export async function POST(request: NextRequest) {
           nombre: nombreAlumno,
         });
         
-      } catch (error: any) {
+      } catch (error) {
         // Capturar error para este alumno específico y continuar con los demás
-        console.error(`Error procesando alumno ${i + 1} (${nombreAlumno}):`, error);
+        const errorMessage = error instanceof Error ? error.message : "Error desconocido al procesar el alumno";
+        if (process.env.NODE_ENV === 'development') {
+          console.error(`Error procesando alumno ${i + 1} (${nombreAlumno}):`, error);
+        }
         alumnosFallidos.push({
           index: i + 1,
           nombre: nombreAlumno,
-          error: error.message || "Error desconocido al procesar el alumno",
+          error: errorMessage,
         });
       }
     }
@@ -308,6 +350,12 @@ export async function POST(request: NextRequest) {
           alumnosExitosos: alumnosExitosos,
           alumnosFallidos: alumnosFallidos,
         },
+      }, {
+        headers: {
+          'X-RateLimit-Limit': '10',
+          'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+          'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString(),
+        }
       });
     }
     
@@ -326,17 +374,24 @@ export async function POST(request: NextRequest) {
         },
         alumnos: alumnosExitosos,
       },
+    }, {
+      headers: {
+        'X-RateLimit-Limit': '10',
+        'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+        'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString(),
+      }
     });
     
-  } catch (error: any) {
-    console.error("Error en registro:", error);
-    
-    const errorDetails = error.message || "Error desconocido";
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Error desconocido";
+    if (process.env.NODE_ENV === 'development') {
+      console.error("Error en registro:", error);
+    }
     
     return NextResponse.json(
       { 
         error: "Error al registrar datos",
-        message: errorDetails,
+        message: errorMessage,
       },
       { status: 500 }
     );
