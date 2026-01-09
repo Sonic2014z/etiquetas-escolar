@@ -125,8 +125,86 @@
 }
 
 @media print {
-  body * { visibility: hidden; }
-  #etiqueta-qr, #etiqueta-qr * { visibility: visible; }
+  /* Estilos para la página de etiquetas */
+  @page {
+    size: letter;
+    margin: 0;
+  }
+  
+  * {
+    /* Forzar impresión a color */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    background: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .print\:hidden {
+    display: none !important;
+  }
+  
+  .print\:p-0 {
+    padding: 0 !important;
+  }
+  
+  /* Asegurar que el contenido de la página de etiquetas sea visible */
+  .etiquetas-print-page,
+  .etiquetas-print-page * {
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  .etiquetas-print-page {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Forzar que los colores de fondo se impriman */
+  .etiquetas-print-page [class*="bg-"],
+  .etiquetas-print-page [class*="bg-"] * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  /* Ocultar elementos del navegador que puedan aparecer */
+  header,
+  nav,
+  footer:not(.etiquetas-print-page footer),
+  .pagination,
+  [role="navigation"],
+  [class*="pagination"] {
+    display: none !important;
+  }
+  
+  /* Asegurar que los colores específicos de Tailwind se mantengan */
+  .bg-purple-600,
+  .bg-orange-500,
+  .bg-yellow-400,
+  .bg-blue-600,
+  .bg-pink-500,
+  .bg-orange-600,
+  .bg-yellow-500,
+  .bg-blue-700,
+  .bg-pink-600,
+  .bg-yellow-300 {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  /* Estilos legacy para etiqueta-qr (mantener compatibilidad con LabelPreview) */
+  /* Solo aplicar la lógica de ocultar si existe #etiqueta-qr y NO estamos en la página de etiquetas */
   #etiqueta-qr {
     position: absolute;
     left: 0;
@@ -135,6 +213,16 @@
     margin: 0;
     border: none;
     box-shadow: none;
+  }
+  
+  /* Si estamos en la página principal (no en /etiquetas) y existe #etiqueta-qr, ocultar todo lo demás */
+  body:not(:has(.etiquetas-print-page)):has(#etiqueta-qr) > *:not(#etiqueta-qr) {
+    visibility: hidden;
+  }
+  
+  body:not(:has(.etiquetas-print-page)):has(#etiqueta-qr) #etiqueta-qr,
+  body:not(:has(.etiquetas-print-page)):has(#etiqueta-qr) #etiqueta-qr * {
+    visibility: visible !important;
   }
 }
 

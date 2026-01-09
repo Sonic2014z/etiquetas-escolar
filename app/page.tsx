@@ -11,6 +11,7 @@ import { formatRutOnType } from "@/lib/formatters/rut";
 import { getWhatsAppNumber } from "@/lib/helpers/common";
 import { Colegio } from "@/types/strapi";
 import { getColegios } from "@/lib/api/colegios";
+import dynamic from "next/dynamic";
 
 export default function GeneratorPage() {
   // --- 1. ESTADO DE DATOS ---
@@ -31,6 +32,11 @@ export default function GeneratorPage() {
     letter: "",
     colegio: ""
   }]);
+
+  const DownloadPdfButton = dynamic(
+    () => import("@/components/label/DownloadPdfButton"),
+    { ssr: false, loading: () => <p>Cargando generador...</p> }
+  );
 
   // --- 2. ESTADO DE VALIDACIÓN ---
   const [isRutValid, setIsRutValid] = useState<boolean | null>(null);
@@ -671,6 +677,16 @@ export default function GeneratorPage() {
                             telefonoApoderado={parentData.phone}
                             qrUrl={previewData.qrUrl}
                         />
+                        
+                        {/* Botón de descarga PDF */}
+                        <div className="mt-3">
+                          <DownloadPdfButton 
+                            student={studentsData[index]}
+                            parent={parentData}
+                            colegioNombre={previewData.colegioNombre}
+                            qrUrl={previewData.qrUrl}
+                          />
+                        </div>
                       </div>
                     ))}
 
