@@ -28,7 +28,10 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({ success: true, data: qrCode });
   } catch (error: any) {
-    console.error('Error storing QR code:', error);
+    // Error al guardar QR (log solo en desarrollo)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error storing QR code:', error);
+    }
     return NextResponse.json(
       { error: error.message || 'Failed to store QR code' },
       { status: 500 }

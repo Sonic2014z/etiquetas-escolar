@@ -44,11 +44,14 @@ export async function GET(
     try {
       whatsappUrl = regenerateWhatsAppUrl(data);
     } catch (error: any) {
-      console.error('Error regenerating WhatsApp URL:', error);
+      // Error al regenerar URL (log solo en desarrollo)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error regenerating WhatsApp URL:', error);
+      }
       return NextResponse.json(
         { 
           error: 'Invalid QR code data. Unable to generate WhatsApp URL.',
-          details: error.message 
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
         },
         { status: 400 }
       );
@@ -65,7 +68,10 @@ export async function GET(
     // Redirigir a WhatsApp
     return NextResponse.redirect(whatsappUrl, 302);
   } catch (error) {
-    console.error('Error redirecting QR:', error);
+    // Error general (log solo en desarrollo)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error redirecting QR:', error);
+    }
     return NextResponse.json(
       { error: 'Invalid QR code' },
       { status: 400 }

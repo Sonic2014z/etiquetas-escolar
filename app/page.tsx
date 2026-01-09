@@ -54,7 +54,10 @@ export default function GeneratorPage() {
         const colegiosData = await getColegios();
         setColegios(colegiosData);
       } catch (error) {
-        console.error("Error cargando colegios:", error);
+        // Error cargando colegios (log solo en desarrollo)
+        if (process.env.NODE_ENV === 'development') {
+          console.error("Error cargando colegios:", error);
+        }
         setColegios([]);
       } finally {
         setLoadingColegios(false);
@@ -302,7 +305,10 @@ export default function GeneratorPage() {
       }, 8000);
 
     } catch (error: any) {
-      console.error('Error al registrar:', error);
+      // Error al registrar (log solo en desarrollo, pero mostrar mensaje al usuario)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error al registrar:', error);
+      }
       setRegisterMessage({
         type: 'error',
         text: error.message || 'Error al registrar los datos. Por favor, intenta nuevamente.',
@@ -356,6 +362,7 @@ export default function GeneratorPage() {
         const hash = hashMatch[1];
         
         // Almacenar los datos en Strapi (async, no bloquea)
+        // Nota: Este fetch es silencioso y no bloquea el flujo principal
         fetch('/api/qr-codes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -366,9 +373,29 @@ export default function GeneratorPage() {
             telefonoApoderado: qrData.parentPhone,
             nombreApoderado: qrData.parentName,
           }),
-        }).catch(err => console.error('Error storing QR data:', err));
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          // QR guardado exitosamente (silencioso, no interrumpe el flujo)
+          // En el futuro se podría agregar un indicador visual sutil
+        })
+        .catch(err => {
+          // Error al guardar QR (no crítico, el QR sigue funcionando)
+          // Solo loguear en desarrollo
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Error storing QR data in Strapi (non-critical):', err);
+          }
+        });
       } else {
-        console.error('Error: No se pudo extraer el hash de la URL del QR:', finalQrUrl);
+        // Error al extraer hash (no crítico, el QR seguirá funcionando con la URL completa)
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Warning: No se pudo extraer el hash de la URL del QR:', finalQrUrl);
+        }
       }
     }
     
@@ -405,7 +432,10 @@ export default function GeneratorPage() {
       sessionStorage.setItem('etiquetasData', JSON.stringify(etiquetasData));
     } catch (e) {
       // sessionStorage puede fallar en modo privado o si está lleno
-      console.warn('No se pudo guardar en sessionStorage:', e);
+      // sessionStorage falló (no crítico, los datos están en query params)
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('No se pudo guardar en sessionStorage:', e);
+      }
       // Continuar sin fallar, los datos están en query params
     }
     

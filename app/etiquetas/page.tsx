@@ -112,12 +112,18 @@ function EtiquetasContent() {
             const parsed = JSON.parse(stored);
             setStudentData(parsed);
           } catch (e) {
-            console.error('Error parsing stored data:', e);
+            // Error al parsear datos de sessionStorage (no crítico)
+            if (process.env.NODE_ENV === 'development') {
+              console.error('Error parsing stored data:', e);
+            }
           }
         }
       } catch (e) {
         // sessionStorage puede no estar disponible (modo privado, etc.)
-        console.warn('No se pudo acceder a sessionStorage:', e);
+        // sessionStorage no disponible (no crítico, los datos están en query params)
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('No se pudo acceder a sessionStorage:', e);
+        }
         // Continuar sin fallar, los datos deberían estar en query params
       }
     }
@@ -383,7 +389,7 @@ function StudentCard({ student, color, colorHex }: { student: StudentInfo; color
               </div>
               <div className="flex items-baseline gap-1 shrink-0 print:gap-1">
                 <span className="text-[7px] text-black print:text-[7px] whitespace-nowrap">
-                  {student.year || new Date().getFullYear()}
+                  {new Date().getFullYear()}
                 </span>
                 <span className="text-[7px] font-bold text-black uppercase print:text-[7px] whitespace-nowrap">
                   ESCOLAR
@@ -398,22 +404,44 @@ function StudentCard({ student, color, colorHex }: { student: StudentInfo; color
 }
 
 function SimpleLabel({ grade, name, highlight, color, colorHex }: { grade: string; name: string; highlight: boolean; color?: string; colorHex?: string }) {
+  // Extraer curso y letra del grade de forma consistente con StudentCard
+  // El formato puede ser: "4° Básico A", "3° Medio B", "4° Básico", etc.
+  let curso = grade || "";
+  let letra = "";
+  
+  if (grade) {
+    const gradeParts = grade.trim().split(/\s+/);
+    if (gradeParts.length > 0) {
+      const lastPart = gradeParts[gradeParts.length - 1];
+      // Si la última parte es una sola letra (A-Z), es la letra del curso
+      if (lastPart.length === 1 && /^[A-Z]$/.test(lastPart)) {
+        letra = lastPart;
+        // El curso es todo lo demás
+        curso = gradeParts.slice(0, -1).join(' ');
+      } else {
+        // No hay letra, el curso es todo el grade
+        curso = grade;
+        letra = "";
+      }
+    }
+  }
+  
   return (
-    <div className="border border-gray-300 rounded overflow-hidden flex items-center text-[9px] print:text-[8px] print:border-gray-300">
+    <div className="border border-gray-300 rounded overflow-hidden flex items-center text-[7px] print:text-[7px] print:border-gray-300" style={{ height: '24px' }}>
       {/* Franja vertical de color */}
       {colorHex && (
         <div 
-          className={`${color || ''} w-2 shrink-0 print:w-1.5`}
+          className={`${color || ''} w-1 shrink-0 print:w-1`}
           style={{ backgroundColor: colorHex, minHeight: '100%' }}
         />
       )}
       {/* Contenido de texto */}
-      <div className="px-2 py-1.5 flex items-center gap-2 flex-1 print:px-1.5 print:py-1 print:gap-1">
+      <div className="px-1 py-0.5 flex items-center gap-1 flex-1 print:px-1 print:py-0.5 print:gap-1">
         <span 
-          className={highlight ? 'bg-yellow-300 px-1' : ''}
+          className={highlight ? 'bg-yellow-300 px-0.5' : ''}
           style={highlight ? { backgroundColor: '#fde047' } : {}}
         >
-          {grade}
+          {curso}{letra ? ` ${letra}` : ''}
         </span>
         <span className="font-semibold">{name}</span>
       </div>
