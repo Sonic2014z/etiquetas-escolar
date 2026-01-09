@@ -337,13 +337,26 @@ export default function GeneratorPage() {
       // Obtener la URL base (usar window.location.origin en cliente)
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
       
-      // Generar URL intermediaria usando los datos (ya incluye query params)
-      finalQrUrl = generateIntermediateQRUrl({
+      // Preparar datos para el QR
+      const qrData = {
         studentName: studentFullName,
         studentGrade: courseText,
         parentPhone: parentData.phone,
         parentName: parentData.nombres,
-      }, baseUrl);
+      };
+      
+      // Generar URL intermediaria (solo hash)
+      finalQrUrl = generateIntermediateQRUrl(qrData, baseUrl);
+      
+      // Extraer el hash de la URL
+      const hash = finalQrUrl.split('/qr/')[1];
+      
+      // Almacenar los datos en el servidor (async, no bloquea)
+      fetch(`${baseUrl}/qr/${hash}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(qrData),
+      }).catch(err => console.error('Error storing QR data:', err));
     }
     
     // Construir URL con query params

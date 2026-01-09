@@ -1,22 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { regenerateWhatsAppUrl } from '@/lib/helpers/qr-hash';
+import { regenerateWhatsAppUrl, type QRData } from '@/lib/helpers/qr-hash';
 
-/**
- * Decodifica un string compacto desde base64 URL-safe
- */
-function compactDecode(encoded: string): string {
-  try {
-    // Convertir de URL-safe a base64 normal
-    let base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
-    // Agregar padding si es necesario
-    while (base64.length % 4) {
-      base64 += '=';
-    }
-    return Buffer.from(base64, 'base64').toString('utf-8');
-  } catch (error) {
-    throw new Error('Invalid encoded data');
-  }
-}
+// Almacenamiento temporal en memoria (Map)
+// En producción, considera usar Redis o una base de datos para persistencia
+const qrDataCache = new Map<string, QRData>();
 
 /**
  * Ruta de redirección para QRs con URL intermediaria
@@ -29,33 +16,18 @@ export async function GET(
   try {
     const { id } = await params;
     
-    // Obtener los datos desde query params
-    const searchParams = request.nextUrl.searchParams;
-    const n = searchParams.get('n');
-    const g = searchParams.get('g');
-    const p = searchParams.get('p');
-    const a = searchParams.get('a');
+    // Buscar los datos en el cache
+    const data = qrDataCache.get(id);
     
-    if (!n || !g || !p || !a) {
+    if (!data) {
       return NextResponse.json(
-        { error: 'Missing QR code data' },
-        { status: 400 }
+        { error: 'QR code not found or expired. Please generate a new QR code.' },
+        { status: 404 }
       );
     }
     
-    // Decodificar los datos compactos
-    const studentName = compactDecode(n);
-    const studentGrade = compactDecode(g);
-    const parentPhone = p; // Ya está en formato numérico
-    const parentName = compactDecode(a);
-    
     // Regenerar URL de WhatsApp desde los datos
-    const whatsappUrl = regenerateWhatsAppUrl({
-      studentName,
-      studentGrade,
-      parentPhone,
-      parentName,
-    });
+    const whatsappUrl = regenerateWhatsAppUrl(data);
     
     // Redirigir a WhatsApp
     return NextResponse.redirect(whatsappUrl, 302);
@@ -64,6 +36,31 @@ export async function GET(
     return NextResponse.json(
       { error: 'Invalid QR code' },
       { status: 400 }
+    );
+  }
+}
+
+/**
+ * Endpoint para almacenar datos del QR en el cache
+ * POST /qr/[id] -> almacena los datos
+ */
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const data: QRData = await request.json();
+    
+    // Almacenar en cache (expira después de 1 año - tiempo suficiente para etiquetas)
+    qrDataCache.set(id, data);
+    
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error storing QR data:', error);
+    return NextResponse.json(
+      { error: 'Failed to store QR data' },
+      { status: 500 }
     );
   }
 }
