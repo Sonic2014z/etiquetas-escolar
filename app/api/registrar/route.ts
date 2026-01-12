@@ -7,6 +7,7 @@ import { cleanRUT } from "@/lib/formatters/rut";
 import { checkRateLimit, getRequestIP } from "@/lib/helpers/rate-limit";
 import { validateEmailWithMessage } from "@/lib/validations/email";
 import { logger } from "@/lib/helpers/logger";
+import { z } from "zod";
 
 interface AlumnoExitoso {
   documentId: string;
@@ -20,6 +21,48 @@ interface AlumnoFallido {
   nombre: string;
   error: string;
 }
+
+const cleanText = (val: string) => {
+  if (!val) return "";
+
+  return val.replace(/[\x00-\x1F\x7F]/g, "").replace(/\s+/g, " ").trim();
+};
+
+// Validar caracteres peligrosos: < > " ' { } [ ] \ | ` ~
+const safeString = z.string().transform((val) => cleanText(val)).refine((val) => !/[<>"'{}\[\]\\|`~]/.test(val), {
+  message: "No se permiten caracteres especiales"
+});
+
+const StudentSchema = z.object({
+  nombres: safeString.pipe(z.string().min(1, "El nombre del alumno es requerido").max(100, "El nombre del alumno es demasiado largo")),
+  primerApellido: safeString.pipe(z.string().min(1, "El primer apellido del alumno es requerido").max(100, "El primer apellido del alumno es demasiado largo")),
+  segundoApellido: safeString.pipe(z.string().max(100)).optional(),
+  course: safeString.pipe(z.string().min(1, "El curso es requerido")),
+  letter: safeString.pipe(z.string().min(1, "La letra del curso es requerida").max(1)),
+  colegio: safeString.pipe(z.string().min(1, "El colegio es requerido")),
+});
+
+const ParentSchema = z.object({
+  nombres: safeString.pipe(z.string().min(1, "El nombre del apoderado es requerido").max(100, "El nombre del apoderado es demasiado largo")),
+  primerApellido: safeString.pipe(z.string().min(1, "El primer apellido del apoderado es requerido").max(100, "El primer apellido del apoderado es demasiado largo")),
+  segundoApellido: safeString.pipe(z.string().max(100)).optional(),
+  phone: safeString.pipe(z.string().min(1, "El teléfono del apoderado es requerido").max(20, "Teléfono muy largo")),
+  email: z.email("Formato de email no válido").max(254, "El email del apoderado es demasiado largo").optional().or(z.literal("")),
+  rut: z.string().optional().refine((val) => {
+    if (!val || val.trim() === "") return true;
+
+    return validateRut(val);
+  }, { message: "RUT inválido. Por favor, verifique el formato."})
+});
+
+const QRSchema = z.object({
+  hash: z.string().length(8, "El código QR no es válido").regex(/^[0-9a-fA-F]+$/),
+})
+
+const RegistrationSchema = z.object({
+  parentData: ParentSchema,
+  students: z.array(StudentSchema).min(1, "Debe haber al menos un alumno"),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,98 +91,46 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Validar datos del apoderado
-    const { parentData, studentsData } = body;
+    const { parentData } = body;
     
     // Soporte para formato antiguo (studentData) y nuevo (studentsData)
-    const students = studentsData || (body.studentData ? [body.studentData] : []);
-    
-    // ========== VALIDACIONES ADICIONALES ANTES DE PROCESAR ==========
-    
-    // Validar estructura básica
-    if (!parentData || !Array.isArray(students) || students.length === 0) {
-      return NextResponse.json(
-        { error: "Datos incompletos. Debe haber al menos un alumno." },
-        { status: 400 }
-      );
+    const students = body.studentsData || (body.studentData ? [body.studentData] : []);
+
+    // Implementación de Zod para validación de datos
+    const validationResult = RegistrationSchema.safeParse({
+      parentData: parentData,
+      students: students,
+    })
+
+    if (!validationResult.success) {
+
+      const erroresAmigables = validationResult.error.issues.map((err => {
+        const [ubicacion, indice, campo] = err.path;
+
+        if (ubicacion === "students" && typeof indice === "number") {
+          const numeroAlumno = indice + 1;
+          return `Alumno ${numeroAlumno}: ${err.message}`;
+        }
+
+        if (ubicacion === "parentData") {
+          return `Apoderado: ${err.message}`;
+        }
+
+        return err.message;
+      }))
+
+      return NextResponse.json({
+        error: "Datos inválidos",
+        detalles: erroresAmigables,
+      }, { status: 400 });
     }
-    
-    // Validar campos requeridos del apoderado (RUT ya no es obligatorio)
-    if (!parentData.nombres || !parentData.nombres.trim()) {
-      return NextResponse.json(
-        { error: "El nombre del apoderado es requerido" },
-        { status: 400 }
-      );
-    }
-    if (!parentData.primerApellido || !parentData.primerApellido.trim()) {
-      return NextResponse.json(
-        { error: "El primer apellido del apoderado es requerido" },
-        { status: 400 }
-      );
-    }
-    if (!parentData.phone || !parentData.phone.trim()) {
-      return NextResponse.json(
-        { error: "El teléfono del apoderado es requerido" },
-        { status: 400 }
-      );
-    }
-    
-    // Validar formato de email si está presente (campo opcional)
-    if (parentData.email && parentData.email.trim() !== '') {
-      const emailValidation = validateEmailWithMessage(parentData.email);
-      if (!emailValidation.valid) {
-        return NextResponse.json(
-          { error: emailValidation.error || "El formato del email no es válido" },
-          { status: 400 }
-        );
-      }
-    }
-    
-    // Validar RUT solo si está presente (ya no es obligatorio)
-    if (parentData.rut && parentData.rut.trim()) {
-      if (!validateRut(parentData.rut)) {
-        return NextResponse.json(
-          { error: "RUT inválido. Por favor, verifique el formato." },
-          { status: 400 }
-        );
-      }
-    }
-    
-    // Validar campos requeridos de cada alumno ANTES de procesar
-    const erroresValidacion: Array<{ index: number; campo: string; mensaje: string }> = [];
-    for (let i = 0; i < students.length; i++) {
-      const studentData = students[i];
-      
-      if (!studentData.nombres || !studentData.nombres.trim()) {
-        erroresValidacion.push({ index: i + 1, campo: 'nombres', mensaje: `Alumno ${i + 1}: Nombres es requerido` });
-      }
-      if (!studentData.primerApellido || !studentData.primerApellido.trim()) {
-        erroresValidacion.push({ index: i + 1, campo: 'primerApellido', mensaje: `Alumno ${i + 1}: Primer apellido es requerido` });
-      }
-      if (!studentData.course || !studentData.course.trim()) {
-        erroresValidacion.push({ index: i + 1, campo: 'course', mensaje: `Alumno ${i + 1}: Curso es requerido` });
-      }
-      if (!studentData.letter || !studentData.letter.trim()) {
-        erroresValidacion.push({ index: i + 1, campo: 'letter', mensaje: `Alumno ${i + 1}: Letra es requerida` });
-      }
-      if (!studentData.colegio || !studentData.colegio.trim()) {
-        erroresValidacion.push({ index: i + 1, campo: 'colegio', mensaje: `Alumno ${i + 1}: Colegio es requerido` });
-      }
-    }
-    
-    if (erroresValidacion.length > 0) {
-      return NextResponse.json(
-        { 
-          error: "Errores de validación",
-          detalles: erroresValidacion.map(e => e.mensaje),
-        },
-        { status: 400 }
-      );
-    }
+
+    const cleanData = validationResult.data;
     
     // Validar que ningún alumno tenga el mismo nombre que el apoderado
-    const nombreApoderado = `${parentData.nombres} ${parentData.primerApellido} ${parentData.segundoApellido || ""}`.trim().toLowerCase();
-    for (let i = 0; i < students.length; i++) {
-      const studentData = students[i];
+    const nombreApoderado = `${cleanData.parentData.nombres} ${cleanData.parentData.primerApellido} ${cleanData.parentData.segundoApellido || ""}`.trim().toLowerCase();
+    for (let i = 0; i < cleanData.students.length; i++) {
+      const studentData = cleanData.students[i];
       const nombreAlumno = `${studentData.nombres} ${studentData.primerApellido} ${studentData.segundoApellido || ""}`.trim().toLowerCase();
       
       if (nombreApoderado && nombreAlumno && nombreApoderado === nombreAlumno) {
@@ -156,8 +147,8 @@ export async function POST(request: NextRequest) {
     let apoderadoExistia = false;
     
     // Si hay RUT, buscar por RUT; si no, crear nuevo apoderado
-    if (parentData.rut && parentData.rut.trim()) {
-      const cleanRut = cleanRUT(parentData.rut);
+    if (cleanData.parentData.rut && cleanData.parentData.rut.trim()) {
+      const cleanRut = cleanRUT(cleanData.parentData.rut);
       let apoderado = await findApoderadoByRut(cleanRut);
       
       if (apoderado) {
@@ -169,12 +160,12 @@ export async function POST(request: NextRequest) {
       } else {
         const uid = generateUID();
         const nuevoApoderado = await createApoderado({
-          nombres: parentData.nombres,
-          primer_apellido: parentData.primerApellido,
-          segundo_apellido: parentData.segundoApellido || "",
+          nombres: cleanData.parentData.nombres,
+          primer_apellido: cleanData.parentData.primerApellido,
+          segundo_apellido: cleanData.parentData.segundoApellido || "",
           rut: cleanRut,
-          telefono: parentData.phone,
-          email: parentData.email || undefined,
+          telefono: cleanData.parentData.phone,
+          email: cleanData.parentData.email || undefined,
           uid: uid,
         });
         
@@ -199,12 +190,12 @@ export async function POST(request: NextRequest) {
       // No hay RUT, crear nuevo apoderado directamente
       const uid = generateUID();
       const nuevoApoderado = await createApoderado({
-        nombres: parentData.nombres,
-        primer_apellido: parentData.primerApellido,
-        segundo_apellido: parentData.segundoApellido || "",
+        nombres: cleanData.parentData.nombres,
+        primer_apellido: cleanData.parentData.primerApellido,
+        segundo_apellido: cleanData.parentData.segundoApellido || "",
         rut: "", // RUT vacío ya que no es obligatorio
-        telefono: parentData.phone,
-        email: parentData.email || undefined,
+        telefono: cleanData.parentData.phone,
+        email: cleanData.parentData.email || undefined,
         uid: uid,
       });
       
@@ -230,8 +221,8 @@ export async function POST(request: NextRequest) {
       error: string;
     }> = [];
     
-    for (let i = 0; i < students.length; i++) {
-      const studentData = students[i];
+    for (let i = 0; i < cleanData.students.length; i++) {
+      const studentData = cleanData.students[i];
       const nombreAlumno = `${studentData.nombres} ${studentData.primerApellido} ${studentData.segundoApellido || ""}`.trim();
       
       try {

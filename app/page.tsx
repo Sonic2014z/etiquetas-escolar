@@ -242,8 +242,22 @@ export default function GeneratorPage() {
         // Construir mensaje de error detallado
         let errorMessage = result.error || result.message || 'Error al registrar';
         
-        if (result.detalles && Array.isArray(result.detalles)) {
-          errorMessage += '\n\nDetalles:\n' + result.detalles.join('\n');
+        // Detectar si el error es por caracteres especiales
+        const errorText = JSON.stringify(result).toLowerCase();
+        const hasSpecialCharsError = errorText.includes('caracteres especiales') || 
+                                     errorText.includes('special characters') ||
+                                     errorText.includes('no se permiten');
+        
+        if (hasSpecialCharsError) {
+          errorMessage = 'No se permiten caracteres especiales. Por favor, revisa los campos y elimina caracteres como < > " \' { } [ ] \\ | ` ~';
+        } else if (result.detalles && Array.isArray(result.detalles)) {
+          // Verificar si algún detalle menciona caracteres especiales
+          const detallesText = result.detalles.join(' ').toLowerCase();
+          if (detallesText.includes('caracteres especiales') || detallesText.includes('no se permiten')) {
+            errorMessage = 'No se permiten caracteres especiales. Por favor, revisa los campos y elimina caracteres como < > " \' { } [ ] \\ | ` ~';
+          } else {
+            errorMessage += '\n\nDetalles:\n' + result.detalles.join('\n');
+          }
         } else if (result.detalles && result.detalles.alumnosFallidos && result.detalles.alumnosFallidos.length > 0) {
           errorMessage += '\n\nAlumnos que fallaron:\n';
           result.detalles.alumnosFallidos.forEach((alumno: { index: number; nombre: string; error: string }) => {
@@ -316,9 +330,18 @@ export default function GeneratorPage() {
     } catch (error: any) {
       // Error al registrar (log solo en desarrollo, pero mostrar mensaje al usuario)
       logger.error('Error al registrar:', error);
+      
+      // Detectar si el error es por caracteres especiales
+      const errorMessage = error.message || '';
+      const hasSpecialCharsError = errorMessage.toLowerCase().includes('caracteres especiales') || 
+                                   errorMessage.toLowerCase().includes('special characters') ||
+                                   errorMessage.toLowerCase().includes('invalid characters');
+      
       setRegisterMessage({
         type: 'error',
-        text: error.message || 'Error al registrar los datos. Por favor, intenta nuevamente.',
+        text: hasSpecialCharsError 
+          ? 'No se permiten caracteres especiales. Por favor, revisa los campos y elimina caracteres como < > " \' { } [ ] \\ | ` ~'
+          : (errorMessage || 'Error al registrar los datos. Por favor, intenta nuevamente.'),
       });
     } finally {
       setIsRegistering(false);
@@ -452,6 +475,19 @@ export default function GeneratorPage() {
   };
 
   // Función para validar campos obligatorios
+  // Función para validar caracteres especiales peligrosos
+  const hasDangerousCharacters = (text: string): boolean => {
+    if (!text || typeof text !== 'string') return false;
+    
+    // Caracteres peligrosos que no se permiten:
+    // - Caracteres de control (ASCII 0-31 excepto tab, newline, carriage return)
+    // - Caracteres especiales peligrosos: < > " ' & { } [ ] \ | ` ~
+    // - Script tags y otros patrones peligrosos
+    const dangerousPattern = /[<>"'{}\[\]\\|`~]|[\x00-\x08\x0B-\x0C\x0E-\x1F]/;
+    
+    return dangerousPattern.test(text);
+  };
+
   const validateRequiredFields = (): { errors: { [key: string]: string }; missingFields: string[] } => {
     const errors: { [key: string]: string } = {};
     const missingFields: string[] = [];
@@ -469,37 +505,68 @@ export default function GeneratorPage() {
       'colegio': 'Colegio del alumno',
     };
 
-    if (!parentData.nombres) {
+    // Validar caracteres peligrosos en campos de texto
+    if (parentData.nombres && hasDangerousCharacters(parentData.nombres)) {
+      errors['nombres'] = "No se permiten caracteres especiales";
+      missingFields.push(fieldNames['nombres'] + " (contiene caracteres especiales)");
+    } else if (!parentData.nombres) {
       errors['nombres'] = "Requerido";
       missingFields.push(fieldNames['nombres']);
     }
-    if (!parentData.primerApellido) {
+    
+    if (parentData.primerApellido && hasDangerousCharacters(parentData.primerApellido)) {
+      errors['primerApellido'] = "No se permiten caracteres especiales";
+      missingFields.push(fieldNames['primerApellido'] + " (contiene caracteres especiales)");
+    } else if (!parentData.primerApellido) {
       errors['primerApellido'] = "Requerido";
       missingFields.push(fieldNames['primerApellido']);
     }
-    // Segundo apellido es opcional, no se valida
+    
+    // Segundo apellido es opcional, pero validamos caracteres si está presente
+    if (parentData.segundoApellido && hasDangerousCharacters(parentData.segundoApellido)) {
+      errors['segundoApellido'] = "No se permiten caracteres especiales";
+    }
+    
     // RUT ya no es obligatorio, solo validamos si está presente
     if (parentData.rut && isRutValid === false) {
       errors['rut'] = "RUT Inválido";
       missingFields.push(fieldNames['rut'] + " (inválido)");
     }
+    
     if (!parentData.phone) {
       errors['phone'] = "Teléfono requerido";
       missingFields.push(fieldNames['phone']);
+    }
+    
+    // Validar email si está presente
+    if (parentData.email && hasDangerousCharacters(parentData.email)) {
+      errors['email'] = "No se permiten caracteres especiales";
     }
     // Validar cada alumno
     studentsData.forEach((student, index) => {
       const studentNumber = studentsData.length > 1 ? ` ${index + 1}` : '';
       
-      if (!student.nombres) {
+      if (student.nombres && hasDangerousCharacters(student.nombres)) {
+        errors[`student_${index}_nombres`] = "No se permiten caracteres especiales";
+        missingFields.push(`Alumno${studentNumber}: Nombres (contiene caracteres especiales)`);
+      } else if (!student.nombres) {
         errors[`student_${index}_nombres`] = "Requerido";
         missingFields.push(`Alumno${studentNumber}: Nombres`);
       }
-      if (!student.primerApellido) {
+      
+      if (student.primerApellido && hasDangerousCharacters(student.primerApellido)) {
+        errors[`student_${index}_primerApellido`] = "No se permiten caracteres especiales";
+        missingFields.push(`Alumno${studentNumber}: Primer apellido (contiene caracteres especiales)`);
+      } else if (!student.primerApellido) {
         errors[`student_${index}_primerApellido`] = "Requerido";
         missingFields.push(`Alumno${studentNumber}: Primer apellido`);
       }
-      // Segundo apellido es opcional, no se valida
+      
+      // Segundo apellido es opcional, pero validamos caracteres si está presente
+      if (student.segundoApellido && hasDangerousCharacters(student.segundoApellido)) {
+        errors[`student_${index}_segundoApellido`] = "No se permiten caracteres especiales";
+      }
+      
       if (!student.course) {
         errors[`student_${index}_course`] = "Selecciona un curso";
         missingFields.push(`Alumno${studentNumber}: Curso`);
@@ -620,6 +687,38 @@ export default function GeneratorPage() {
                 onClick={() => setValidationAlert({ show: false, missingFields: [] })}
                 className="ml-4 shrink-0 text-yellow-400 hover:text-yellow-600 transition-colors"
                 aria-label="Cerrar alerta"
+              >
+                <span className="text-xl">×</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Mensaje de registro */}
+        {registerMessage && (
+          <div className={`p-4 rounded-lg shadow-md animate-fade-in ${
+            registerMessage.type === 'success' 
+              ? 'bg-green-50 text-green-800 border-l-4 border-green-400' 
+              : 'bg-red-50 text-red-800 border-l-4 border-red-400'
+          }`}>
+            <div className="flex items-start">
+              <div className="shrink-0">
+                <span className={`text-2xl ${registerMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                  {registerMessage.type === 'success' ? '✓' : '✗'}
+                </span>
+              </div>
+              <div className="ml-3 flex-1">
+                <h3 className={`text-sm font-bold mb-2 ${registerMessage.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
+                  {registerMessage.type === 'success' ? 'Registro Exitoso' : 'Error en el Registro'}
+                </h3>
+                <div className="text-sm whitespace-pre-line">
+                  {registerMessage.text}
+                </div>
+              </div>
+              <button
+                onClick={() => setRegisterMessage(null)}
+                className={`ml-4 shrink-0 transition-colors ${registerMessage.type === 'success' ? 'text-green-400 hover:text-green-600' : 'text-red-400 hover:text-red-600'}`}
+                aria-label="Cerrar mensaje"
               >
                 <span className="text-xl">×</span>
               </button>
@@ -854,23 +953,6 @@ export default function GeneratorPage() {
                       </button>
                     </div>
                 </div>
-
-                {/* Mensaje de registro */}
-                {registerMessage && (
-                  <div className={`mt-8 p-4 rounded-lg ${
-                    registerMessage.type === 'success' 
-                      ? 'bg-green-100 text-green-800 border border-green-300' 
-                      : 'bg-red-100 text-red-800 border border-red-300'
-                  }`}>
-                    <div className="font-semibold mb-2">
-                      {registerMessage.type === 'success' ? '✓ ' : '✗ '}
-                      {registerMessage.type === 'success' ? 'Registro Exitoso' : 'Error en el Registro'}
-                    </div>
-                    <div className="text-sm whitespace-pre-line">
-                      {registerMessage.text}
-                    </div>
-                  </div>
-                )}
 
             </div>
 
