@@ -1,4 +1,5 @@
 import type { Colegio } from "@/types/strapi";
+import { logger } from "@/lib/helpers/logger";
 
 /**
  * Obtiene todos los colegios desde Strapi
@@ -25,7 +26,7 @@ export async function getColegios(): Promise<Colegio[]> {
     const colegios: Colegio[] = await response.json();
     return colegios;
   } catch (error) {
-    console.error("[getColegios] Error obteniendo colegios:", error);
+    logger.error("[getColegios] Error obteniendo colegios:", error);
     // Retornar array vacío en caso de error para no romper la UI
     return [];
   }

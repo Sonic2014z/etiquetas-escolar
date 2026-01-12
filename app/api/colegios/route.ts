@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { strapi } from '@/lib/api/strapi';
 import type { Colegio } from '@/types/strapi';
+import { logger } from '@/lib/helpers/logger';
 
 /**
  * Interfaz para la respuesta de Strapi
@@ -70,7 +71,7 @@ export async function GET() {
       
       // Verificar que response tenga la estructura esperada
       if (!response || typeof response !== 'object' || !response.data) {
-        console.error('[API /api/colegios] Invalid response structure en página', page);
+        logger.error('[API /api/colegios] Invalid response structure en página', page);
         break;
       }
       
@@ -146,7 +147,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('[API /api/colegios] Error:', error);
+    logger.error('[API /api/colegios] Error:', error);
     
     // Retornar error al cliente
     return NextResponse.json(

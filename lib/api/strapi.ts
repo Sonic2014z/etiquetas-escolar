@@ -1,6 +1,7 @@
 /* API de Strapi */
 
 import { env } from "@/lib/env";
+import { logger } from "@/lib/helpers/logger";
 
 /* Variables de entorno */
 
@@ -72,13 +73,11 @@ async function fetchAPI<T>(
         if (!response.ok) {
             const errorData = (await response.json().catch(() => ({}))) as StrapiErrorResponse;
             // Log solo en desarrollo
-            if (process.env.NODE_ENV === 'development') {
-                console.error(`[Strapi API] Error response:`, {
-                    status: response.status,
-                    statusText: response.statusText,
-                    errorData
-                });
-            }
+            logger.error(`[Strapi API] Error response:`, {
+                status: response.status,
+                statusText: response.statusText,
+                errorData
+            });
             const errorMessage = errorData.error?.message || errorData.message || response.statusText;
             const errorDetails = errorData.error?.details ? JSON.stringify(errorData.error.details, null, 2) : '';
             throw new Error(`Error Strapi (${response.status}): ${errorMessage}${errorDetails ? `\nDetalles: ${errorDetails}` : ''}`);
@@ -101,9 +100,7 @@ async function fetchAPI<T>(
         }
         
         // Log solo en desarrollo
-        if (process.env.NODE_ENV === 'development') {
-            console.error(`[Strapi API] Error en ${method} ${path}:`, error);
-        }
+        logger.error(`[Strapi API] Error en ${method} ${path}:`, error);
         throw error;
     }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { upsertQRCode } from '@/lib/api/qr-codes';
 import { checkRateLimit, getRequestIP } from '@/lib/helpers/rate-limit';
+import { logger } from '@/lib/helpers/logger';
 
 /**
  * API route para crear o actualizar QR codes en Strapi
@@ -67,9 +68,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to store QR code';
     // Error al guardar QR (log solo en desarrollo)
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error storing QR code:', error);
-    }
+    logger.error('Error storing QR code:', error);
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }

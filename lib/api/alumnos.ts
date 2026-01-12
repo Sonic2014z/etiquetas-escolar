@@ -1,5 +1,6 @@
 import { strapi } from "./strapi";
 import type { Alumno, StrapiCollectionResponse, StrapiResponse } from "@/types/strapi";
+import { logger } from "@/lib/helpers/logger";
 
 /**
  * Verifica que un alumno existe por ID
@@ -15,7 +16,7 @@ export async function verifyAlumnoExists(alumnoId: number): Promise<Alumno | nul
     if (error.message?.includes('404')) {
       return null;
     }
-    console.error("Error verificando alumno por ID:", error);
+    logger.error("Error verificando alumno por ID:", error);
     throw error;
   }
 }
@@ -54,7 +55,7 @@ export async function findAlumno(data: {
     }
     return null;
   } catch (error) {
-    console.error("Error buscando alumno:", error);
+    logger.error("Error buscando alumno:", error);
     throw error;
   }
 }
@@ -91,7 +92,7 @@ export async function createAlumno(data: {
     
     return response.data;
   } catch (error) {
-    console.error("Error creando alumno:", error);
+    logger.error("Error creando alumno:", error);
     throw error;
   }
 }
@@ -113,7 +114,7 @@ export async function updateAlumnoWithApoderado(
     
     return response.data;
   } catch (error) {
-    console.error("Error actualizando alumno con apoderado:", error);
+    logger.error("Error actualizando alumno con apoderado:", error);
     return null;
   }
 }

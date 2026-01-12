@@ -6,6 +6,7 @@ import { validateRut } from "@/lib/validations/rut";
 import { cleanRUT } from "@/lib/formatters/rut";
 import { checkRateLimit, getRequestIP } from "@/lib/helpers/rate-limit";
 import { validateEmailWithMessage } from "@/lib/validations/email";
+import { logger } from "@/lib/helpers/logger";
 
 interface AlumnoExitoso {
   documentId: string;
@@ -292,9 +293,7 @@ export async function POST(request: NextRequest) {
           await updateAlumnoWithApoderado(alumnoDocumentId, apoderadoDocumentId);
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-          if (process.env.NODE_ENV === 'development') {
-            console.error(`Error estableciendo relación Alumno ${i + 1} -> Apoderado:`, error);
-          }
+          logger.error(`Error estableciendo relación Alumno ${i + 1} -> Apoderado:`, error);
           throw new Error(`No se pudo establecer la relación del alumno con el apoderado: ${errorMessage}`);
         }
         
@@ -302,7 +301,7 @@ export async function POST(request: NextRequest) {
           await updateApoderadoWithAlumno(apoderadoDocumentId, alumnoDocumentId);
         } catch (error) {
           // No lanzamos error aquí porque la relación principal ya está establecida
-          console.warn(`Advertencia: No se pudo actualizar la relación inversa del apoderado con el alumno ${i + 1}`);
+          logger.warn(`Advertencia: No se pudo actualizar la relación inversa del apoderado con el alumno ${i + 1}`);
         }
         
         alumnosExitosos.push({
@@ -315,9 +314,7 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         // Capturar error para este alumno específico y continuar con los demás
         const errorMessage = error instanceof Error ? error.message : "Error desconocido al procesar el alumno";
-        if (process.env.NODE_ENV === 'development') {
-          console.error(`Error procesando alumno ${i + 1} (${nombreAlumno}):`, error);
-        }
+        logger.error(`Error procesando alumno ${i + 1} (${nombreAlumno}):`, error);
         alumnosFallidos.push({
           index: i + 1,
           nombre: nombreAlumno,
@@ -396,9 +393,7 @@ export async function POST(request: NextRequest) {
     
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Error desconocido";
-    if (process.env.NODE_ENV === 'development') {
-      console.error("Error en registro:", error);
-    }
+    logger.error("Error en registro:", error);
     
     return NextResponse.json(
       { 

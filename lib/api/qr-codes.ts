@@ -1,5 +1,6 @@
 import { strapi } from "./strapi";
 import type { EtiquetaQR, StrapiResponse, StrapiCollectionResponse } from "@/types/strapi";
+import { logger } from "@/lib/helpers/logger";
 
 /**
  * Busca un QR code por hash
@@ -15,7 +16,7 @@ export async function findQRByHash(hash: string): Promise<EtiquetaQR | null> {
     }
     return null;
   } catch (error) {
-    console.error("Error buscando QR por hash:", error);
+    logger.error("Error buscando QR por hash:", error);
     throw error;
   }
 }
@@ -50,7 +51,7 @@ export async function createQRCode(data: {
     
     return response.data;
   } catch (error) {
-    console.error("Error creando QR code:", error);
+    logger.error("Error creando QR code:", error);
     throw error;
   }
 }
@@ -88,7 +89,7 @@ export async function upsertQRCode(data: {
       return await createQRCode(data);
     }
   } catch (error) {
-    console.error("Error en upsert QR code:", error);
+    logger.error("Error en upsert QR code:", error);
     throw error;
   }
 }

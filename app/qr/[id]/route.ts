@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { regenerateWhatsAppUrl, type QRData } from '@/lib/helpers/qr-hash';
 import { findQRByHash } from '@/lib/api/qr-codes';
+import { logger } from '@/lib/helpers/logger';
 
 /**
  * Ruta de redirección para QRs con URL intermediaria
@@ -46,9 +47,7 @@ export async function GET(
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       // Error al regenerar URL (log solo en desarrollo)
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Error regenerating WhatsApp URL:', error);
-      }
+      logger.error('Error regenerating WhatsApp URL:', error);
       return NextResponse.json(
         { 
           error: 'Invalid QR code data. Unable to generate WhatsApp URL.',
@@ -70,9 +69,7 @@ export async function GET(
     return NextResponse.redirect(whatsappUrl, 302);
   } catch (error) {
     // Error general (log solo en desarrollo)
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error redirecting QR:', error);
-    }
+    logger.error('Error redirecting QR:', error);
     return NextResponse.json(
       { error: 'Invalid QR code' },
       { status: 400 }

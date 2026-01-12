@@ -13,6 +13,7 @@ import { generateIntermediateQRUrl } from "@/lib/helpers/qr-hash";
 import { Colegio } from "@/types/strapi";
 import { getColegios } from "@/lib/api/colegios";
 import dynamic from "next/dynamic";
+import { logger } from "@/lib/helpers/logger";
 
 export default function GeneratorPage() {
   // --- 1. ESTADO DE DATOS ---
@@ -56,9 +57,7 @@ export default function GeneratorPage() {
         setColegios(colegiosData);
       } catch (error) {
         // Error cargando colegios (log solo en desarrollo)
-        if (process.env.NODE_ENV === 'development') {
-          console.error("Error cargando colegios:", error);
-        }
+        logger.error("Error cargando colegios:", error);
         setColegios([]);
       } finally {
         setLoadingColegios(false);
@@ -316,9 +315,7 @@ export default function GeneratorPage() {
 
     } catch (error: any) {
       // Error al registrar (log solo en desarrollo, pero mostrar mensaje al usuario)
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Error al registrar:', error);
-      }
+      logger.error('Error al registrar:', error);
       setRegisterMessage({
         type: 'error',
         text: error.message || 'Error al registrar los datos. Por favor, intenta nuevamente.',
@@ -399,9 +396,7 @@ export default function GeneratorPage() {
         .catch(err => {
           // Error al guardar QR (no crítico, el QR sigue funcionando)
           // Solo loguear en desarrollo
-          if (process.env.NODE_ENV === 'development') {
-            console.error('Error storing QR data in Strapi (non-critical):', err);
-          }
+          logger.error('Error storing QR data in Strapi (non-critical):', err);
           return { success: false, error: err };
         });
         
@@ -409,9 +404,7 @@ export default function GeneratorPage() {
         // Por ahora se ignora silenciosamente
       } else {
         // Error al extraer hash (no crítico, el QR seguirá funcionando con la URL completa)
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Warning: No se pudo extraer el hash de la URL del QR:', finalQrUrl);
-        }
+        logger.error('Warning: No se pudo extraer el hash de la URL del QR:', finalQrUrl);
       }
     }
     
@@ -449,9 +442,7 @@ export default function GeneratorPage() {
     } catch (e) {
       // sessionStorage puede fallar en modo privado o si está lleno
       // sessionStorage falló (no crítico, los datos están en query params)
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('No se pudo guardar en sessionStorage:', e);
-      }
+      logger.warn('No se pudo guardar en sessionStorage:', e);
       // Continuar sin fallar, los datos están en query params
     }
     

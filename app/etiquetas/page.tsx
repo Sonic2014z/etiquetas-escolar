@@ -6,6 +6,7 @@ import { Download } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import Image from 'next/image';
 import type { ParentData, StudentData } from "@/types/label";
+import { logger } from "@/lib/helpers/logger";
 
 interface StudentInfo {
   name: string;
@@ -118,17 +119,13 @@ function EtiquetasContent() {
             setStudentData(parsed);
           } catch (e) {
             // Error al parsear datos de sessionStorage (no crítico)
-            if (process.env.NODE_ENV === 'development') {
-              console.error('Error parsing stored data:', e);
-            }
+            logger.error('Error parsing stored data:', e);
           }
         }
       } catch (e) {
         // sessionStorage puede no estar disponible (modo privado, etc.)
         // sessionStorage no disponible (no crítico, los datos están en query params)
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('No se pudo acceder a sessionStorage:', e);
-        }
+        logger.warn('No se pudo acceder a sessionStorage:', e);
         // Continuar sin fallar, los datos deberían estar en query params
       }
     }

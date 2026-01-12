@@ -1,5 +1,6 @@
 import { strapi } from "./strapi";
 import type { Apoderado, StrapiCollectionResponse, StrapiResponse } from "@/types/strapi";
+import { logger } from "@/lib/helpers/logger";
 
 /**
  * Verifica que un apoderado existe por ID
@@ -15,7 +16,7 @@ export async function verifyApoderadoExists(apoderadoId: number): Promise<Apoder
     if (error.message?.includes('404')) {
       return null;
     }
-    console.error("Error verificando apoderado por ID:", error);
+    logger.error("Error verificando apoderado por ID:", error);
     throw error;
   }
 }
@@ -35,7 +36,7 @@ export async function findApoderadoByRut(rut: string): Promise<Apoderado | null>
     }
     return null;
   } catch (error) {
-    console.error("Error buscando apoderado por RUT:", error);
+    logger.error("Error buscando apoderado por RUT:", error);
     throw error;
   }
 }
@@ -80,7 +81,7 @@ export async function createApoderado(data: {
     
     return response.data;
   } catch (error) {
-    console.error("Error creando apoderado:", error);
+    logger.error("Error creando apoderado:", error);
     throw error;
   }
 }
@@ -128,7 +129,7 @@ export async function updateApoderadoWithAlumno(
     
     return response.data;
   } catch (error) {
-    console.error("Error actualizando apoderado con alumno:", error);
+    logger.error("Error actualizando apoderado con alumno:", error);
     // No lanzamos el error, solo lo registramos, porque la relación ya está establecida desde el lado del alumno
     return null;
   }
