@@ -288,9 +288,10 @@ export default function GeneratorPage() {
         // No limpiar el formulario en caso de éxito parcial para que el usuario pueda corregir
       } else {
         // Éxito completo
+        const successMessage = result.message || 'Registro completado exitosamente';
         setRegisterMessage({
           type: 'success',
-          text: result.message || 'Registro completado exitosamente',
+          text: `${successMessage}\n\nSe le enviará el PDF a su correo electrónico en breve.`,
         });
 
         // Abrir página de etiquetas y generar PDF para cada alumno registrado exitosamente
@@ -314,8 +315,8 @@ export default function GeneratorPage() {
                 
                 const finalIndex = studentIndex >= 0 ? studentIndex : idx;
                 
-                // Abrir página de etiquetas (para que el usuario pueda imprimir)
-                openEtiquetasPage(studentData, finalIndex);
+                // NO abrir página de etiquetas - el PDF se genera en background y se enviará por correo
+                // openEtiquetasPage(studentData, finalIndex); // Removido para evitar edición del PDF
                 
                 // Validar que tenemos el documentId del alumno antes de generar PDF
                 if (alumno.documentId && result.data.apoderado?.documentId) {
@@ -332,14 +333,9 @@ export default function GeneratorPage() {
             });
           }, 1000);
         } else {
-          // Si no hay información de alumnos exitosos, abrir para todos los alumnos
-          setTimeout(() => {
-            studentsData.forEach((student, index) => {
-              openEtiquetasPage(student, index);
-              // No generar PDF si no tenemos los documentIds
-              logger.warn('No se puede generar PDF: no hay información de alumnos registrados');
-            });
-          }, 1000);
+          // Si no hay información de alumnos exitosos, no abrir páginas
+          // El PDF se generará en background si tenemos los documentIds
+          logger.warn('No se puede generar PDF: no hay información de alumnos registrados');
         }
 
         // Limpiar el formulario después de un registro exitoso completo
