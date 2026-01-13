@@ -57,7 +57,29 @@ export async function POST(request: NextRequest) {
     }
 
     // Obtener la URL base de la aplicación
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    // Prioridad: 1. Variable de entorno, 2. URL del request, 3. Railway domain, 4. localhost
+    let baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+    
+    if (!baseUrl) {
+      // Intentar obtener desde el request
+      const url = new URL(request.url);
+      baseUrl = `${url.protocol}//${url.host}`;
+    }
+    
+    // Si aún no tenemos URL, intentar usar Railway domain
+    if (!baseUrl || baseUrl.includes('localhost')) {
+      const railwayDomain = process.env.RAILWAY_PUBLIC_DOMAIN;
+      if (railwayDomain) {
+        baseUrl = `https://${railwayDomain}`;
+      } else {
+        // Fallback a localhost solo en desarrollo
+        baseUrl = process.env.NODE_ENV === 'production' 
+          ? 'https://etiquetas.up.railway.app' // Fallback hardcodeado si es necesario
+          : 'http://localhost:3000';
+      }
+    }
+    
+    logger.log(`URL base detectada: ${baseUrl}`);
 
     // Construir la URL completa de la página de etiquetas
     const fullEtiquetasUrl = etiquetasUrl.startsWith('http') 
