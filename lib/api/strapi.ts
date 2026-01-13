@@ -43,7 +43,18 @@ async function fetchAPI<T>(
     body?: unknown,
     customHeaders?: HeadersInit,
 ): Promise<T> {
+    // Validar que tenemos las variables de entorno necesarias
+    if (!STRAPI_URL) {
+        logger.error('[Strapi API] STRAPI_URL no está configurado');
+        throw new Error('Configuración faltante: STRAPI_URL no está definida. Verifica las variables de entorno.');
+    }
+    
+    if (!STRAPI_TOKEN) {
+        logger.warn('[Strapi API] STRAPI_TOKEN no está configurado - las peticiones pueden fallar');
+    }
+    
     const requestUrl = getStrapiURL(path);
+    logger.log(`[Strapi API] ${method} ${requestUrl}`);
 
     const headers: HeadersInit = {
         "Content-Type": "application/json",
@@ -95,8 +106,9 @@ async function fetchAPI<T>(
         }
         
         // Manejar errores de red
-        if (error instanceof TypeError && error.message.includes('fetch')) {
-            throw new Error('Error de conexión: No se pudo conectar con Strapi. Verifica tu conexión a internet.');
+        if (error instanceof TypeError && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
+            logger.error(`[Strapi API] Error de conexión. URL: ${STRAPI_URL}, Path: ${path}`);
+            throw new Error(`Error de conexión: No se pudo conectar con Strapi en ${STRAPI_URL}. Verifica que la URL sea correcta y que Strapi esté accesible.`);
         }
         
         // Log solo en desarrollo
