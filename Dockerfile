@@ -30,6 +30,11 @@ ENV CHROME_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
+# Variables de entorno dummy para el build (se sobrescribirán en Railway)
+# Estas son necesarias para que Next.js pueda hacer el build sin errores
+ENV NEXT_PUBLIC_STRAPI_URL="https://placeholder.strapi.url"
+ENV STRAPI_API_TOKEN="placeholder-token-for-build"
+
 # Crear directorio de trabajo
 WORKDIR /app
 
