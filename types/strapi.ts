@@ -65,3 +65,24 @@ export interface EtiquetaQR {
     telefonoApoderado: string;
     nombreApoderado: string;
 }
+
+// Tipo para Etiquetas - PDF
+export interface EtiquetaPDF {
+    id: number;
+    documentId: string;
+    apoderado?: Apoderado | string; // Puede ser objeto o documentId
+    alumno?: Alumno | string; // Puede ser objeto o documentId
+    fecha_generacion: string; // ISO date string
+    hash_qr: string;
+    archivo_pdf?: {
+        id: number;
+        url: string;
+        name: string;
+        mime: string;
+        size: number;
+    };
+    numero_orden: number; // Integer según tu schema
+    año_escolar: number;
+    colegio_nombre: string; // Required según tu schema
+    estado?: 'generado' | 'impreso' | 'archivado';
+}

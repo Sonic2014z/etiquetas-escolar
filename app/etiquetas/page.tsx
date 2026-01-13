@@ -219,29 +219,29 @@ function EtiquetasContent() {
         </div>
 
         {/* Footer Section */}
-        <div className="border-t pt-2 print:pt-1.5 flex items-start justify-between">
-          <div>
-            <h2 className="text-xl font-bold mb-1 print:text-lg print:mb-1">
-              Gracias por confiar<br />en Librería Escolar.
+        <div className="border-t pt-2 print:pt-1.5 print:border-t print:border-gray-300 flex items-start justify-between print:mt-0">
+          <div className="flex-1">
+            <h2 className="text-xl font-bold mb-1 print:text-lg print:mb-1 print:leading-tight">
+              Gracias por confiar<br className="print:hidden" /><span className="print:hidden"> </span><span className="hidden print:inline"> </span>en Librería Escolar.
             </h2>
-            <p className="text-[9px] text-gray-600 print:text-[8px] print:mb-0.5">
+            <p className="text-[9px] text-gray-600 print:text-[8px] print:mb-0.5 print:leading-tight">
               Etiquetas con QR: Si se pierde, te avisan.
             </p>
-            <div className="mt-1.5 text-[8px] text-gray-700 print:mt-1 print:text-[8px]">
-              <p>Orden n°: {studentData.orderNumber}</p>
-              <p>Apoderado: {studentData.guardian}</p>
-            </div>
           </div>
-          <div className="text-right flex flex-col items-end">
+          <div className="text-right flex flex-col items-end print:shrink-0 print:ml-1">
             <Image
               src="/logo.png"
               alt="Logo de Librería Escolar"
               width={100}
               height={40}
-              className="object-contain print:block"
+              className="object-contain print:block print:w-20 print:h-auto print:mb-1"
               style={{ maxWidth: '100px', height: 'auto' }}
               loading="lazy"
             />
+            <div className="text-[8px] text-gray-700 print:text-[8px] print:leading-tight print:text-right print:mt-0">
+              <p className="print:mb-0">Orden n°: {studentData.orderNumber}</p>
+              <p className="print:mb-0">Apoderado: {studentData.guardian}</p>
+            </div>
           </div>
         </div>
       </div>

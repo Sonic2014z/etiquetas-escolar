@@ -293,19 +293,41 @@ export default function GeneratorPage() {
           text: result.message || 'Registro completado exitosamente',
         });
 
-        // Abrir página de etiquetas para cada alumno registrado exitosamente
-        if (result.data && result.data.alumnosExitosos && result.data.alumnosExitosos.length > 0) {
+        // Abrir página de etiquetas y generar PDF para cada alumno registrado exitosamente
+        // La API puede retornar 'alumnos' o 'alumnosExitosos' dependiendo del caso
+        const alumnosRegistrados = result.data?.alumnosExitosos || result.data?.alumnos || [];
+        
+        if (alumnosRegistrados.length > 0) {
           // Esperar un momento antes de abrir las ventanas para que el usuario vea el mensaje
           setTimeout(() => {
-            result.data.alumnosExitosos.forEach((alumno: { documentId: string; existia: boolean; index: number; nombre: string }, index: number) => {
+            alumnosRegistrados.forEach((alumno: { documentId: string; existia: boolean; index: number; nombre: string }, idx: number) => {
               // Buscar los datos del alumno en studentsData
               const studentData = studentsData.find(
                 s => `${s.nombres} ${s.primerApellido} ${s.segundoApellido}`.trim() === alumno.nombre
               );
               
               if (studentData) {
-                // Usar la misma lógica que DownloadPdfButton pero con URL intermediaria
-                openEtiquetasPage(studentData, index);
+                // Obtener el índice correcto del estudiante (usar el índice del array original, no el del forEach)
+                const studentIndex = studentsData.findIndex(
+                  s => `${s.nombres} ${s.primerApellido} ${s.segundoApellido}`.trim() === alumno.nombre
+                );
+                
+                const finalIndex = studentIndex >= 0 ? studentIndex : idx;
+                
+                // Abrir página de etiquetas (para que el usuario pueda imprimir)
+                openEtiquetasPage(studentData, finalIndex);
+                
+                // Validar que tenemos el documentId del alumno antes de generar PDF
+                if (alumno.documentId && result.data.apoderado?.documentId) {
+                  // Generar y subir PDF a Strapi (en background, no bloquea)
+                  generateAndUploadPDF(studentData, finalIndex, result.data.apoderado.documentId, alumno.documentId);
+                } else {
+                  logger.warn('No se puede generar PDF: faltan documentIds', {
+                    apoderadoDocumentId: result.data.apoderado?.documentId || 'undefined',
+                    alumnoDocumentId: alumno.documentId || 'undefined',
+                    alumno: alumno,
+                  });
+                }
               }
             });
           }, 1000);
@@ -314,6 +336,8 @@ export default function GeneratorPage() {
           setTimeout(() => {
             studentsData.forEach((student, index) => {
               openEtiquetasPage(student, index);
+              // No generar PDF si no tenemos los documentIds
+              logger.warn('No se puede generar PDF: no hay información de alumnos registrados');
             });
           }, 1000);
         }
@@ -472,6 +496,128 @@ export default function GeneratorPage() {
     // Abrir en nueva ventana para imprimir
     const url = `/etiquetas?${params.toString()}`;
     window.open(url, '_blank');
+  };
+
+  // Función para generar y subir PDF a Strapi
+  const generateAndUploadPDF = async (
+    student: StudentData, 
+    index: number, 
+    apoderadoDocumentId: string,
+    alumnoDocumentId: string
+  ) => {
+    try {
+      const currentYear = new Date().getFullYear();
+      const studentFullName = `${student.nombres} ${student.primerApellido} ${student.segundoApellido}`.trim();
+      const courseText = `${student.course} ${student.letter}`;
+      
+      // Obtener datos de la vista previa
+      const previewData = studentsPreviewData[index];
+      if (!previewData) {
+        logger.warn('No se encontraron datos de preview para generar PDF');
+        return;
+      }
+      
+      // Dividir el nombre del colegio si es necesario
+      const colegioParts = previewData.colegioNombre.split(' ');
+      const colegioLine1 = colegioParts.slice(0, Math.ceil(colegioParts.length / 2)).join(' ');
+      const colegioLine2 = colegioParts.slice(Math.ceil(colegioParts.length / 2)).join(' ');
+      
+      // Generar número de orden
+      const orderNumber = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+      
+      // Generar hash QR si existe
+      let hash_qr = '';
+      let finalQrUrl = previewData.qrUrl;
+      
+      if (finalQrUrl && parentData.phone) {
+        const baseUrl = typeof window !== 'undefined' 
+          ? (process.env.NEXT_PUBLIC_APP_URL || window.location.origin)
+          : '';
+        
+        const qrData = {
+          studentName: studentFullName,
+          studentGrade: courseText,
+          parentPhone: parentData.phone,
+          parentName: parentData.nombres,
+        };
+        
+        finalQrUrl = generateIntermediateQRUrl(qrData, baseUrl);
+        const hashMatch = finalQrUrl.match(/\/qr\/([a-f0-9]+)$/);
+        if (hashMatch && hashMatch[1]) {
+          hash_qr = hashMatch[1];
+        }
+      }
+      
+      // Construir URL de etiquetas con query params
+      const params = new URLSearchParams({
+        studentName: studentFullName,
+        studentGrade: courseText,
+        studentSchool: colegioLine1,
+        studentLocation: colegioLine2,
+        studentYear: currentYear.toString(),
+        orderNumber: orderNumber,
+        guardian: `${parentData.nombres} ${parentData.primerApellido}`,
+        studentIndex: index.toString(),
+        ...(finalQrUrl && { qrUrl: finalQrUrl }),
+      });
+      
+      const etiquetasUrl = `/etiquetas?${params.toString()}`;
+      
+      // Validar que tenemos todos los datos necesarios antes de llamar a la API
+      if (!apoderadoDocumentId || !alumnoDocumentId) {
+        logger.warn('No se puede generar PDF: faltan documentIds', {
+          apoderadoDocumentId: !!apoderadoDocumentId,
+          alumnoDocumentId: !!alumnoDocumentId,
+        });
+        return;
+      }
+      
+      // Si no hay hash_qr, generar uno temporal o usar un valor por defecto
+      const finalHashQr = hash_qr || `temp_${Date.now()}`;
+      
+      logger.log('Llamando a /api/generar-pdf con:', {
+        apoderadoDocumentId,
+        alumnoDocumentId,
+        hash_qr: finalHashQr,
+        numero_orden: parseInt(orderNumber),
+        año_escolar: currentYear,
+        colegio_nombre: previewData.colegioNombre,
+        etiquetasUrl,
+      });
+      
+      // Llamar a la API para generar y subir PDF
+      const response = await fetch('/api/generar-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apoderadoDocumentId,
+          alumnoDocumentId,
+          hash_qr: finalHashQr,
+          numero_orden: parseInt(orderNumber),
+          año_escolar: currentYear,
+          colegio_nombre: previewData.colegioNombre,
+          etiquetasUrl,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        logger.error('Error generando/subiendo PDF:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorData,
+        });
+        // No mostrar error al usuario, es silencioso
+        return;
+      }
+      
+      const result = await response.json();
+      logger.log('PDF generado y subido exitosamente:', result.data?.documentId);
+      
+    } catch (error: unknown) {
+      // Error silencioso, no interrumpe el flujo del usuario
+      logger.error('Error en generateAndUploadPDF (no crítico):', error);
+    }
   };
 
   // Función para validar campos obligatorios

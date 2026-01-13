@@ -1,0 +1,393 @@
+import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/helpers/logger";
+import { env } from "@/lib/env";
+import { strapi } from "@/lib/api/strapi";
+import type { EtiquetaPDF, StrapiResponse, StrapiCollectionResponse } from "@/types/strapi";
+
+/**
+ * API route para generar y subir PDF a Strapi
+ * POST /api/generar-pdf
+ * 
+ * Esta ruta recibe los datos del registro y genera el PDF usando Puppeteer
+ * para renderizar la página de etiquetas, luego lo sube a Strapi.
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    logger.log("Datos recibidos en /api/generar-pdf:", JSON.stringify(body, null, 2));
+    
+    const {
+      apoderadoDocumentId,
+      alumnoDocumentId,
+      hash_qr,
+      numero_orden,
+      año_escolar,
+      colegio_nombre,
+      etiquetasUrl, // URL relativa o absoluta de la página de etiquetas con query params
+    } = body;
+
+    // Validar campos requeridos con logging detallado
+    const missingFields: string[] = [];
+    if (!apoderadoDocumentId) missingFields.push('apoderadoDocumentId');
+    if (!alumnoDocumentId) missingFields.push('alumnoDocumentId');
+    if (!hash_qr) missingFields.push('hash_qr');
+    if (!etiquetasUrl) missingFields.push('etiquetasUrl');
+    
+    if (missingFields.length > 0) {
+      logger.error("Faltan campos requeridos:", missingFields);
+      logger.error("Datos recibidos:", {
+        apoderadoDocumentId: apoderadoDocumentId || 'undefined',
+        alumnoDocumentId: alumnoDocumentId || 'undefined',
+        hash_qr: hash_qr || 'undefined',
+        etiquetasUrl: etiquetasUrl || 'undefined',
+      });
+      return NextResponse.json(
+        { 
+          error: "Faltan campos requeridos",
+          missingFields: missingFields,
+          received: {
+            apoderadoDocumentId: !!apoderadoDocumentId,
+            alumnoDocumentId: !!alumnoDocumentId,
+            hash_qr: !!hash_qr,
+            etiquetasUrl: !!etiquetasUrl,
+          }
+        },
+        { status: 400 }
+      );
+    }
+
+    // Obtener la URL base de la aplicación
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+    // Construir la URL completa de la página de etiquetas
+    const fullEtiquetasUrl = etiquetasUrl.startsWith('http') 
+      ? etiquetasUrl 
+      : `${baseUrl}${etiquetasUrl.startsWith('/') ? etiquetasUrl : `/${etiquetasUrl}`}`;
+
+    logger.log(`Generando PDF desde: ${fullEtiquetasUrl}`);
+
+    // Intentar usar Puppeteer para generar el PDF
+    let pdfBuffer: Buffer;
+    
+    try {
+      // Importar puppeteer-core dinámicamente (solo se carga cuando se necesita)
+      const puppeteer = await import('puppeteer-core');
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      // Para puppeteer-core, necesitamos especificar el ejecutable de Chrome
+      // Intentar encontrar Chrome en ubicaciones comunes
+      let executablePath = process.env.CHROME_EXECUTABLE_PATH || 
+                          process.env.PUPPETEER_EXECUTABLE_PATH;
+      
+      // Si no está configurado, intentar encontrar Chrome en ubicaciones comunes
+      if (!executablePath) {
+        const possiblePaths = [
+          // Windows
+          'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+          'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+          process.env.LOCALAPPDATA ? `${process.env.LOCALAPPDATA}\\Google\\Chrome\\Application\\chrome.exe` : null,
+          // Linux
+          '/usr/bin/google-chrome',
+          '/usr/bin/google-chrome-stable',
+          '/usr/bin/chromium',
+          '/usr/bin/chromium-browser',
+          // Mac
+          '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+        ].filter(Boolean) as string[];
+        
+        // Buscar el primer ejecutable que exista
+        for (const possiblePath of possiblePaths) {
+          try {
+            if (fs.default.existsSync(possiblePath)) {
+              executablePath = possiblePath;
+              logger.log(`Chrome encontrado en: ${executablePath}`);
+              break;
+            }
+          } catch {
+            // Continuar buscando
+          }
+        }
+      }
+      
+      // Si aún no tenemos executablePath, intentar usar 'channel'
+      const launchOptions: any = {
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+        ],
+      };
+      
+      if (executablePath) {
+        launchOptions.executablePath = executablePath;
+      } else {
+        // Intentar usar 'channel' (busca Chrome en ubicaciones estándar)
+        launchOptions.channel = 'chrome';
+      }
+      
+      logger.log(`Lanzando Puppeteer con opciones:`, {
+        executablePath: launchOptions.executablePath || 'usando channel',
+        channel: launchOptions.channel || 'no especificado',
+      });
+      
+      const browser = await puppeteer.default.launch(launchOptions);
+
+      const page = await browser.newPage();
+      
+      // Navegar a la página de etiquetas
+      await page.goto(fullEtiquetasUrl, {
+        waitUntil: 'networkidle0',
+        timeout: 30000,
+      });
+
+      // Esperar un poco más para que todo se renderice
+      // waitForTimeout fue deprecado, usar setTimeout con Promise
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Generar PDF con las mismas configuraciones que la impresión
+      // page.pdf() retorna Uint8Array, necesitamos convertirlo a Buffer
+      const pdfUint8Array = await page.pdf({
+        format: 'letter',
+        printBackground: true,
+        margin: {
+          top: '0',
+          right: '0',
+          bottom: '0',
+          left: '0',
+        },
+      });
+
+      // Convertir Uint8Array a Buffer
+      pdfBuffer = Buffer.from(pdfUint8Array);
+
+      await browser.close();
+      
+      logger.log(`PDF generado exitosamente, tamaño: ${pdfBuffer.length} bytes`);
+    } catch (puppeteerError: unknown) {
+      logger.error("Error generando PDF con Puppeteer:", puppeteerError);
+      
+      // Si Puppeteer no está disponible, retornar error informativo
+      if (puppeteerError instanceof Error && 
+          (puppeteerError.message.includes('Cannot find module') || 
+           puppeteerError.message.includes('puppeteer'))) {
+        return NextResponse.json(
+          { 
+            error: "Puppeteer-core no está instalado",
+            message: "Para generar PDFs, instala puppeteer-core: npm install puppeteer-core",
+            details: "Esta funcionalidad requiere puppeteer-core para renderizar la página y generar el PDF. También necesitas tener Chrome/Chromium instalado o configurar CHROME_EXECUTABLE_PATH."
+          },
+          { status: 500 }
+        );
+      }
+      
+      // Si el error es sobre el ejecutable de Chrome
+      if (puppeteerError instanceof Error && 
+          (puppeteerError.message.includes('executable') || 
+           puppeteerError.message.includes('browser') ||
+           puppeteerError.message.includes('Chrome') ||
+           puppeteerError.message.includes('executablePath') ||
+           puppeteerError.message.includes('channel'))) {
+        return NextResponse.json(
+          { 
+            error: "No se encontró el ejecutable de Chrome",
+            message: "puppeteer-core requiere Chrome/Chromium instalado",
+            details: "Instala Chrome o configura la variable de entorno CHROME_EXECUTABLE_PATH con la ruta al ejecutable de Chrome. Ejemplo en Windows: C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+          },
+          { status: 500 }
+        );
+      }
+      
+      throw puppeteerError;
+    }
+
+    // Subir PDF a Strapi usando FormData
+    // En Strapi v5, para crear un registro con archivo y relaciones, necesitamos:
+    // 1. Primero subir el archivo
+    // 2. Luego crear el registro con el ID del archivo
+    
+    const STRAPI_URL = env.STRAPI_URL;
+    const STRAPI_TOKEN = env.STRAPI_API_TOKEN;
+
+    if (!STRAPI_URL || !STRAPI_TOKEN) {
+      logger.error("Faltan variables de entorno STRAPI_URL o STRAPI_API_TOKEN");
+      return NextResponse.json(
+        { error: "Configuración de Strapi incompleta" },
+        { status: 500 }
+      );
+    }
+
+    // Paso 1: Subir el archivo PDF primero
+    logger.log("Subiendo archivo PDF a Strapi...");
+    const uploadFormData = new FormData();
+    const pdfUint8Array = new Uint8Array(pdfBuffer);
+    const pdfBlob = new Blob([pdfUint8Array], { type: 'application/pdf' });
+    uploadFormData.append('files', pdfBlob, `etiqueta_${hash_qr}.pdf`);
+
+    const uploadResponse = await fetch(`${STRAPI_URL}/api/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${STRAPI_TOKEN}`,
+      },
+      body: uploadFormData,
+    });
+
+    if (!uploadResponse.ok) {
+      const errorData = await uploadResponse.json().catch(() => ({}));
+      logger.error("Error subiendo archivo PDF a Strapi:", {
+        status: uploadResponse.status,
+        statusText: uploadResponse.statusText,
+        errorData
+      });
+      return NextResponse.json(
+        { 
+          error: "Error al subir archivo PDF a Strapi",
+          details: errorData.error?.message || uploadResponse.statusText,
+          status: uploadResponse.status
+        },
+        { status: uploadResponse.status }
+      );
+    }
+
+    const uploadData = await uploadResponse.json();
+    logger.log("Respuesta completa del upload:", JSON.stringify(uploadData, null, 2));
+    
+    // En Strapi v5, el upload devuelve un array con objetos que tienen 'id' (numérico)
+    // Para campos de media, necesitamos usar el 'id' numérico, no el documentId
+    const uploadedFile = Array.isArray(uploadData) ? uploadData[0] : uploadData;
+    const fileId = uploadedFile?.id; // Usar 'id' numérico para campos de media
+    
+    if (!fileId) {
+      logger.error("Strapi no devolvió el ID del archivo subido:", uploadData);
+      return NextResponse.json(
+        { 
+          error: "Error: Strapi no devolvió el ID del archivo subido",
+          details: uploadData
+        },
+        { status: 500 }
+      );
+    }
+
+    logger.log(`Archivo PDF subido exitosamente, ID numérico: ${fileId}`);
+
+    // Paso 2: Crear el registro con el archivo y las relaciones usando el cliente de Strapi
+    logger.log("Creando registro de etiqueta PDF en Strapi...");
+    
+    const validEndpoint = "etiquetas-pdf"; // Según el schema, pluralName es "etiquetas-pdf"
+    
+    // Verificar directamente con fetch si el endpoint está disponible
+    // Esto nos ayudará a diagnosticar el problema
+    const testUrl = `${env.STRAPI_URL}/api/${validEndpoint}`;
+    logger.log(`Verificando endpoint: ${testUrl}`);
+    
+    try {
+      const directTest = await fetch(testUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${env.STRAPI_API_TOKEN}`,
+        },
+      });
+      logger.log(`Respuesta directa del endpoint: ${directTest.status} ${directTest.statusText}`);
+      if (!directTest.ok) {
+        const testBody = await directTest.text();
+        logger.log(`Cuerpo de la respuesta: ${testBody.substring(0, 200)}`);
+      }
+    } catch (testErr) {
+      logger.error("Error al verificar endpoint directamente:", testErr);
+    }
+    
+    const recordData = {
+      apoderado: apoderadoDocumentId,
+      alumno: alumnoDocumentId,
+      fecha_generacion: new Date().toISOString(), // Formato ISO para datetime
+      hash_qr: hash_qr,
+      numero_orden: numero_orden || 0,
+      año_escolar: año_escolar || new Date().getFullYear(),
+      colegio_nombre: colegio_nombre || '',
+      estado: 'generado' as const,
+      archivo_pdf: fileId, // ID numérico del archivo subido
+    };
+
+    logger.log("Datos a enviar a Strapi:", JSON.stringify(recordData, null, 2));
+    logger.log(`URL completa para POST: ${env.STRAPI_URL}/api/${validEndpoint}`);
+    logger.log(`API Token usado: ${env.STRAPI_API_TOKEN ? 'Presente (primeros 10 chars: ' + env.STRAPI_API_TOKEN.substring(0, 10) + '...)' : 'FALTANTE'}`);
+    
+    // El error 405 cuando puedes crear manualmente sugiere un problema con los permisos de la API Key
+    // Aunque tengas "Full Access", en Strapi v5 a veces necesitas verificar permisos específicos por Content Type
+
+    // Usar el cliente de Strapi que ya maneja el formato correcto
+    let strapiData: StrapiResponse<EtiquetaPDF>;
+    try {
+      strapiData = await strapi.post<StrapiResponse<EtiquetaPDF>>(
+        validEndpoint,
+        recordData
+      );
+    } catch (error) {
+      // Si el error es 405, proporcionar instrucciones más específicas
+      if (error instanceof Error && error.message.includes('405')) {
+        logger.error("═══════════════════════════════════════════════════════");
+        logger.error("ERROR 405: El endpoint existe pero no acepta POST");
+        logger.error("═══════════════════════════════════════════════════════");
+        logger.error("DIAGNÓSTICO:");
+        logger.error("  ✓ Puedes crear manualmente → Content Type está bien");
+        logger.error("  ✓ Servidor reiniciado → Endpoint debería estar disponible");
+        logger.error("  ✗ API devuelve 405 → Problema con permisos de API Key");
+        logger.error("");
+        logger.error("SOLUCIÓN:");
+        logger.error("El Content Type 'etiquetas-pdf' no aparece en los permisos de tu API Key.");
+        logger.error("Esto indica que Strapi no lo reconoce como un Content Type válido para la API.");
+        logger.error("");
+        logger.error("VERIFICACIONES EN STRAPI:");
+        logger.error("1. Ve a Content-Type Builder → etiquetas-pdf");
+        logger.error("   - Verifica que esté guardado (debe tener un check verde)");
+        logger.error("   - Si hay un botón 'Save', haz clic en él");
+        logger.error("");
+        logger.error("2. Verifica el nombre del Content Type:");
+        logger.error("   - Singular name: 'etiqueta-pdf'");
+        logger.error("   - Plural name: 'etiquetas-pdf' (sin 's' extra)");
+        logger.error("   - Display name: 'Etiquetas - PDFs'");
+        logger.error("");
+        logger.error("3. Si el Content Type tiene guiones en el nombre, puede causar problemas:");
+        logger.error("   - Considera renombrarlo sin guiones (ej: 'etiquetasPdf')");
+        logger.error("   - O verifica que el pluralName sea exactamente 'etiquetas-pdf'");
+        logger.error("");
+        logger.error("4. Reinicia Strapi después de hacer cambios:");
+        logger.error("   - Detén el servidor Strapi");
+        logger.error("   - Inícialo de nuevo");
+        logger.error("");
+        logger.error("5. Después de reiniciar, crea una NUEVA API Key:");
+        logger.error("   - Settings → API Tokens → Create new API Token");
+        logger.error("   - Token type: 'Full access'");
+        logger.error("   - Verifica que 'etiquetas-pdf' aparezca en la lista");
+        logger.error("   - Si NO aparece, el Content Type no está correctamente configurado");
+        logger.error("");
+        logger.error("ALTERNATIVA: Si nada funciona, considera renombrar el Content Type");
+        logger.error("sin guiones (ej: 'etiquetasPdf') y actualizar el código en consecuencia.");
+        logger.error("═══════════════════════════════════════════════════════");
+      }
+      throw error;
+    }
+
+    logger.log("Registro de etiqueta PDF creado exitosamente:", strapiData.data?.documentId);
+
+    return NextResponse.json({
+      success: true,
+      message: "PDF generado y subido exitosamente",
+      data: strapiData,
+    });
+
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Error desconocido";
+    logger.error("Error en generar-pdf:", error);
+    
+    return NextResponse.json(
+      { 
+        error: "Error al generar PDF",
+        message: errorMessage,
+      },
+      { status: 500 }
+    );
+  }
+}
