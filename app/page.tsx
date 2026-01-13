@@ -318,6 +318,72 @@ export default function GeneratorPage() {
                 // NO abrir página de etiquetas - el PDF se genera en background y se enviará por correo
                 // openEtiquetasPage(studentData, finalIndex); // Removido para evitar edición del PDF
                 
+                // Guardar QR code en Strapi (si existe)
+                const previewData = studentsPreviewData[finalIndex];
+                if (previewData && previewData.qrUrl && parentData.phone) {
+                  const baseUrl = typeof window !== 'undefined' 
+                    ? (process.env.NEXT_PUBLIC_APP_URL || window.location.origin)
+                    : '';
+                  
+                  const studentFullName = `${studentData.nombres} ${studentData.primerApellido} ${studentData.segundoApellido}`.trim();
+                  const courseText = `${studentData.course} ${studentData.letter}`;
+                  
+                  const qrData = {
+                    studentName: studentFullName,
+                    studentGrade: courseText,
+                    parentPhone: parentData.phone,
+                    parentName: parentData.nombres,
+                  };
+                  
+                  // Generar URL intermediaria (solo hash)
+                  const finalQrUrl = generateIntermediateQRUrl(qrData, baseUrl);
+                  
+                  // Extraer el hash de la URL y validar que existe
+                  const hashMatch = finalQrUrl.match(/\/qr\/([a-f0-9]+)$/);
+                  if (hashMatch && hashMatch[1]) {
+                    const hash = hashMatch[1];
+                    
+                    // Log para verificar que el código se ejecuta
+                    console.log('[QR Code] Intentando guardar QR code en Strapi:', { hash, nombreAlumno: qrData.studentName });
+                    
+                    // Almacenar los datos en Strapi (async, no bloquea)
+                    fetch('/api/qr-codes', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        hash: hash,
+                        nombreAlumno: qrData.studentName,
+                        cursoAlumno: qrData.studentGrade,
+                        telefonoApoderado: qrData.parentPhone,
+                        nombreApoderado: qrData.parentName,
+                      }),
+                    })
+                    .then(async response => {
+                      const responseData = await response.json().catch(() => ({}));
+                      
+                      if (!response.ok) {
+                        console.error('[QR Code] Error al guardar QR code:', {
+                          status: response.status,
+                          statusText: response.statusText,
+                          error: responseData.error || 'Unknown error',
+                          details: responseData.details || responseData,
+                        });
+                        throw new Error(`HTTP error! status: ${response.status}, error: ${responseData.error || response.statusText}`);
+                      }
+                      
+                      console.log('[QR Code] QR code guardado exitosamente:', responseData);
+                    })
+                    .catch(err => {
+                      console.error('[QR Code] Error guardando QR code en Strapi:', {
+                        error: err,
+                        message: err instanceof Error ? err.message : String(err),
+                        hash: hash,
+                        qrData: qrData,
+                      });
+                    });
+                  }
+                }
+                
                 // Validar que tenemos el documentId del alumno antes de generar PDF
                 if (alumno.documentId && result.data.apoderado?.documentId) {
                   // Generar y subir PDF a Strapi (en background, no bloquea)
