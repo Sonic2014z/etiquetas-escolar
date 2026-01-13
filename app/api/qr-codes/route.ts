@@ -50,13 +50,33 @@ export async function POST(request: NextRequest) {
     }
     
     // Crear o actualizar el QR code en Strapi
-    const qrCode = await upsertQRCode({
-      hash: data.hash,
-      nombreAlumno: data.nombreAlumno,
-      cursoAlumno: data.cursoAlumno,
-      telefonoApoderado: data.telefonoApoderado,
-      nombreApoderado: data.nombreApoderado,
-    });
+    logger.log("Intentando crear/actualizar QR code:", { hash: data.hash });
+    
+    let qrCode;
+    try {
+      qrCode = await upsertQRCode({
+        hash: data.hash,
+        nombreAlumno: data.nombreAlumno,
+        cursoAlumno: data.cursoAlumno,
+        telefonoApoderado: data.telefonoApoderado,
+        nombreApoderado: data.nombreApoderado,
+      });
+      logger.log("QR code creado/actualizado exitosamente");
+    } catch (qrError) {
+      logger.error("Error en upsertQRCode:", qrError);
+      // Si es un error 405, proporcionar información más específica
+      if (qrError instanceof Error && (qrError.message.includes('405') || qrError.message.includes('Method Not Allowed'))) {
+        return NextResponse.json(
+          { 
+            error: 'El Content Type etiquetas-qr no está disponible para la API Key',
+            details: 'Verifica en Strapi que el Content Type etiquetas-qr esté en los permisos de tu API Key. Si creaste el Content Type después de la API Key, necesitas recrear la API Key.',
+            originalError: qrError.message
+          },
+          { status: 500 }
+        );
+      }
+      throw qrError;
+    }
     
     return NextResponse.json({ success: true, data: qrCode }, {
       headers: {

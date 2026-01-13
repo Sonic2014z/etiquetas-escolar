@@ -40,18 +40,29 @@ export async function createQRCode(data: {
       nombreApoderado: data.nombreApoderado,
     };
     
+    logger.log("Creando QR code en Strapi:", { hash: data.hash, nombreAlumno: data.nombreAlumno });
+    
     const response = await strapi.post<StrapiResponse<EtiquetaQR>>(
       "etiquetas-qr",
       payload
     );
     
-    if (!response.data || !response.data.id) {
+    if (!response.data || (!response.data.id && !response.data.documentId)) {
+      logger.error("Strapi no devolvió ID al crear QR code:", response);
       throw new Error("Error: Strapi no devolvió ID al crear QR code");
     }
     
+    logger.log("QR code creado exitosamente:", response.data.documentId || response.data.id);
     return response.data;
   } catch (error) {
     logger.error("Error creando QR code:", error);
+    if (error instanceof Error) {
+      // Si es un error 405, podría ser el mismo problema que con etiquetas-pdf
+      if (error.message.includes('405') || error.message.includes('Method Not Allowed')) {
+        logger.error("ERROR 405 en etiquetas-qr: El Content Type podría no estar disponible para la API Key");
+        logger.error("Verifica en Strapi que 'etiquetas-qr' esté en los permisos de tu API Key");
+      }
+    }
     throw error;
   }
 }
