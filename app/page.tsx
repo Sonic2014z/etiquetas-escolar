@@ -411,6 +411,10 @@ export default function GeneratorPage() {
       if (hashMatch && hashMatch[1]) {
         const hash = hashMatch[1];
         
+        // Log para verificar que el código se ejecuta
+        logger.log('Intentando guardar QR code en Strapi:', { hash, qrData });
+        console.log('[QR Code] Intentando guardar:', { hash, nombreAlumno: qrData.studentName });
+        
         // Almacenar los datos en Strapi (async, no bloquea)
         // Nota: Este fetch es silencioso y no bloquea el flujo principal
         // Se podría agregar un estado de loading aquí si se necesita feedback visual
@@ -425,11 +429,21 @@ export default function GeneratorPage() {
             nombreApoderado: qrData.parentName,
           }),
         })
-        .then(response => {
+        .then(async response => {
+          const responseData = await response.json().catch(() => ({}));
+          
           if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            logger.error('Error al guardar QR code:', {
+              status: response.status,
+              statusText: response.statusText,
+              error: responseData.error || 'Unknown error',
+              details: responseData.details || responseData,
+            });
+            throw new Error(`HTTP error! status: ${response.status}, error: ${responseData.error || response.statusText}`);
           }
-          return response.json();
+          
+          logger.log('QR code guardado exitosamente:', responseData);
+          return responseData;
         })
         .then(data => {
           // QR guardado exitosamente (silencioso, no interrumpe el flujo)
@@ -437,9 +451,22 @@ export default function GeneratorPage() {
           return { success: true, data };
         })
         .catch(err => {
-          // Error al guardar QR (no crítico, el QR sigue funcionando)
-          // Solo loguear en desarrollo
+          // Log detallado del error para diagnóstico (siempre visible)
+          const errorDetails = {
+            error: err,
+            message: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? err.stack : undefined,
+            hash: hash,
+            qrData: qrData,
+          };
+          
+          // Log en consola del navegador (siempre visible)
+          console.error('[QR Code] Error guardando QR code en Strapi:', errorDetails);
+          
+          // Log usando logger (puede estar silenciado en producción)
+          logger.error('Error en saveQRPromise:', errorDetails);
           logger.error('Error storing QR data in Strapi (non-critical):', err);
+          
           return { success: false, error: err };
         });
         
