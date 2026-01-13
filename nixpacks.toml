@@ -1,0 +1,14 @@
+# Configuración de Nixpacks para Railway
+# Esto asegura que Chromium se instale durante el build
+
+[phases.setup]
+nixPkgs = ['chromium']
+
+[phases.install]
+cmds = ['npm ci']
+
+[phases.build]
+cmds = ['npm run build']
+
+[start]
+cmd = 'npm start'

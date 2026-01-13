@@ -83,15 +83,15 @@ export async function POST(request: NextRequest) {
       // Si no está configurado, intentar encontrar Chrome en ubicaciones comunes
       if (!executablePath) {
         const possiblePaths = [
+          // Railway/Linux (prioridad para producción)
+          '/usr/bin/chromium',
+          '/usr/bin/chromium-browser',
+          '/usr/bin/google-chrome-stable',
+          '/usr/bin/google-chrome',
           // Windows
           'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
           'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
           process.env.LOCALAPPDATA ? `${process.env.LOCALAPPDATA}\\Google\\Chrome\\Application\\chrome.exe` : null,
-          // Linux
-          '/usr/bin/google-chrome',
-          '/usr/bin/google-chrome-stable',
-          '/usr/bin/chromium',
-          '/usr/bin/chromium-browser',
           // Mac
           '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
         ].filter(Boolean) as string[];
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
         }
       }
       
-      // Si aún no tenemos executablePath, intentar usar 'channel'
+      // Si aún no tenemos executablePath, intentar usar 'channel' o lanzar error
       const launchOptions: any = {
         headless: true,
         args: [
@@ -118,13 +118,17 @@ export async function POST(request: NextRequest) {
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
           '--disable-gpu',
+          '--disable-software-rasterizer',
+          '--disable-extensions',
         ],
       };
       
       if (executablePath) {
         launchOptions.executablePath = executablePath;
       } else {
-        // Intentar usar 'channel' (busca Chrome en ubicaciones estándar)
+        // En Railway/producción, intentar usar 'channel' como último recurso
+        // Si esto falla, el error será más claro
+        logger.warn('No se encontró Chrome/Chromium en rutas comunes. Intentando usar channel...');
         launchOptions.channel = 'chrome';
       }
       

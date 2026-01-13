@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "node scripts/install-chromium.js || true"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.3.2",
