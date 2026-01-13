@@ -20,14 +20,8 @@ if (!isBuildTime) {
         .map(([key]) => key);
     
     if (missingVars.length > 0) {
-        // Log detallado para diagnóstico
-        console.error('[env.ts] Variables de entorno:', {
-            NEXT_PUBLIC_STRAPI_URL: NEXT_PUBLIC_STRAPI_URL || 'FALTANTE',
-            STRAPI_API_TOKEN: STRAPI_API_TOKEN ? 'PRESENTE' : 'FALTANTE',
-            NODE_ENV: process.env.NODE_ENV,
-            NEXT_PHASE: process.env.NEXT_PHASE,
-            todasLasEnvVars: Object.keys(process.env).filter(k => k.includes('STRAPI')),
-        });
+        // Log genérico sin exponer valores
+        logger.error('Faltan variables de entorno requeridas');
         throw new Error(`Faltan variables de entorno requeridas: ${missingVars.join(', ')}`);
     }
 }

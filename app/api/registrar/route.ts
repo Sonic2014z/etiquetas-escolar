@@ -305,7 +305,7 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         // Capturar error para este alumno específico y continuar con los demás
         const errorMessage = error instanceof Error ? error.message : "Error desconocido al procesar el alumno";
-        logger.error(`Error procesando alumno ${i + 1} (${nombreAlumno}):`, error);
+        logger.error(`Error procesando alumno ${i + 1}:`, error instanceof Error ? error.message : 'Error desconocido');
         alumnosFallidos.push({
           index: i + 1,
           nombre: nombreAlumno,

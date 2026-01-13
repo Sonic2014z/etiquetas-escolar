@@ -50,8 +50,6 @@ export async function POST(request: NextRequest) {
     }
     
     // Crear o actualizar el QR code en Strapi
-    logger.log("Intentando crear/actualizar QR code:", { hash: data.hash });
-    
     let qrCode;
     try {
       qrCode = await upsertQRCode({
@@ -61,7 +59,6 @@ export async function POST(request: NextRequest) {
         telefonoApoderado: data.telefonoApoderado,
         nombreApoderado: data.nombreApoderado,
       });
-      logger.log("QR code creado/actualizado exitosamente");
     } catch (qrError) {
       logger.error("Error en upsertQRCode:", qrError);
       // Si es un error 405, proporcionar información más específica

@@ -14,7 +14,6 @@ import type { EtiquetaPDF, StrapiResponse, StrapiCollectionResponse } from "@/ty
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    logger.log("Datos recibidos en /api/generar-pdf:", JSON.stringify(body, null, 2));
     
     const {
       apoderadoDocumentId,
@@ -35,12 +34,6 @@ export async function POST(request: NextRequest) {
     
     if (missingFields.length > 0) {
       logger.error("Faltan campos requeridos:", missingFields);
-      logger.error("Datos recibidos:", {
-        apoderadoDocumentId: apoderadoDocumentId || 'undefined',
-        alumnoDocumentId: alumnoDocumentId || 'undefined',
-        hash_qr: hash_qr || 'undefined',
-        etiquetasUrl: etiquetasUrl || 'undefined',
-      });
       return NextResponse.json(
         { 
           error: "Faltan campos requeridos",
@@ -79,14 +72,10 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    logger.log(`URL base detectada: ${baseUrl}`);
-
     // Construir la URL completa de la página de etiquetas
     const fullEtiquetasUrl = etiquetasUrl.startsWith('http') 
       ? etiquetasUrl 
       : `${baseUrl}${etiquetasUrl.startsWith('/') ? etiquetasUrl : `/${etiquetasUrl}`}`;
-
-    logger.log(`Generando PDF desde: ${fullEtiquetasUrl}`);
 
     // Intentar usar Puppeteer para generar el PDF
     let pdfBuffer: Buffer;
@@ -246,7 +235,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Paso 1: Subir el archivo PDF primero
-    logger.log("Subiendo archivo PDF a Strapi...");
+    // Subiendo archivo PDF a Strapi
     const uploadFormData = new FormData();
     const pdfUint8Array = new Uint8Array(pdfBuffer);
     const pdfBlob = new Blob([pdfUint8Array], { type: 'application/pdf' });
@@ -278,7 +267,7 @@ export async function POST(request: NextRequest) {
     }
 
     const uploadData = await uploadResponse.json();
-    logger.log("Respuesta completa del upload:", JSON.stringify(uploadData, null, 2));
+    // Archivo subido exitosamente
     
     // En Strapi v5, el upload devuelve un array con objetos que tienen 'id' (numérico)
     // Para campos de media, necesitamos usar el 'id' numérico, no el documentId
@@ -286,43 +275,20 @@ export async function POST(request: NextRequest) {
     const fileId = uploadedFile?.id; // Usar 'id' numérico para campos de media
     
     if (!fileId) {
-      logger.error("Strapi no devolvió el ID del archivo subido:", uploadData);
+      logger.error("Strapi no devolvió el ID del archivo subido");
       return NextResponse.json(
         { 
-          error: "Error: Strapi no devolvió el ID del archivo subido",
-          details: uploadData
+          error: "Error: Strapi no devolvió el ID del archivo subido"
         },
         { status: 500 }
       );
     }
 
-    logger.log(`Archivo PDF subido exitosamente, ID numérico: ${fileId}`);
+    // Archivo PDF subido exitosamente
 
     // Paso 2: Crear el registro con el archivo y las relaciones usando el cliente de Strapi
-    logger.log("Creando registro de etiqueta PDF en Strapi...");
-    
-    const validEndpoint = "etiquetas-pdf"; // Según el schema, pluralName es "etiquetas-pdf"
-    
-    // Verificar directamente con fetch si el endpoint está disponible
-    // Esto nos ayudará a diagnosticar el problema
-    const testUrl = `${env.STRAPI_URL}/api/${validEndpoint}`;
-    logger.log(`Verificando endpoint: ${testUrl}`);
-    
-    try {
-      const directTest = await fetch(testUrl, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${env.STRAPI_API_TOKEN}`,
-        },
-      });
-      logger.log(`Respuesta directa del endpoint: ${directTest.status} ${directTest.statusText}`);
-      if (!directTest.ok) {
-        const testBody = await directTest.text();
-        logger.log(`Cuerpo de la respuesta: ${testBody.substring(0, 200)}`);
-      }
-    } catch (testErr) {
-      logger.error("Error al verificar endpoint directamente:", testErr);
-    }
+    // Creando registro de etiqueta PDF en Strapi
+    const validEndpoint = "etiquetas-pdf";
     
     const recordData = {
       apoderado: apoderadoDocumentId,
@@ -336,9 +302,7 @@ export async function POST(request: NextRequest) {
       archivo_pdf: fileId, // ID numérico del archivo subido
     };
 
-    logger.log("Datos a enviar a Strapi:", JSON.stringify(recordData, null, 2));
-    logger.log(`URL completa para POST: ${env.STRAPI_URL}/api/${validEndpoint}`);
-    logger.log(`API Token usado: ${env.STRAPI_API_TOKEN ? 'Presente (primeros 10 chars: ' + env.STRAPI_API_TOKEN.substring(0, 10) + '...)' : 'FALTANTE'}`);
+    // Enviando datos a Strapi
     
     // El error 405 cuando puedes crear manualmente sugiere un problema con los permisos de la API Key
     // Aunque tengas "Full Access", en Strapi v5 a veces necesitas verificar permisos específicos por Content Type
@@ -396,7 +360,7 @@ export async function POST(request: NextRequest) {
       throw error;
     }
 
-    logger.log("Registro de etiqueta PDF creado exitosamente:", strapiData.data?.documentId);
+    // Registro de etiqueta PDF creado exitosamente
 
     return NextResponse.json({
       success: true,

@@ -8,15 +8,9 @@ import { logger } from "@/lib/helpers/logger";
 const STRAPI_URL = env.STRAPI_URL;
 const STRAPI_TOKEN = env.STRAPI_API_TOKEN;
 
-// Logging para diagnóstico (solo en desarrollo o si hay problemas)
-if (process.env.NODE_ENV !== 'production' || !STRAPI_URL || STRAPI_URL.includes('placeholder')) {
-    logger.log('[Strapi API] Configuración:', {
-        STRAPI_URL: STRAPI_URL || 'NO CONFIGURADO',
-        STRAPI_TOKEN: STRAPI_TOKEN ? `${STRAPI_TOKEN.substring(0, 10)}...` : 'NO CONFIGURADO',
-        NODE_ENV: process.env.NODE_ENV,
-        NEXT_PUBLIC_STRAPI_URL: process.env.NEXT_PUBLIC_STRAPI_URL || 'NO EN ENV',
-        STRAPI_API_TOKEN_ENV: process.env.STRAPI_API_TOKEN ? 'PRESENTE' : 'NO EN ENV',
-    });
+// Validar configuración sin exponer datos sensibles
+if (!STRAPI_URL) {
+    logger.error('[Strapi API] STRAPI_URL no está configurado');
 }
 
 export function getStrapiURL(path = ""): string {
@@ -65,7 +59,6 @@ async function fetchAPI<T>(
     }
     
     const requestUrl = getStrapiURL(path);
-    logger.log(`[Strapi API] ${method} ${requestUrl}`);
 
     const headers: HeadersInit = {
         "Content-Type": "application/json",

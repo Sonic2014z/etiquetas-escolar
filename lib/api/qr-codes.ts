@@ -40,19 +40,15 @@ export async function createQRCode(data: {
       nombreApoderado: data.nombreApoderado,
     };
     
-    logger.log("Creando QR code en Strapi:", { hash: data.hash, nombreAlumno: data.nombreAlumno });
-    
     const response = await strapi.post<StrapiResponse<EtiquetaQR>>(
       "etiquetas-qr",
       payload
     );
     
     if (!response.data || (!response.data.id && !response.data.documentId)) {
-      logger.error("Strapi no devolvió ID al crear QR code:", response);
+      logger.error("Strapi no devolvió ID al crear QR code");
       throw new Error("Error: Strapi no devolvió ID al crear QR code");
     }
-    
-    logger.log("QR code creado exitosamente:", response.data.documentId || response.data.id);
     return response.data;
   } catch (error) {
     logger.error("Error creando QR code:", error);

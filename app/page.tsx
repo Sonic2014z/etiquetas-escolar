@@ -343,9 +343,6 @@ export default function GeneratorPage() {
                   if (hashMatch && hashMatch[1]) {
                     const hash = hashMatch[1];
                     
-                    // Log para verificar que el código se ejecuta
-                    console.log('[QR Code] Intentando guardar QR code en Strapi:', { hash, nombreAlumno: qrData.studentName });
-                    
                     // Almacenar los datos en Strapi (async, no bloquea)
                     fetch('/api/qr-codes', {
                       method: 'POST',
@@ -362,24 +359,15 @@ export default function GeneratorPage() {
                       const responseData = await response.json().catch(() => ({}));
                       
                       if (!response.ok) {
-                        console.error('[QR Code] Error al guardar QR code:', {
+                        logger.error('Error al guardar QR code:', {
                           status: response.status,
                           statusText: response.statusText,
-                          error: responseData.error || 'Unknown error',
-                          details: responseData.details || responseData,
                         });
-                        throw new Error(`HTTP error! status: ${response.status}, error: ${responseData.error || response.statusText}`);
+                        throw new Error(`HTTP error! status: ${response.status}`);
                       }
-                      
-                      console.log('[QR Code] QR code guardado exitosamente:', responseData);
                     })
                     .catch(err => {
-                      console.error('[QR Code] Error guardando QR code en Strapi:', {
-                        error: err,
-                        message: err instanceof Error ? err.message : String(err),
-                        hash: hash,
-                        qrData: qrData,
-                      });
+                      logger.error('Error guardando QR code (no crítico):', err instanceof Error ? err.message : 'Error desconocido');
                     });
                   }
                 }
@@ -477,10 +465,7 @@ export default function GeneratorPage() {
       if (hashMatch && hashMatch[1]) {
         const hash = hashMatch[1];
         
-        // Log para verificar que el código se ejecuta
-        logger.log('Intentando guardar QR code en Strapi:', { hash, qrData });
-        console.log('[QR Code] Intentando guardar:', { hash, nombreAlumno: qrData.studentName });
-        
+        // Guardando QR code en Strapi
         // Almacenar los datos en Strapi (async, no bloquea)
         // Nota: Este fetch es silencioso y no bloquea el flujo principal
         // Se podría agregar un estado de loading aquí si se necesita feedback visual
@@ -502,13 +487,9 @@ export default function GeneratorPage() {
             logger.error('Error al guardar QR code:', {
               status: response.status,
               statusText: response.statusText,
-              error: responseData.error || 'Unknown error',
-              details: responseData.details || responseData,
             });
-            throw new Error(`HTTP error! status: ${response.status}, error: ${responseData.error || response.statusText}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
           }
-          
-          logger.log('QR code guardado exitosamente:', responseData);
           return responseData;
         })
         .then(data => {
@@ -517,21 +498,8 @@ export default function GeneratorPage() {
           return { success: true, data };
         })
         .catch(err => {
-          // Log detallado del error para diagnóstico (siempre visible)
-          const errorDetails = {
-            error: err,
-            message: err instanceof Error ? err.message : String(err),
-            stack: err instanceof Error ? err.stack : undefined,
-            hash: hash,
-            qrData: qrData,
-          };
-          
-          // Log en consola del navegador (siempre visible)
-          console.error('[QR Code] Error guardando QR code en Strapi:', errorDetails);
-          
-          // Log usando logger (puede estar silenciado en producción)
-          logger.error('Error en saveQRPromise:', errorDetails);
-          logger.error('Error storing QR data in Strapi (non-critical):', err);
+          // Error al guardar QR (no crítico, el QR sigue funcionando)
+          logger.error('Error storing QR data in Strapi (non-critical):', err instanceof Error ? err.message : 'Error desconocido');
           
           return { success: false, error: err };
         });
@@ -540,7 +508,7 @@ export default function GeneratorPage() {
         // Por ahora se ignora silenciosamente
       } else {
         // Error al extraer hash (no crítico, el QR seguirá funcionando con la URL completa)
-        logger.error('Warning: No se pudo extraer el hash de la URL del QR:', finalQrUrl);
+        logger.error('Warning: No se pudo extraer el hash de la URL del QR');
       }
     }
     
@@ -694,14 +662,13 @@ export default function GeneratorPage() {
         logger.error('Error generando/subiendo PDF:', {
           status: response.status,
           statusText: response.statusText,
-          errorData,
         });
         // No mostrar error al usuario, es silencioso
         return;
       }
       
       const result = await response.json();
-      logger.log('PDF generado y subido exitosamente:', result.data?.documentId);
+      // PDF generado y subido exitosamente
       
     } catch (error: unknown) {
       // Error silencioso, no interrumpe el flujo del usuario
