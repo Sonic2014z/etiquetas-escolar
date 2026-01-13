@@ -20,8 +20,10 @@ if (!isBuildTime) {
         .map(([key]) => key);
     
     if (missingVars.length > 0) {
-        // Log genérico sin exponer valores
-        logger.error('Faltan variables de entorno requeridas');
+        // Log genérico sin exponer valores (solo en desarrollo)
+        if (process.env.NODE_ENV === 'development') {
+            console.error('Faltan variables de entorno requeridas:', missingVars.join(', '));
+        }
         throw new Error(`Faltan variables de entorno requeridas: ${missingVars.join(', ')}`);
     }
 }
