@@ -60,14 +60,17 @@ export async function POST(request: NextRequest) {
         nombreApoderado: data.nombreApoderado,
       });
     } catch (qrError) {
-      logger.error("Error en upsertQRCode:", qrError);
+      // Log sanitizado sin exponer datos del QR
+      logger.error("Error en upsertQRCode", {
+        errorType: qrError instanceof Error ? qrError.constructor.name : 'Unknown',
+        is405Error: qrError instanceof Error && (qrError.message.includes('405') || qrError.message.includes('Method Not Allowed')),
+      });
       // Si es un error 405, proporcionar información más específica
       if (qrError instanceof Error && (qrError.message.includes('405') || qrError.message.includes('Method Not Allowed'))) {
         return NextResponse.json(
           { 
             error: 'El Content Type etiquetas-qr no está disponible para la API Key',
             details: 'Verifica en Strapi que el Content Type etiquetas-qr esté en los permisos de tu API Key. Si creaste el Content Type después de la API Key, necesitas recrear la API Key.',
-            originalError: qrError.message
           },
           { status: 500 }
         );
@@ -83,11 +86,13 @@ export async function POST(request: NextRequest) {
       }
     });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Failed to store QR code';
-    // Error al guardar QR (log solo en desarrollo)
-    logger.error('Error storing QR code:', error);
+    // Log sanitizado sin exponer detalles completos del error
+    logger.error('Error storing QR code', {
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      hasMessage: !!(error instanceof Error ? error.message : false),
+    });
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Error al guardar el código QR. Por favor, intenta nuevamente.' },
       { status: 500 }
     );
   }

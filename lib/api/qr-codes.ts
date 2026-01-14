@@ -16,7 +16,11 @@ export async function findQRByHash(hash: string): Promise<EtiquetaQR | null> {
     }
     return null;
   } catch (error) {
-    logger.error("Error buscando QR por hash:", error);
+    // Log sanitizado sin exponer hash completo
+    logger.error("Error buscando QR por hash", {
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      tieneHash: !!hash,
+    });
     throw error;
   }
 }
@@ -51,7 +55,11 @@ export async function createQRCode(data: {
     }
     return response.data;
   } catch (error) {
-    logger.error("Error creando QR code:", error);
+    // Log sanitizado sin exponer datos del QR
+    logger.error("Error creando QR code", {
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      is405Error: error instanceof Error && (error.message.includes('405') || error.message.includes('Method Not Allowed')),
+    });
     if (error instanceof Error) {
       // Si es un error 405, podría ser el mismo problema que con etiquetas-pdf
       if (error.message.includes('405') || error.message.includes('Method Not Allowed')) {
@@ -96,7 +104,11 @@ export async function upsertQRCode(data: {
       return await createQRCode(data);
     }
   } catch (error) {
-    logger.error("Error en upsert QR code:", error);
+    // Log sanitizado sin exponer datos del QR
+    logger.error("Error en upsert QR code", {
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      hasMessage: !!(error instanceof Error ? error.message : false),
+    });
     throw error;
   }
 }

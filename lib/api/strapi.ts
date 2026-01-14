@@ -87,11 +87,12 @@ async function fetchAPI<T>(
 
         if (!response.ok) {
             const errorData = (await response.json().catch(() => ({}))) as StrapiErrorResponse;
-            // Log solo en desarrollo
-            logger.error(`[Strapi API] Error response:`, {
+            // Log sanitizado sin exponer detalles completos del error
+            logger.error(`[Strapi API] Error response`, {
                 status: response.status,
                 statusText: response.statusText,
-                errorData
+                errorType: `HTTP_${response.status}`,
+                path: path.split('?')[0], // Solo el path, sin query params
             });
             const errorMessage = errorData.error?.message || errorData.message || response.statusText;
             const errorDetails = errorData.error?.details ? JSON.stringify(errorData.error.details, null, 2) : '';
@@ -111,8 +112,12 @@ async function fetchAPI<T>(
         
         // Manejar errores de red
         if (error instanceof TypeError && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
-            logger.error(`[Strapi API] Error de conexión. URL: ${STRAPI_URL}, Path: ${path}`);
-            throw new Error(`Error de conexión: No se pudo conectar con Strapi en ${STRAPI_URL}. Verifica que la URL sea correcta y que Strapi esté accesible.`);
+            // Log sanitizado sin exponer URL completa
+            logger.error(`[Strapi API] Error de conexión`, {
+                tieneStrapiUrl: !!STRAPI_URL,
+                path: path.split('?')[0], // Solo el path, sin query params
+            });
+            throw new Error(`Error de conexión: No se pudo conectar con Strapi. Verifica que la URL sea correcta y que Strapi esté accesible.`);
         }
         
         // Log solo en desarrollo

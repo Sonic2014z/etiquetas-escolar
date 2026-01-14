@@ -147,11 +147,15 @@ export async function GET() {
       },
     });
   } catch (error) {
-    logger.error('[API /api/colegios] Error:', error);
+    // Log sanitizado sin exponer detalles completos del error
+    logger.error('[API /api/colegios] Error', {
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      hasMessage: !!(error instanceof Error ? error.message : false),
+    });
     
     // Retornar error al cliente
     return NextResponse.json(
-      { error: 'Error al obtener colegios', message: error instanceof Error ? error.message : 'Error desconocido' },
+      { error: 'Error al obtener colegios', message: 'No se pudo obtener la lista de colegios. Por favor, intenta nuevamente.' },
       { status: 500 }
     );
   }

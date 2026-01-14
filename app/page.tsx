@@ -378,9 +378,8 @@ export default function GeneratorPage() {
                   generateAndUploadPDF(studentData, finalIndex, result.data.apoderado.documentId, alumno.documentId);
                 } else {
                   logger.warn('No se puede generar PDF: faltan documentIds', {
-                    apoderadoDocumentId: result.data.apoderado?.documentId || 'undefined',
-                    alumnoDocumentId: alumno.documentId || 'undefined',
-                    alumno: alumno,
+                    tieneApoderadoDocumentId: !!result.data.apoderado?.documentId,
+                    tieneAlumnoDocumentId: !!alumno.documentId,
                   });
                 }
               }
@@ -632,14 +631,13 @@ export default function GeneratorPage() {
       // Si no hay hash_qr, generar uno temporal o usar un valor por defecto
       const finalHashQr = hash_qr || `temp_${Date.now()}`;
       
-      logger.log('Llamando a /api/generar-pdf con:', {
-        apoderadoDocumentId,
-        alumnoDocumentId,
-        hash_qr: finalHashQr,
+      // Log sanitizado sin exponer información sensible
+      logger.log('Llamando a /api/generar-pdf', {
+        tieneApoderadoDocumentId: !!apoderadoDocumentId,
+        tieneAlumnoDocumentId: !!alumnoDocumentId,
+        tieneHashQr: !!finalHashQr,
         numero_orden: parseInt(orderNumber),
         año_escolar: currentYear,
-        colegio_nombre: previewData.colegioNombre,
-        etiquetasUrl,
       });
       
       // Llamar a la API para generar y subir PDF
@@ -672,7 +670,10 @@ export default function GeneratorPage() {
       
     } catch (error: unknown) {
       // Error silencioso, no interrumpe el flujo del usuario
-      logger.error('Error en generateAndUploadPDF (no crítico):', error);
+      logger.error('Error en generateAndUploadPDF (no crítico)', {
+        errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+        hasMessage: !!(error instanceof Error ? error.message : false),
+      });
     }
   };
 
@@ -943,7 +944,7 @@ export default function GeneratorPage() {
                   Advertencia: Campos de contacto faltantes
                 </h3>
                 <p className="text-sm text-orange-700 mb-3">
-                  [PLACEHOLDER: Mensaje de advertencia personalizable]
+                  Uno o más campos de contacto no están completos. Por favor, complete los campos faltantes para continuar.
                 </p>
                 <p className="text-sm text-orange-700 mb-2">
                   Los siguientes campos no están completos:

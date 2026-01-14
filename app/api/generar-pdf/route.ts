@@ -38,12 +38,6 @@ export async function POST(request: NextRequest) {
         { 
           error: "Faltan campos requeridos",
           missingFields: missingFields,
-          received: {
-            apoderadoDocumentId: !!apoderadoDocumentId,
-            alumnoDocumentId: !!alumnoDocumentId,
-            hash_qr: !!hash_qr,
-            etiquetasUrl: !!etiquetasUrl,
-          }
         },
         { status: 400 }
       );
@@ -143,9 +137,10 @@ export async function POST(request: NextRequest) {
         launchOptions.channel = 'chrome';
       }
       
-      logger.log(`Lanzando Puppeteer con opciones:`, {
-        executablePath: launchOptions.executablePath || 'usando channel',
-        channel: launchOptions.channel || 'no especificado',
+      // Log sanitizado sin exponer rutas completas
+      logger.log('Lanzando Puppeteer', {
+        tieneExecutablePath: !!launchOptions.executablePath,
+        usandoChannel: !!launchOptions.channel,
       });
       
       const browser = await puppeteer.default.launch(launchOptions);
@@ -251,10 +246,11 @@ export async function POST(request: NextRequest) {
 
     if (!uploadResponse.ok) {
       const errorData = await uploadResponse.json().catch(() => ({}));
-      logger.error("Error subiendo archivo PDF a Strapi:", {
+      // Log sanitizado sin exponer detalles completos del error
+      logger.error("Error subiendo archivo PDF a Strapi", {
         status: uploadResponse.status,
         statusText: uploadResponse.statusText,
-        errorData
+        errorType: errorData.error?.name || 'Unknown',
       });
       return NextResponse.json(
         { 
@@ -369,13 +365,17 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: unknown) {
+    // Log sanitizado sin exponer detalles completos del error
     const errorMessage = error instanceof Error ? error.message : "Error desconocido";
-    logger.error("Error en generar-pdf:", error);
+    logger.error("Error en generar-pdf", {
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      hasMessage: !!errorMessage,
+    });
     
     return NextResponse.json(
       { 
         error: "Error al generar PDF",
-        message: errorMessage,
+        message: "Ocurrió un error al generar el PDF. Por favor, intenta nuevamente.",
       },
       { status: 500 }
     );

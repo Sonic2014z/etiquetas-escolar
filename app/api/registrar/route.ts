@@ -383,13 +383,16 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Error desconocido";
-    logger.error("Error en registro:", error);
+    // Log sanitizado sin exponer detalles completos del error
+    logger.error("Error en registro", {
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      hasMessage: !!(error instanceof Error ? error.message : false),
+    });
     
     return NextResponse.json(
       { 
         error: "Error al registrar datos",
-        message: errorMessage,
+        message: "Ocurrió un error al procesar el registro. Por favor, intenta nuevamente.",
       },
       { status: 500 }
     );

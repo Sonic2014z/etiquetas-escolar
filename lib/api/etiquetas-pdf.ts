@@ -16,7 +16,11 @@ export async function findPDFByHash(hash: string): Promise<EtiquetaPDF | null> {
     }
     return null;
   } catch (error: unknown) {
-    logger.error("Error buscando PDF por hash:", error);
+    // Log sanitizado sin exponer hash completo
+    logger.error("Error buscando PDF por hash", {
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      tieneHash: !!hash,
+    });
     throw error;
   }
 }
@@ -32,7 +36,11 @@ export async function findPDFsByApoderado(apoderadoDocumentId: string): Promise<
 
     return response.data || [];
   } catch (error: unknown) {
-    logger.error("Error buscando PDFs por apoderado:", error);
+    // Log sanitizado sin exponer documentId
+    logger.error("Error buscando PDFs por apoderado", {
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      tieneDocumentId: !!apoderadoDocumentId,
+    });
     throw error;
   }
 }
@@ -48,7 +56,11 @@ export async function findPDFsByAlumno(alumnoDocumentId: string): Promise<Etique
 
     return response.data || [];
   } catch (error: unknown) {
-    logger.error("Error buscando PDFs por alumno:", error);
+    // Log sanitizado sin exponer documentId
+    logger.error("Error buscando PDFs por alumno", {
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      tieneDocumentId: !!alumnoDocumentId,
+    });
     throw error;
   }
 }
@@ -105,7 +117,12 @@ export async function createPDFRecord(data: {
 
     return response.data;
   } catch (error: unknown) {
-    logger.error("Error creando registro de PDF:", error);
+    // Log sanitizado sin exponer datos del PDF
+    logger.error("Error creando registro de PDF", {
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      tieneHashQr: !!data.hash_qr,
+      tieneDocumentIds: !!(data.apoderado && data.alumno),
+    });
     throw error;
   }
 }
@@ -124,7 +141,12 @@ export async function updatePDFEstado(documentId: string, estado: 'generado' | '
 
     return response.data;
   } catch (error: unknown) {
-    logger.error("Error actualizando estado de PDF:", error);
+    // Log sanitizado sin exponer documentId
+    logger.error("Error actualizando estado de PDF", {
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      tieneDocumentId: !!documentId,
+      nuevoEstado: estado,
+    });
     throw error;
   }
 }
