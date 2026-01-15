@@ -99,7 +99,7 @@ export default function EtiquetasPDFPage() {
       const response = await fetch(`/api/etiquetas-pdf?${params.toString()}`);
       
       if (!response.ok) {
-        throw new Error('Error al cargar PDFs');
+        throw new Error('No pudimos cargar los PDFs en este momento');
       }
 
       const data: PDFsResponse = await response.json();
@@ -123,7 +123,7 @@ export default function EtiquetasPDFPage() {
       setPdfs(filteredPDFs);
       setPagination(data.meta?.pagination || null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      setError(err instanceof Error ? err.message : 'Ocurrió un problema inesperado. Por favor, intenta nuevamente.');
     } finally {
       setLoading(false);
     }
@@ -282,7 +282,7 @@ export default function EtiquetasPDFPage() {
           </div>
         ) : error ? (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-800">Error: {error}</p>
+            <p className="text-red-800">{error}</p>
             <button
               onClick={loadPDFs}
               className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"

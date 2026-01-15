@@ -46,8 +46,11 @@ COPY . .
 # El código en lib/env.ts maneja la ausencia de variables durante el build
 RUN npm run build
 
-# Instalar solo dependencias de producción para el runtime
-RUN npm ci --only=production && npm cache clean --force
+# Limpiar node_modules y reinstalar solo dependencias de producción
+# Esto reduce el tamaño de la imagen final
+RUN rm -rf node_modules && \
+    npm ci --only=production && \
+    npm cache clean --force
 
 # Exponer el puerto
 EXPOSE 3000

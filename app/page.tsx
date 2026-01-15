@@ -246,7 +246,7 @@ export default function GeneratorPage() {
 
       if (!response.ok) {
         // Construir mensaje de error detallado
-        let errorMessage = result.error || result.message || 'Error al registrar';
+        let errorMessage = result.error || result.message || 'No pudimos completar el registro';
         
         // Detectar si el error es por caracteres especiales
         const errorText = JSON.stringify(result).toLowerCase();
@@ -255,19 +255,22 @@ export default function GeneratorPage() {
                                      errorText.includes('no se permiten');
         
         if (hasSpecialCharsError) {
-          errorMessage = 'No se permiten caracteres especiales. Por favor, revisa los campos y elimina caracteres como < > " \' { } [ ] \\ | ` ~';
+          errorMessage = 'Por favor, revisa los campos y elimina caracteres especiales como < > " \' { } [ ] \\ | ` ~';
         } else if (result.detalles && Array.isArray(result.detalles)) {
           // Verificar si algún detalle menciona caracteres especiales
           const detallesText = result.detalles.join(' ').toLowerCase();
           if (detallesText.includes('caracteres especiales') || detallesText.includes('no se permiten')) {
-            errorMessage = 'No se permiten caracteres especiales. Por favor, revisa los campos y elimina caracteres como < > " \' { } [ ] \\ | ` ~';
+            errorMessage = 'Por favor, revisa los campos y elimina caracteres especiales como < > " \' { } [ ] \\ | ` ~';
           } else {
             errorMessage += '\n\nDetalles:\n' + result.detalles.join('\n');
           }
         } else if (result.detalles && result.detalles.alumnosFallidos && result.detalles.alumnosFallidos.length > 0) {
-          errorMessage += '\n\nAlumnos que fallaron:\n';
+          errorMessage += '\n\nNo se pudieron registrar los siguientes alumnos:\n';
           result.detalles.alumnosFallidos.forEach((alumno: { index: number; nombre: string; error: string }) => {
-            errorMessage += `- ${alumno.nombre}: ${alumno.error}\n`;
+            const friendlyError = alumno.error.toLowerCase().includes('caracteres especiales')
+              ? 'Contiene caracteres especiales no permitidos'
+              : alumno.error;
+            errorMessage += `- ${alumno.nombre}: ${friendlyError}\n`;
           });
         }
         
@@ -280,9 +283,12 @@ export default function GeneratorPage() {
         let mensaje = result.message || 'Registro parcial completado';
         
         if (result.data && result.data.alumnosFallidos && result.data.alumnosFallidos.length > 0) {
-          mensaje += '\n\nAlumnos que fallaron:\n';
+          mensaje += '\n\nNo se pudieron registrar los siguientes alumnos:\n';
           result.data.alumnosFallidos.forEach((alumno: { index: number; nombre: string; error: string }) => {
-            mensaje += `- ${alumno.nombre}: ${alumno.error}\n`;
+            const friendlyError = alumno.error.toLowerCase().includes('caracteres especiales')
+              ? 'Contiene caracteres especiales no permitidos'
+              : alumno.error;
+            mensaje += `- ${alumno.nombre}: ${friendlyError}\n`;
           });
         }
         
@@ -438,8 +444,8 @@ export default function GeneratorPage() {
       setRegisterMessage({
         type: 'error',
         text: hasSpecialCharsError 
-          ? 'No se permiten caracteres especiales. Por favor, revisa los campos y elimina caracteres como < > " \' { } [ ] \\ | ` ~'
-          : (errorMessage || 'Error al registrar los datos. Por favor, intenta nuevamente.'),
+          ? 'Por favor, revisa los campos y elimina caracteres especiales como < > " \' { } [ ] \\ | ` ~'
+          : (errorMessage || 'No pudimos procesar tu registro en este momento. Por favor, verifica que todos los campos estén correctos e intenta nuevamente.'),
       });
     } finally {
       setIsRegistering(false);
@@ -735,76 +741,76 @@ export default function GeneratorPage() {
 
     // Validar caracteres peligrosos en campos de texto
     if (parentData.nombres && hasDangerousCharacters(parentData.nombres)) {
-      errors['nombres'] = "No se permiten caracteres especiales";
+      errors['nombres'] = "Este campo no permite caracteres especiales";
       missingFields.push(fieldNames['nombres'] + " (contiene caracteres especiales)");
     } else if (!parentData.nombres) {
-      errors['nombres'] = "Requerido";
+      errors['nombres'] = "Este campo es obligatorio";
       missingFields.push(fieldNames['nombres']);
     }
     
     if (parentData.primerApellido && hasDangerousCharacters(parentData.primerApellido)) {
-      errors['primerApellido'] = "No se permiten caracteres especiales";
+      errors['primerApellido'] = "Este campo no permite caracteres especiales";
       missingFields.push(fieldNames['primerApellido'] + " (contiene caracteres especiales)");
     } else if (!parentData.primerApellido) {
-      errors['primerApellido'] = "Requerido";
+      errors['primerApellido'] = "Este campo es obligatorio";
       missingFields.push(fieldNames['primerApellido']);
     }
     
     // Segundo apellido es opcional, pero validamos caracteres si está presente
     if (parentData.segundoApellido && hasDangerousCharacters(parentData.segundoApellido)) {
-      errors['segundoApellido'] = "No se permiten caracteres especiales";
+      errors['segundoApellido'] = "Este campo no permite caracteres especiales";
     }
     
     // RUT ya no es obligatorio, solo validamos si está presente
     if (parentData.rut && isRutValid === false) {
-      errors['rut'] = "RUT Inválido";
+      errors['rut'] = "El RUT ingresado no es válido";
       missingFields.push(fieldNames['rut'] + " (inválido)");
     }
     
     if (!parentData.phone) {
-      errors['phone'] = "Teléfono requerido";
+      errors['phone'] = "El teléfono es obligatorio";
       missingFields.push(fieldNames['phone']);
     }
     
     // Validar email si está presente
     if (parentData.email && hasDangerousCharacters(parentData.email)) {
-      errors['email'] = "No se permiten caracteres especiales";
+      errors['email'] = "Este campo no permite caracteres especiales";
     }
     // Validar cada alumno
     studentsData.forEach((student, index) => {
       const studentNumber = studentsData.length > 1 ? ` ${index + 1}` : '';
       
       if (student.nombres && hasDangerousCharacters(student.nombres)) {
-        errors[`student_${index}_nombres`] = "No se permiten caracteres especiales";
+        errors[`student_${index}_nombres`] = "Este campo no permite caracteres especiales";
         missingFields.push(`Alumno${studentNumber}: Nombres (contiene caracteres especiales)`);
       } else if (!student.nombres) {
-        errors[`student_${index}_nombres`] = "Requerido";
+        errors[`student_${index}_nombres`] = "Este campo es obligatorio";
         missingFields.push(`Alumno${studentNumber}: Nombres`);
       }
       
       if (student.primerApellido && hasDangerousCharacters(student.primerApellido)) {
-        errors[`student_${index}_primerApellido`] = "No se permiten caracteres especiales";
+        errors[`student_${index}_primerApellido`] = "Este campo no permite caracteres especiales";
         missingFields.push(`Alumno${studentNumber}: Primer apellido (contiene caracteres especiales)`);
       } else if (!student.primerApellido) {
-        errors[`student_${index}_primerApellido`] = "Requerido";
+        errors[`student_${index}_primerApellido`] = "Este campo es obligatorio";
         missingFields.push(`Alumno${studentNumber}: Primer apellido`);
       }
       
       // Segundo apellido es opcional, pero validamos caracteres si está presente
       if (student.segundoApellido && hasDangerousCharacters(student.segundoApellido)) {
-        errors[`student_${index}_segundoApellido`] = "No se permiten caracteres especiales";
+        errors[`student_${index}_segundoApellido`] = "Este campo no permite caracteres especiales";
       }
       
       if (!student.course) {
-        errors[`student_${index}_course`] = "Selecciona un curso";
+        errors[`student_${index}_course`] = "Por favor, selecciona un curso";
         missingFields.push(`Alumno${studentNumber}: Curso`);
       }
       if (!student.letter) {
-        errors[`student_${index}_letra`] = "Falta letra";
+        errors[`student_${index}_letra`] = "Por favor, selecciona la letra del curso";
         missingFields.push(`Alumno${studentNumber}: Letra`);
       }
       if (!student.colegio) {
-        errors[`student_${index}_colegio`] = "Selecciona un colegio";
+        errors[`student_${index}_colegio`] = "Por favor, selecciona un colegio";
         missingFields.push(`Alumno${studentNumber}: Colegio`);
       }
     });
@@ -986,7 +992,7 @@ export default function GeneratorPage() {
               </div>
               <div className="ml-3 flex-1">
                 <h3 className={`text-sm font-bold mb-2 ${registerMessage.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
-                  {registerMessage.type === 'success' ? 'Registro Exitoso' : 'Error en el Registro'}
+                  {registerMessage.type === 'success' ? '¡Registro Exitoso!' : 'Problema al Registrar'}
                 </h3>
                 <div className="text-sm whitespace-pre-line">
                   {registerMessage.text}
