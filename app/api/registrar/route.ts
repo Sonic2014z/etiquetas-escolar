@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { findApoderadoByRut, createApoderado, updateApoderadoWithAlumno, verifyApoderadoExists } from "@/lib/api/apoderados";
+import { findApoderadoByRut, findApoderadoByCriterios, findApoderadoByTelefono, findApoderadoByEmail, createApoderado, updateApoderadoWithAlumno, verifyApoderadoExists } from "@/lib/api/apoderados";
 import { findAlumno, createAlumno, verifyAlumnoExists, updateAlumnoWithApoderado } from "@/lib/api/alumnos";
 import { generateUID } from "@/lib/helpers/uid";
 import { validateRut } from "@/lib/validations/rut";
@@ -146,54 +146,39 @@ export async function POST(request: NextRequest) {
     let apoderadoDocumentId: string;
     let apoderadoExistia = false;
     
-    // Si hay RUT, buscar por RUT; si no, crear nuevo apoderado
-    if (cleanData.parentData.rut && cleanData.parentData.rut.trim()) {
-      const cleanRut = cleanRUT(cleanData.parentData.rut);
-      let apoderado = await findApoderadoByRut(cleanRut);
-      
-      if (apoderado) {
-        if (!apoderado.documentId) {
-          throw new Error(`Apoderado encontrado no tiene documentId`);
-        }
-        apoderadoDocumentId = apoderado.documentId;
-        apoderadoExistia = true;
-      } else {
-        const uid = generateUID();
-        const nuevoApoderado = await createApoderado({
-          nombres: cleanData.parentData.nombres,
-          primer_apellido: cleanData.parentData.primerApellido,
-          segundo_apellido: cleanData.parentData.segundoApellido || "",
-          rut: cleanRut,
-          telefono: cleanData.parentData.phone,
-          email: cleanData.parentData.email || undefined,
-          uid: uid,
-        });
-        
-        if (!nuevoApoderado.documentId) {
-          throw new Error(`Apoderado creado no tiene documentId`);
-        }
-        
-        apoderadoDocumentId = nuevoApoderado.documentId;
+    // Buscar apoderado existente por múltiples criterios (RUT, teléfono, email)
+    // Prioridad: RUT > Teléfono > Email
+    const cleanRut = cleanData.parentData.rut && cleanData.parentData.rut.trim() 
+      ? cleanRUT(cleanData.parentData.rut) 
+      : undefined;
+    
+    const apoderadoExistente = await findApoderadoByCriterios({
+      rut: cleanRut,
+      telefono: cleanData.parentData.phone,
+      email: cleanData.parentData.email,
+    });
+    
+    if (apoderadoExistente) {
+      // Apoderado encontrado, usar el existente
+      if (!apoderadoExistente.documentId) {
+        throw new Error(`Apoderado encontrado no tiene documentId`);
       }
-      
-      // Verificar que el apoderado existe en Strapi
-      const apoderadoVerificado = await findApoderadoByRut(cleanRut);
-      if (!apoderadoVerificado || !apoderadoVerificado.documentId) {
-        throw new Error(`No se pudo encontrar el apoderado con RUT ${cleanRut} después de crearlo o no tiene documentId`);
-      }
-      const apoderadoDocumentIdReal = apoderadoVerificado.documentId;
-      
-      if (apoderadoDocumentIdReal !== apoderadoDocumentId) {
-        apoderadoDocumentId = apoderadoDocumentIdReal;
-      }
+      apoderadoDocumentId = apoderadoExistente.documentId;
+      apoderadoExistia = true;
+      logger.log('Apoderado existente encontrado, reutilizando registro', {
+        documentId: apoderadoExistente.documentId.substring(0, 10) + '...',
+        tieneRut: !!apoderadoExistente.rut,
+        tieneTelefono: !!apoderadoExistente.telefono,
+        tieneEmail: !!apoderadoExistente.email,
+      });
     } else {
-      // No hay RUT, crear nuevo apoderado directamente
+      // No se encontró apoderado, crear uno nuevo
       const uid = generateUID();
       const nuevoApoderado = await createApoderado({
         nombres: cleanData.parentData.nombres,
         primer_apellido: cleanData.parentData.primerApellido,
         segundo_apellido: cleanData.parentData.segundoApellido || "",
-        rut: "", // RUT vacío ya que no es obligatorio
+        rut: cleanRut || "",
         telefono: cleanData.parentData.phone,
         email: cleanData.parentData.email || undefined,
         uid: uid,
@@ -204,6 +189,33 @@ export async function POST(request: NextRequest) {
       }
       
       apoderadoDocumentId = nuevoApoderado.documentId;
+      logger.log('Nuevo apoderado creado', {
+        documentId: nuevoApoderado.documentId.substring(0, 10) + '...',
+      });
+    }
+    
+    // Verificar que el apoderado existe en Strapi (usando el criterio más confiable disponible)
+    let apoderadoVerificado: any = null;
+    if (cleanRut) {
+      apoderadoVerificado = await findApoderadoByRut(cleanRut);
+    } else if (cleanData.parentData.phone) {
+      apoderadoVerificado = await findApoderadoByTelefono(cleanData.parentData.phone);
+    } else if (cleanData.parentData.email) {
+      apoderadoVerificado = await findApoderadoByEmail(cleanData.parentData.email);
+    }
+    
+    if (!apoderadoVerificado || !apoderadoVerificado.documentId) {
+      throw new Error(`No se pudo verificar el apoderado después de crearlo o no tiene documentId`);
+    }
+    
+    const apoderadoDocumentIdReal = apoderadoVerificado.documentId;
+    
+    if (apoderadoDocumentIdReal !== apoderadoDocumentId) {
+      logger.warn('DocumentId del apoderado no coincide, usando el verificado', {
+        original: apoderadoDocumentId.substring(0, 10) + '...',
+        verificado: apoderadoDocumentIdReal.substring(0, 10) + '...',
+      });
+      apoderadoDocumentId = apoderadoDocumentIdReal;
     }
     
     // ========== PROCESAMIENTO DE ALUMNOS CON MANEJO DE ERRORES PARCIALES ==========

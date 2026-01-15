@@ -42,6 +42,88 @@ export async function findApoderadoByRut(rut: string): Promise<Apoderado | null>
 }
 
 /**
+ * Busca un apoderado por teléfono
+ */
+export async function findApoderadoByTelefono(telefono: string): Promise<Apoderado | null> {
+  try {
+    const cleanTelefono = telefono.replace(/\s+/g, '').trim();
+    const response = await strapi.get<StrapiCollectionResponse<Apoderado>>(
+      `etiquetas-apoderados?filters[telefono][$eq]=${encodeURIComponent(cleanTelefono)}&populate=alumnos`
+    );
+    
+    if (response.data && response.data.length > 0) {
+      return response.data[0];
+    }
+    return null;
+  } catch (error) {
+    logger.error("Error buscando apoderado por teléfono:", error);
+    throw error;
+  }
+}
+
+/**
+ * Busca un apoderado por email
+ */
+export async function findApoderadoByEmail(email: string): Promise<Apoderado | null> {
+  try {
+    const cleanEmail = email.trim().toLowerCase();
+    const response = await strapi.get<StrapiCollectionResponse<Apoderado>>(
+      `etiquetas-apoderados?filters[email][$eq]=${encodeURIComponent(cleanEmail)}&populate=alumnos`
+    );
+    
+    if (response.data && response.data.length > 0) {
+      return response.data[0];
+    }
+    return null;
+  } catch (error) {
+    logger.error("Error buscando apoderado por email:", error);
+    throw error;
+  }
+}
+
+/**
+ * Busca un apoderado por múltiples criterios (RUT, teléfono, email)
+ * Retorna el primer apoderado encontrado con cualquiera de estos criterios
+ */
+export async function findApoderadoByCriterios(data: {
+  rut?: string;
+  telefono?: string;
+  email?: string;
+}): Promise<Apoderado | null> {
+  try {
+    // Prioridad: RUT > Teléfono > Email
+    if (data.rut && data.rut.trim()) {
+      const apoderado = await findApoderadoByRut(data.rut);
+      if (apoderado) {
+        logger.log('Apoderado encontrado por RUT');
+        return apoderado;
+      }
+    }
+    
+    if (data.telefono && data.telefono.trim()) {
+      const apoderado = await findApoderadoByTelefono(data.telefono);
+      if (apoderado) {
+        logger.log('Apoderado encontrado por teléfono');
+        return apoderado;
+      }
+    }
+    
+    if (data.email && data.email.trim()) {
+      const apoderado = await findApoderadoByEmail(data.email);
+      if (apoderado) {
+        logger.log('Apoderado encontrado por email');
+        return apoderado;
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    logger.error("Error buscando apoderado por criterios:", error);
+    throw error;
+  }
+}
+
+/**
  * Crea un nuevo apoderado en Strapi
  */
 export async function createApoderado(data: {
