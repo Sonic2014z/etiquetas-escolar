@@ -282,7 +282,32 @@ export async function POST(request: NextRequest) {
 
     // Archivo PDF subido exitosamente
 
-    // Paso 2: Crear el registro con el archivo y las relaciones usando el cliente de Strapi
+    // Paso 2: Generar número de orden secuencial único (si no se proporciona)
+    const { generateUniqueOrderNumber } = await import('@/lib/helpers/order-number');
+    
+    let finalOrderNumber: number;
+    if (numero_orden) {
+      // Si se proporciona un número de orden, usarlo (aunque normalmente no se enviará)
+      finalOrderNumber = parseInt(numero_orden.toString());
+    } else {
+      // Generar número de orden secuencial único
+      try {
+        const orderNumberString = await generateUniqueOrderNumber();
+        finalOrderNumber = parseInt(orderNumberString);
+        logger.log(`Número de orden secuencial generado: ${finalOrderNumber}`);
+      } catch (error) {
+        logger.error("Error generando número de orden único:", error);
+        return NextResponse.json(
+          { 
+            error: "Error al generar número de orden",
+            message: "No se pudo generar un número de orden único. Por favor, intenta nuevamente.",
+          },
+          { status: 500 }
+        );
+      }
+    }
+
+    // Paso 3: Crear el registro con el archivo y las relaciones usando el cliente de Strapi
     // Creando registro de etiqueta PDF en Strapi
     const validEndpoint = "etiquetas-pdf";
     
@@ -291,7 +316,7 @@ export async function POST(request: NextRequest) {
       alumno: alumnoDocumentId,
       fecha_generacion: new Date().toISOString(), // Formato ISO para datetime
       hash_qr: hash_qr,
-      numero_orden: numero_orden || 0,
+      numero_orden: finalOrderNumber,
       año_escolar: año_escolar || new Date().getFullYear(),
       colegio_nombre: colegio_nombre || '',
       estado: 'generado' as const,

@@ -87,12 +87,13 @@ async function fetchAPI<T>(
 
         if (!response.ok) {
             const errorData = (await response.json().catch(() => ({}))) as StrapiErrorResponse;
-            // Log sanitizado sin exponer detalles completos del error
+            // Log detallado del error para debugging
             logger.error(`[Strapi API] Error response`, {
                 status: response.status,
                 statusText: response.statusText,
                 errorType: `HTTP_${response.status}`,
                 path: path.split('?')[0], // Solo el path, sin query params
+                errorData: JSON.stringify(errorData, null, 2), // Log completo del error
             });
             const errorMessage = errorData.error?.message || errorData.message || response.statusText;
             const errorDetails = errorData.error?.details ? JSON.stringify(errorData.error.details, null, 2) : '';

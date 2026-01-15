@@ -609,8 +609,21 @@ export default function GeneratorPage() {
       const colegioLine1 = colegioParts.slice(0, Math.ceil(colegioParts.length / 2)).join(' ');
       const colegioLine2 = colegioParts.slice(Math.ceil(colegioParts.length / 2)).join(' ');
       
-      // Generar número de orden
-      const orderNumber = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+      // Obtener número de orden secuencial desde el backend
+      let orderNumber: string;
+      try {
+        const orderResponse = await fetch('/api/generar-numero-orden');
+        if (!orderResponse.ok) {
+          throw new Error('Error al obtener número de orden');
+        }
+        const orderData = await orderResponse.json();
+        orderNumber = orderData.numero_orden;
+        logger.log(`Número de orden secuencial obtenido: ${orderNumber}`);
+      } catch (error) {
+        logger.error('Error obteniendo número de orden secuencial, usando fallback:', error);
+        // Fallback: usar timestamp como número de orden temporal
+        orderNumber = Date.now().toString().slice(-8).padStart(8, '0');
+      }
       
       // Generar hash QR si existe
       let hash_qr = '';
@@ -667,11 +680,12 @@ export default function GeneratorPage() {
         tieneApoderadoDocumentId: !!apoderadoDocumentId,
         tieneAlumnoDocumentId: !!alumnoDocumentId,
         tieneHashQr: !!finalHashQr,
-        numero_orden: parseInt(orderNumber),
+        orderNumber: orderNumber, // Número de orden para la URL (no se envía al backend)
         año_escolar: currentYear,
       });
       
       // Llamar a la API para generar y subir PDF
+      // NOTA: No enviamos numero_orden, el backend lo generará secuencialmente
       const response = await fetch('/api/generar-pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -679,7 +693,7 @@ export default function GeneratorPage() {
           apoderadoDocumentId,
           alumnoDocumentId,
           hash_qr: finalHashQr,
-          numero_orden: parseInt(orderNumber),
+          // numero_orden: NO se envía, el backend lo genera secuencialmente
           año_escolar: currentYear,
           colegio_nombre: previewData.colegioNombre,
           etiquetasUrl,
