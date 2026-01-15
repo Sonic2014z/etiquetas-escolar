@@ -80,10 +80,16 @@ export default function EtiquetasPDFPage() {
 
     try {
       const params = new URLSearchParams();
-      // Solo enviar búsqueda si es numérica (para número de orden)
+      // Enviar búsqueda al servidor si es numérica (para número de orden con coincidencia parcial)
       // o si no hay búsqueda, para obtener todos y filtrar en cliente
-      if (searchTerm && /^\d+$/.test(searchTerm)) {
-        params.append('search', searchTerm);
+      if (searchTerm) {
+        if (/^\d+$/.test(searchTerm)) {
+          // Si es numérico, enviar al servidor para búsqueda parcial en tiempo real
+          params.append('search', searchTerm);
+        } else {
+          // Si es texto, no enviar al servidor, filtrar en cliente después
+          // (para búsqueda en nombres de apoderado/alumno)
+        }
       }
       if (añoEscolar) params.append('año_escolar', añoEscolar);
       if (estado) params.append('estado', estado);
@@ -99,9 +105,19 @@ export default function EtiquetasPDFPage() {
       const data: PDFsResponse = await response.json();
       let filteredPDFs = data.data || [];
       
-      // Filtrar en el cliente si hay búsqueda de texto
-      if (searchTerm && !/^\d+$/.test(searchTerm)) {
-        filteredPDFs = filterPDFs(filteredPDFs, searchTerm);
+      // Filtrar en el cliente:
+      // - Si es búsqueda numérica: filtrar por coincidencia parcial en número de orden
+      // - Si es búsqueda de texto: filtrar por nombres, hash, colegio, etc.
+      if (searchTerm) {
+        if (/^\d+$/.test(searchTerm)) {
+          // Búsqueda numérica: filtrar por coincidencia parcial en número de orden
+          filteredPDFs = filteredPDFs.filter((pdf) => 
+            pdf.numero_orden.toString().includes(searchTerm)
+          );
+        } else {
+          // Búsqueda de texto: filtrar por múltiples campos
+          filteredPDFs = filterPDFs(filteredPDFs, searchTerm);
+        }
       }
       
       setPdfs(filteredPDFs);

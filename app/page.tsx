@@ -14,6 +14,7 @@ import { Colegio } from "@/types/strapi";
 import { getColegios } from "@/lib/api/colegios";
 import dynamic from "next/dynamic";
 import { logger } from "@/lib/helpers/logger";
+import { Loader2, CheckCircle2 } from "lucide-react";
 
 export default function GeneratorPage() {
   // --- 1. ESTADO DE DATOS ---
@@ -47,6 +48,11 @@ export default function GeneratorPage() {
   const [validationAlert, setValidationAlert] = useState<{ show: boolean; missingFields: string[] }>({ show: false, missingFields: [] });
   const [confirmationAlert, setConfirmationAlert] = useState<{ show: boolean; missingFields: string[] }>({ show: false, missingFields: [] });
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  
+  // --- 3. ESTADO DE PROGRESO DE PDFs ---
+  const [isGeneratingPdfs, setIsGeneratingPdfs] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState({ completed: 0, total: 0 });
+  const [pdfsCompleted, setPdfsCompleted] = useState(false);
 
   // --- 2.1. CARGAR COLEGIOS DESDE STRAPI ---
   useEffect(() => {
@@ -299,24 +305,28 @@ export default function GeneratorPage() {
         const alumnosRegistrados = result.data?.alumnosExitosos || result.data?.alumnos || [];
         
         if (alumnosRegistrados.length > 0) {
-          // Esperar un momento antes de abrir las ventanas para que el usuario vea el mensaje
-          setTimeout(() => {
-            alumnosRegistrados.forEach((alumno: { documentId: string; existia: boolean; index: number; nombre: string }, idx: number) => {
+          // Inicializar el banner de progreso
+          setIsGeneratingPdfs(true);
+          setPdfProgress({ completed: 0, total: alumnosRegistrados.length });
+          
+          // Esperar un momento antes de comenzar la generación de PDFs
+          setTimeout(async () => {
+            // Procesar PDFs secuencialmente
+            for (let idx = 0; idx < alumnosRegistrados.length; idx++) {
+              const alumno = alumnosRegistrados[idx];
+              
               // Buscar los datos del alumno en studentsData
               const studentData = studentsData.find(
                 s => `${s.nombres} ${s.primerApellido} ${s.segundoApellido}`.trim() === alumno.nombre
               );
               
               if (studentData) {
-                // Obtener el índice correcto del estudiante (usar el índice del array original, no el del forEach)
+                // Obtener el índice correcto del estudiante
                 const studentIndex = studentsData.findIndex(
                   s => `${s.nombres} ${s.primerApellido} ${s.segundoApellido}`.trim() === alumno.nombre
                 );
                 
                 const finalIndex = studentIndex >= 0 ? studentIndex : idx;
-                
-                // NO abrir página de etiquetas - el PDF se genera en background y se enviará por correo
-                // openEtiquetasPage(studentData, finalIndex); // Removido para evitar edición del PDF
                 
                 // Guardar QR code en Strapi (si existe)
                 const previewData = studentsPreviewData[finalIndex];
@@ -374,16 +384,31 @@ export default function GeneratorPage() {
                 
                 // Validar que tenemos el documentId del alumno antes de generar PDF
                 if (alumno.documentId && result.data.apoderado?.documentId) {
-                  // Generar y subir PDF a Strapi (en background, no bloquea)
-                  generateAndUploadPDF(studentData, finalIndex, result.data.apoderado.documentId, alumno.documentId);
+                  // Generar y subir PDF a Strapi (secuencialmente)
+                  await generateAndUploadPDF(studentData, finalIndex, result.data.apoderado.documentId, alumno.documentId);
+                  
+                  // Actualizar progreso
+                  setPdfProgress(prev => ({ ...prev, completed: prev.completed + 1 }));
                 } else {
                   logger.warn('No se puede generar PDF: faltan documentIds', {
                     tieneApoderadoDocumentId: !!result.data.apoderado?.documentId,
                     tieneAlumnoDocumentId: !!alumno.documentId,
                   });
+                  // Aún así actualizamos el progreso para no bloquear
+                  setPdfProgress(prev => ({ ...prev, completed: prev.completed + 1 }));
                 }
               }
-            });
+            }
+            
+            // Marcar como completado y mostrar mensaje de éxito
+            setPdfsCompleted(true);
+            
+            // Ocultar el banner después de mostrar el mensaje de éxito
+            setTimeout(() => {
+              setIsGeneratingPdfs(false);
+              setPdfProgress({ completed: 0, total: 0 });
+              setPdfsCompleted(false);
+            }, 3000); // Mostrar el mensaje de éxito por 3 segundos
           }, 1000);
         } else {
           // Si no hay información de alumnos exitosos, no abrir páginas
@@ -850,7 +875,47 @@ export default function GeneratorPage() {
 
   return (
     <main className="min-h-screen bg-background p-6 md:p-12 transition-colors duration-300">
-      <div className="max-w-7xl mx-auto space-y-8">
+      {/* Banner de progreso de PDFs */}
+      {isGeneratingPdfs && (
+        <div className={`fixed top-0 left-0 right-0 text-white shadow-lg z-50 transition-colors duration-500 ${
+          pdfsCompleted ? 'bg-green-600' : 'bg-blue-600'
+        }`}>
+          <div className="max-w-7xl mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {pdfsCompleted ? (
+                  <CheckCircle2 className="w-5 h-5" />
+                ) : (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                )}
+                <span className="font-medium">
+                  {pdfsCompleted 
+                    ? 'PDF generado correctamente' 
+                    : `Generando PDFs... ${Math.round((pdfProgress.completed / pdfProgress.total) * 100)}%`
+                  }
+                </span>
+              </div>
+              {!pdfsCompleted && (
+                <div className="text-sm">
+                  {pdfProgress.completed} de {pdfProgress.total} completados
+                </div>
+              )}
+            </div>
+            <div className={`mt-2 w-full rounded-full h-2 ${
+              pdfsCompleted ? 'bg-green-700' : 'bg-blue-700'
+            }`}>
+              <div
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  pdfsCompleted ? 'bg-white' : 'bg-white'
+                }`}
+                style={{ width: `${(pdfProgress.completed / pdfProgress.total) * 100}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className={`max-w-7xl mx-auto space-y-8 ${isGeneratingPdfs ? 'pt-20' : ''}`}>
         
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -864,6 +929,15 @@ export default function GeneratorPage() {
               Los campos marcados con <strong className="text-error">*</strong> son obligatorios.
              </p>
            </div>
+           {/* Enlace temporal a demo de feedback */}
+           <a
+             href="/demo-pdf-feedback"
+             className="text-xs text-blue-600 hover:text-blue-800 underline"
+             target="_blank"
+             rel="noopener noreferrer"
+           >
+             🎨 Ver Demo: Feedback de Carga PDFs
+           </a>
         </div>
 
         {/* Alerta de validación */}

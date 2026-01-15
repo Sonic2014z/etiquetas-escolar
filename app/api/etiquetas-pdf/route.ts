@@ -29,16 +29,16 @@ export async function GET(request: NextRequest) {
     // Búsqueda general (busca en múltiples campos)
     if (search) {
       const searchEncoded = encodeURIComponent(search);
-      // Buscar en número de orden (si es numérico)
-      if (/^\d+$/.test(search)) {
-        filters.push(`filters[numero_orden][$eq]=${search}`);
-      } else {
-        // Buscar en hash_qr, colegio_nombre
+      // Si es numérico, no aplicar filtro en servidor (se filtrará en cliente para coincidencia parcial)
+      // Strapi v5 no soporta $contains en campos numéricos, así que filtramos en cliente
+      if (!/^\d+$/.test(search)) {
+        // Buscar en hash_qr, colegio_nombre (solo para búsquedas de texto)
         // Nota: La búsqueda en apoderado/alumno se hace en el cliente después de obtener los datos
         // porque Strapi requiere populate específico para buscar en relaciones
         filters.push(`filters[$or][0][hash_qr][$contains]=${searchEncoded}`);
         filters.push(`filters[$or][1][colegio_nombre][$contains]=${searchEncoded}`);
       }
+      // Si es numérico, no agregamos filtro aquí - se filtrará en el cliente
     }
 
     // Filtro por año escolar
@@ -53,7 +53,10 @@ export async function GET(request: NextRequest) {
 
     // Construir query string
     const filterQuery = filters.length > 0 ? `&${filters.join('&')}` : '';
-    const paginationQuery = `pagination[page]=${page}&pagination[pageSize]=${pageSize}`;
+    // Si es búsqueda numérica, obtener más registros para filtrar en cliente
+    const isNumericSearch = search && /^\d+$/.test(search);
+    const effectivePageSize = isNumericSearch ? Math.max(pageSize, 500) : pageSize; // Obtener más registros para búsqueda numérica
+    const paginationQuery = `pagination[page]=${page}&pagination[pageSize]=${effectivePageSize}`;
     // Populate específico: solo los campos que necesitamos
     // Sin usar * para evitar populate de relaciones anidadas problemáticas en Strapi v5
     const populateQuery = [
