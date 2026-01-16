@@ -24,9 +24,11 @@ export const metadata: Metadata = {
   description: "Sistema de recuperación de útiles escolares mediante QR Inteligentes",
   icons: {
     icon: [
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png'},
-      { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png'},
-      { url: '/favicon.ico', sizes: 'any'},
+      { url: '/ISOTIPO-16x16.ico', sizes: '16x16', type: 'image/x-icon' },
+      { url: '/ISOTIPO-32x32.ico', sizes: '32x32', type: 'image/x-icon' },
+      { url: '/ISOTIPO-64x64.ico', sizes: '64x64', type: 'image/x-icon' },
+      { url: '/ISOTIPO.ico', sizes: 'any', type: 'image/x-icon' },
+      { url: '/favicon.ico', sizes: 'any', type: 'image/x-icon' },
     ],
     apple: [
       { url: '/apple-icon.png', sizes: '192x192', type: 'image/png'},
