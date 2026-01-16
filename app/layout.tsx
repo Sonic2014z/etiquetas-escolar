@@ -22,6 +22,16 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://libreriaescolar.cl/"),
   title: "Librería Escolar | Etiquetas Inteligentes",
   description: "Sistema de recuperación de útiles escolares mediante QR Inteligentes",
+  icons: {
+    icon: [
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png'},
+      { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png'},
+      { url: '/favicon.ico', sizes: 'any'},
+    ],
+    apple: [
+      { url: '/apple-icon.png', sizes: '192x192', type: 'image/png'},
+    ],
+  },
   openGraph: {
     title: "Librería Escolar | Etiquetas Inteligentes",
     description: "Recupera tus útiles escolares perdidos con nuestro sistema de etiquetas QR.",
