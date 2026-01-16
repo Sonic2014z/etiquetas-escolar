@@ -949,15 +949,15 @@ export default function GeneratorPage() {
               Los campos marcados con <strong className="text-error">*</strong> son obligatorios.
              </p>
            </div>
-           {/* Enlace temporal a demo de feedback */}
-           <a
+           {/* Enlace temporal a demo de feedback - OCULTO */}
+           {/* <a
              href="/demo-pdf-feedback"
              className="text-xs text-blue-600 hover:text-blue-800 underline"
              target="_blank"
              rel="noopener noreferrer"
            >
              🎨 Ver Demo: Feedback de Carga PDFs
-           </a>
+           </a> */}
         </div>
 
         {/* Alerta de validación */}
