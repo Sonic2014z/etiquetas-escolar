@@ -19,50 +19,52 @@ interface StudentInfo {
   qrUrl?: string;
 }
 
-// Colores con valores hexadecimales para impresión
+// Colores con valores hexadecimales para impresión (paleta actualizada)
+// Patrón: púrpura, azul, amarillo (alternando por columna) - Actualizados
 const colors = [
-  { class: 'bg-purple-600', hex: '#9333ea' },
-  { class: 'bg-orange-500', hex: '#f97316' },
-  { class: 'bg-yellow-400', hex: '#facc15' },
-  { class: 'bg-blue-600', hex: '#2563eb' },
-  { class: 'bg-pink-500', hex: '#ec4899' },
-  { class: 'bg-orange-600', hex: '#ea580c' },
-  { class: 'bg-yellow-500', hex: '#eab308' }
+  { class: 'bg-purple-600', hex: '#9E2488' }, // MORADO
+  { class: 'bg-blue-600', hex: '#164296' }, // AZUL
+  { class: 'bg-yellow-400', hex: '#FFC403' }, // AMARILLO
+  { class: 'bg-orange-500', hex: '#EA5936' }, // NARANJO
 ];
 
-// Configuración consolidada de asignaturas por fila
-// Cada fila tiene un array de asignaturas con sus colores
+// Configuración consolidada de asignaturas por fila (paleta actualizada) - Actualizados
 const subjectRows = [
-  // Fila 1: 5 asignaturas
+  // Fila 1: 5 asignaturas completas
   [
-    { name: 'Matemática', color: 'bg-blue-700', hex: '#1d4ed8' },
-    { name: 'Lenguaje', color: 'bg-pink-600', hex: '#db2777' },
-    { name: 'Historia', color: 'bg-orange-500', hex: '#f97316' },
-    { name: 'Ciencias', color: 'bg-yellow-400', hex: '#facc15' },
-    { name: 'Artes', color: 'bg-blue-700', hex: '#1d4ed8' },
+    { name: 'Matemática', color: 'bg-blue-700', hex: '#164296' }, // AZUL
+    { name: 'Lenguaje', color: 'bg-purple-600', hex: '#9E2488' }, // MORADO
+    { name: 'Historia', color: 'bg-orange-500', hex: '#EA5936' }, // NARANJO
+    { name: 'Ciencias', color: 'bg-yellow-400', hex: '#FFC403' }, // AMARILLO
+    { name: 'Artes', color: 'bg-blue-700', hex: '#164296' }, // AZUL
   ],
-  // Fila 2: 5 asignaturas
+  // Fila 2: 5 asignaturas completas
   [
-    { name: 'Matemática', color: 'bg-blue-700', hex: '#1d4ed8' },
-    { name: 'Lenguaje', color: 'bg-pink-600', hex: '#db2777' },
-    { name: 'Historia', color: 'bg-orange-500', hex: '#f97316' },
-    { name: 'Ciencias', color: 'bg-yellow-400', hex: '#facc15' },
-    { name: 'Música', color: 'bg-blue-700', hex: '#1d4ed8' },
+    { name: 'Matemática', color: 'bg-blue-700', hex: '#164296' }, // AZUL
+    { name: 'Lenguaje', color: 'bg-purple-600', hex: '#9E2488' }, // MORADO
+    { name: 'Historia', color: 'bg-orange-500', hex: '#EA5936' }, // NARANJO
+    { name: 'Ciencias', color: 'bg-yellow-400', hex: '#FFC403' }, // AMARILLO
+    { name: 'Música', color: 'bg-blue-700', hex: '#164296' }, // AZUL
   ],
-  // Fila 3: 2 asignaturas + 3 espacios vacíos
+  // Fila 3: 2 asignaturas (Biología, Física)
   [
-    { name: 'Biología', color: 'bg-blue-700', hex: '#1d4ed8' },
-    { name: 'Física', color: 'bg-pink-600', hex: '#db2777' },
+    { name: 'Biología', color: 'bg-blue-700', hex: '#164296' }, // AZUL
+    { name: 'Física', color: 'bg-purple-600', hex: '#9E2488' }, // MORADO
   ],
-  // Fila 4: 2 asignaturas + 3 espacios vacíos
+  // Fila 4: 2 asignaturas (Biología, Física)
   [
-    { name: 'Biología', color: 'bg-blue-700', hex: '#1d4ed8' },
-    { name: 'Física', color: 'bg-pink-600', hex: '#db2777' },
+    { name: 'Biología', color: 'bg-blue-700', hex: '#164296' }, // AZUL
+    { name: 'Física', color: 'bg-purple-600', hex: '#9E2488' }, // MORADO
   ],
-  // Fila 5: 2 asignaturas + 3 espacios vacíos
+  // Fila 5: 2 asignaturas (Química azul, Química púrpura)
   [
-    { name: 'Química', color: 'bg-blue-700', hex: '#1d4ed8' },
-    { name: 'Química', color: 'bg-pink-600', hex: '#db2777' },
+    { name: 'Química', color: 'bg-blue-700', hex: '#164296' }, // AZUL
+    { name: 'Química', color: 'bg-purple-600', hex: '#9E2488' }, // MORADO
+  ],
+  // Fila 6: 2 asignaturas adicionales para crear más espacio residual
+  [
+    { name: 'Química', color: 'bg-blue-700', hex: '#164296' }, // AZUL
+    { name: 'Química', color: 'bg-purple-600', hex: '#9E2488' }, // MORADO
   ],
 ];
 
@@ -165,24 +167,27 @@ function EtiquetasContent() {
         {/* Main ID Cards Grid - 3 columns x 7 rows = 21 cards */}
         <div className="grid grid-cols-3 gap-1.5 mb-2 print:gap-1 print:mb-1.5 print:grid-cols-3">
           {Array.from({ length: 21 }).map((_, idx) => {
-            const colorIndex = Math.floor(idx / 3) % colors.length;
+            // Colores alternando por columna: púrpura, azul, amarillo
+            const columnIndex = idx % 3;
+            const colorData = colors[columnIndex];
             return (
               <StudentCard
                 key={idx}
                 student={studentData}
-                color={colors[colorIndex].class}
-                colorHex={colors[colorIndex].hex}
+                color={colorData.class}
+                colorHex={colorData.hex}
               />
             );
           })}
         </div>
 
-        {/* Simple Name Labels Grid - 4 columns x 4 rows = 16 labels */}
-        <div className="grid grid-cols-4 gap-0.5 mb-2 print:gap-0.5 print:mb-1.5">
-          {Array.from({ length: 16 }).map((_, idx) => {
-            // Cada fila (4 etiquetas) tiene el mismo color
-            const rowIndex = Math.floor(idx / 4);
-            const colorIndex = rowIndex % colors.length;
+        {/* Simple Name Labels Grid - 5 columns x 3 rows = 15 labels */}
+        <div className="grid grid-cols-5 gap-0.5 mb-2 print:gap-0.5 print:mb-1.5">
+          {Array.from({ length: 15 }).map((_, idx) => {
+            // Colores alternando por columna: púrpura, azul, amarillo, azul, púrpura
+            const columnIndex = idx % 5;
+            const colorPattern = [0, 1, 2, 1, 0]; // índices de colores: púrpura, azul, amarillo, azul, púrpura
+            const colorIndex = colorPattern[columnIndex];
             const colorData = colors[colorIndex];
             
             return (
@@ -222,25 +227,44 @@ function EtiquetasContent() {
         <div className="border-t pt-2 print:pt-1.5 print:border-t print:border-gray-300 flex items-start justify-between print:mt-0">
           <div className="flex-1">
             <h2 className="text-xl font-bold mb-1 print:text-lg print:mb-1 print:leading-tight">
-              Gracias por confiar<br className="print:hidden" /><span className="print:hidden"> </span><span className="hidden print:inline"> </span>en Librería Escolar.
+              Gracias por confiar en Librería Escolar.
             </h2>
             <p className="text-[9px] text-gray-600 print:text-[8px] print:mb-0.5 print:leading-tight">
               Etiquetas con QR: Si se pierde, te avisan.
             </p>
-          </div>
-          <div className="text-right flex flex-col items-end print:shrink-0 print:ml-1">
-            <Image
-              src="/logo.png"
-              alt="Logo de Librería Escolar"
-              width={100}
-              height={40}
-              className="object-contain print:block print:w-20 print:h-auto print:mb-1"
-              style={{ maxWidth: '100px', height: 'auto' }}
-              loading="lazy"
-            />
-            <div className="text-[8px] text-gray-700 print:text-[8px] print:leading-tight print:text-right print:mt-0">
+            <div className="text-[8px] text-gray-700 print:text-[8px] print:leading-tight print:mt-1">
               <p className="print:mb-0">Orden n°: {studentData.orderNumber}</p>
               <p className="print:mb-0">Apoderado: {studentData.guardian}</p>
+            </div>
+          </div>
+          <div className="text-right flex items-end print:shrink-0 print:ml-1">
+            <img 
+              src="/logo.png" 
+              alt="Librería Escolar" 
+              style={{
+                height: 'auto',
+                width: 'auto',
+                maxHeight: '60px', // Logo agrandado
+                maxWidth: '200px', // Logo agrandado
+                objectFit: 'contain',
+              }}
+              onError={(e) => {
+                // Fallback si la imagen no carga
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                const fallback = target.parentElement?.querySelector('.logo-fallback');
+                if (fallback) {
+                  (fallback as HTMLElement).style.display = 'flex';
+                }
+              }}
+            />
+            {/* Fallback de texto si la imagen no carga */}
+            <div 
+              className="logo-fallback flex flex-col items-end"
+              style={{ display: 'none' }}
+            >
+              <span className="text-lg font-bold print:text-base print:mb-0.5" style={{ color: '#164296' }}>escolar</span>
+              <span className="text-xs print:text-[10px]" style={{ color: '#164296' }}>Librería</span>
             </div>
           </div>
         </div>
@@ -295,13 +319,21 @@ const StudentCard = memo(function StudentCard({ student, color, colorHex }: { st
         maxWidth: '100%'
       }}
     >
-      {/* Borde izquierdo rosa/fucsia con texto "DEVOLVER AQUI" y QR Code */}
+      {/* Franja vertical de color con texto "DEVOLVER AQUI" y QR Code - Bleed/descalce para impresión */}
       <div 
-        className={`${color} w-24 flex flex-row items-center justify-center gap-1.5 p-1.5 relative shrink-0 h-full print:w-24 print:p-1.5`}
-        style={{ backgroundColor: colorHex }}
+        className={`${color} flex flex-row items-center justify-center gap-2 p-2 relative shrink-0 h-full print:p-2`}
+        style={{ 
+          backgroundColor: colorHex, 
+          width: '90px', 
+          minWidth: '90px',
+          // Bleed: extender el color más allá del borde para compensar descalce al cortar
+          marginLeft: '-1px', // Extender hacia la izquierda
+          marginTop: '-1px', // Extender hacia arriba
+          marginBottom: '-1px', // Extender hacia abajo
+        }}
       >
         {/* Texto vertical "DEVOLVER AQUI" a la izquierda */}
-        <div className="shrink-0 flex items-center justify-center">
+        <div className="shrink-0 flex items-center justify-center h-full">
           <span 
             className="text-white font-bold text-[6px] tracking-wider whitespace-nowrap print:text-[6px]"
             style={{ 
@@ -314,10 +346,10 @@ const StudentCard = memo(function StudentCard({ student, color, colorHex }: { st
           </span>
         </div>
         
-        {/* QR Code centrado junto con el texto */}
-        <div className="shrink-0">
+        {/* QR Code a la derecha del texto - Márgenes iguales arriba, abajo y derecha */}
+        <div className="shrink-0" style={{ marginTop: '3px', marginBottom: '3px', marginRight: '3px' }}>
           {qrData ? (
-            <div className="border border-white/30 p-0.5 rounded bg-white print:p-0.5" style={{ borderColor: 'rgba(255, 255, 255, 0.3)' }}>
+            <div className="border border-white/30 p-1 rounded bg-white print:p-1" style={{ borderColor: 'rgba(255, 255, 255, 0.3)' }}>
               <QRCodeSVG 
                 value={qrData}
                 size={60}
@@ -328,7 +360,7 @@ const StudentCard = memo(function StudentCard({ student, color, colorHex }: { st
               />
             </div>
           ) : (
-            <div className="w-[62px] h-[62px] bg-white/20 border border-dashed border-white/50 rounded flex items-center justify-center text-center p-0.5 print:w-[62px] print:h-[62px]">
+            <div className="w-[62px] h-[62px] bg-white/20 border border-dashed border-white/50 rounded flex items-center justify-center text-center p-1 print:w-[62px] print:h-[62px]">
               <span className="text-[6px] text-white font-medium print:text-[6px]">Faltan datos</span>
             </div>
           )}
@@ -339,16 +371,25 @@ const StudentCard = memo(function StudentCard({ student, color, colorHex }: { st
       <div className="flex-1 flex flex-col items-start p-2 print:p-2">
         {/* Información del alumno y colegio */}
         <div className="flex-1 min-w-0 flex flex-col justify-start w-full h-full">
-          {/* Nombre del alumno - grande y en negrita */}
-          <h3 className="font-bold text-[11px] leading-tight text-black mb-0.5 print:text-[11px] print:mb-0.5">
+          {/* Nombre del alumno - Achicado y con margen superior aumentado */}
+          <h3 className="text-[10px] leading-tight text-black mb-0.5 print:text-[10px] print:mb-0.5" style={{ marginTop: '4px' }}>
             {student.name || "Nombre del Alumno"}
           </h3>
 
-          {/* Curso y letra con subrayado */}
+          {/* Curso y letra - Sin bold */}
           <div className="flex items-baseline gap-1 mb-1 print:mb-1">
-            <span className="text-[9px] font-bold text-black underline print:text-[9px]">
+            <span className="text-[9px] text-black print:text-[9px]" style={{ fontWeight: 'normal' }}>
               {curso}{letra ? ` ${letra}` : ''}
             </span>
+            {/* Línea separadora corta y delgada debajo del curso */}
+            <div 
+              className="bg-black"
+              style={{
+                width: '28px',
+                height: '1px',
+                marginTop: '1px',
+              }}
+            />
           </div>
 
           {/* Nombre del colegio en dos líneas con año y ESCOLAR */}
@@ -364,12 +405,30 @@ const StudentCard = memo(function StudentCard({ student, color, colorHex }: { st
                   </span>
                 )}
               </div>
-              <div className="flex items-baseline gap-1 shrink-0 print:gap-1">
+              <div className="flex items-baseline gap-0.5 shrink-0 print:gap-0.5">
                 <span className="text-[7px] text-black print:text-[7px] whitespace-nowrap">
                   {new Date().getFullYear()}
                 </span>
-                <span className="text-[7px] font-bold text-black uppercase print:text-[7px] whitespace-nowrap">
-                  ESCOLAR
+                <img 
+                  src="/logo.png" 
+                  alt="escolar" 
+                  style={{
+                    height: '12px', // Logo agrandado
+                    width: 'auto',
+                    objectFit: 'contain',
+                  }}
+                  onError={(e) => {
+                    // Fallback si la imagen no carga
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const fallback = target.parentElement?.querySelector('.logo-fallback');
+                    if (fallback) {
+                      (fallback as HTMLElement).style.display = 'inline';
+                    }
+                  }}
+                />
+                <span className="text-[7px] font-bold print:text-[7px] whitespace-nowrap logo-fallback" style={{ color: '#164296', display: 'none' }}>
+                  escolar
                 </span>
               </div>
             </div>
@@ -429,10 +488,11 @@ const SimpleLabel = memo(function SimpleLabel({ grade, name, highlight, color, c
 const SubjectLabel = memo(function SubjectLabel({ subject, color, colorHex }: { subject: string; color: string; colorHex: string }) {
   return (
     <div 
-      className={`${color} text-white text-center py-1 flex items-center justify-center px-1 print:py-0.5 print:px-1`}
+      className={`${color} text-white text-center py-1 flex items-center justify-center px-1 print:py-0.5 print:px-1 gap-1`}
       style={{ backgroundColor: colorHex, height: '20px' }}
     >
       <span className="text-[8px] font-bold print:text-[8px]">{subject}</span>
+      <span className="text-[6px] font-bold text-blue-700 print:text-[6px]" style={{ color: '#1e40af' }}>escolar</span>
     </div>
   );
 });
