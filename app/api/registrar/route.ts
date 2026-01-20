@@ -353,7 +353,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         partial: true,
-        message: `${alumnosExitosos.length} de ${students.length} alumnos registrados exitosamente. ${alumnosFallidos.length} alumno(s) fallaron.`,
+        message: `${alumnosExitosos.length} de ${cleanData.students.length} alumnos registrados exitosamente. ${alumnosFallidos.length} alumno(s) fallaron.`,
         data: {
           apoderado: {
             documentId: apoderadoDocumentId,
@@ -372,9 +372,9 @@ export async function POST(request: NextRequest) {
     }
     
     // Si todos los alumnos fueron exitosos
-    const mensaje = students.length === 1 
+    const mensaje = cleanData.students.length === 1 
       ? "Registro completado exitosamente"
-      : `${students.length} alumnos registrados exitosamente`;
+      : `${cleanData.students.length} alumnos registrados exitosamente`;
     
     return NextResponse.json({
       success: true,

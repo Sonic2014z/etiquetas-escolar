@@ -243,6 +243,13 @@ export default function GeneratorPage() {
       });
 
       const result = await response.json();
+      
+      logger.log('Respuesta de /api/registrar:', {
+        ok: response.ok,
+        success: result.success,
+        hasData: !!result.data,
+        alumnosCount: result.data?.alumnos?.length || result.data?.alumnosExitosos?.length || 0,
+      });
 
       if (!response.ok) {
         // Construir mensaje de error detallado
@@ -705,13 +712,17 @@ export default function GeneratorPage() {
         logger.error('Error generando/subiendo PDF:', {
           status: response.status,
           statusText: response.statusText,
+          errorData: errorData,
         });
         // No mostrar error al usuario, es silencioso
         return;
       }
       
       const result = await response.json();
-      // PDF generado y subido exitosamente
+      logger.log('PDF generado y subido exitosamente:', {
+        success: result.success,
+        hasData: !!result.data,
+      });
       
     } catch (error: unknown) {
       // Error silencioso, no interrumpe el flujo del usuario
