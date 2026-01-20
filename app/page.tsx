@@ -1183,8 +1183,8 @@ export default function GeneratorPage() {
                   </div>
                 ))}
 
-                {/* Botón para agregar más alumnos */}
-                <div className="flex justify-center mt-4">
+                {/* Botones de acción */}
+                <div className="flex justify-center gap-4 mt-4 flex-wrap">
                   <button
                     type="button"
                     onClick={addStudentForm}
@@ -1193,13 +1193,27 @@ export default function GeneratorPage() {
                     <span className="text-xl">+</span>
                     <span>Agregar otro alumno</span>
                   </button>
+                  <button 
+                    onClick={handleRegister}
+                    disabled={isRegistering}
+                    className="px-6 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-md transition-colors flex items-center gap-2"
+                  >
+                    {isRegistering ? (
+                      <>
+                        <span className="animate-spin">⏳</span>
+                        <span>Registrando...</span>
+                      </>
+                    ) : (
+                      <span>📝 Registrar {studentsData.length > 1 ? `(${studentsData.length} alumnos)` : ''}</span>
+                    )}
+                  </button>
                 </div>
             </div>
 
             {/* COLUMNA DERECHA: Vistas Previas (5 cols) */}
-            <div className="lg:col-span-5">
+            <div className="lg:col-span-5 w-full overflow-hidden">
                 {/* Contenedor sticky que incluye las vistas previas y el botón */}
-                <div className="sticky top-6 space-y-6">
+                <div className="lg:sticky lg:top-6 space-y-6 w-full max-w-full overflow-hidden">
                     {/* Título general de vistas previas */}
                     {studentsData.length > 1 && (
                       <div className="mb-4">
@@ -1231,24 +1245,6 @@ export default function GeneratorPage() {
                         
                       </div>
                     ))}
-
-                    {/* Botón de Acción Principal */}
-                    <div className="flex justify-center pt-4">
-                      <button 
-                        onClick={handleRegister}
-                        disabled={isRegistering}
-                        className="bg-primary hover:bg-primary-dark disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center gap-2 w-full md:w-auto"
-                      >
-                        {isRegistering ? (
-                          <>
-                            <span className="animate-spin">⏳</span>
-                            <span>Registrando...</span>
-                          </>
-                        ) : (
-                          <span>📝 Registrar {studentsData.length > 1 ? `(${studentsData.length} alumnos)` : ''}</span>
-                        )}
-                      </button>
-                    </div>
                 </div>
 
             </div>

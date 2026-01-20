@@ -23,16 +23,16 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
     const colegioLine2 = colegioParts.slice(Math.ceil(colegioParts.length / 2)).join(' ');
 
     return (
-        <div>
+        <div className="w-full overflow-hidden">
             <h2 className="text-lg font-semibold text-foreground-secondary mb-4 hidden lg:block">
                 Vista Previa
             </h2>
 
-            <Card variant="accent" className="flex flex-col items-center justify-center p-8 bg-slate-50">
+            <Card variant="accent" className="flex flex-col items-center justify-center p-2 sm:p-4 lg:p-8 bg-slate-50 w-full max-w-full overflow-hidden">
 
-                <div id="etiqueta-qr" className="bg-white w-full max-w-[508px] min-h-[185px] aspect-[2.3/1] border-2 border-black rounded-lg shadow-xl flex flex-row overflow-hidden relative">
+                <div id="etiqueta-qr" className="bg-white w-full max-w-full sm:max-w-[508px] min-h-[140px] sm:min-h-[185px] aspect-[2.3/1] border-2 border-black rounded-lg shadow-xl flex flex-row overflow-hidden relative">
                     {/* Borde izquierdo rosa/fucsia con texto "DEVOLVER AQUI" y QR Code */}
-                    <div className="bg-[#ec4899] w-40 flex flex-row items-center justify-center gap-3 p-4 relative shrink-0 h-full">
+                    <div className="bg-[#ec4899] w-28 sm:w-36 lg:w-40 flex flex-row items-center justify-center gap-2 sm:gap-3 p-2 sm:p-4 relative shrink-0 h-full">
                         {/* Texto vertical "DEVOLVER AQUI" a la izquierda */}
                         <div className="shrink-0 flex items-center justify-center">
                             <span 
@@ -48,59 +48,62 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
                         </div>
                         
                         {/* QR Code centrado junto con el texto - Reducido 10% para mejor espaciado */}
-                        <div className="shrink-0">
+                        <div className="shrink-0 flex items-center justify-center">
                             {qrUrl ? (
-                                <div className="border border-white/30 p-1.5 rounded bg-white">
-                                    <QRCode 
-                                        value={qrUrl}
-                                        size={108}
-                                        level="H"
-                                        fgColor="#000000"
-                                        bgColor="#ffffff" 
-                                    />
+                                <div className="border border-white/30 p-1 sm:p-1.5 rounded bg-white">
+                                    <div className="w-[76px] h-[76px] sm:w-[102px] sm:h-[102px] flex items-center justify-center overflow-hidden">
+                                        <QRCode 
+                                            value={qrUrl}
+                                            size={76}
+                                            level="H"
+                                            fgColor="#000000"
+                                            bgColor="#ffffff"
+                                            style={{ width: '100%', height: '100%' }}
+                                        />
+                                    </div>
                                 </div>
                             ) : (
-                                <div className="w-[110px] h-[110px] bg-white/20 border-2 border-dashed border-white/50 rounded flex items-center justify-center text-center p-1">
-                                    <span className="text-[8px] text-white font-medium">Faltan datos</span>
+                                <div className="w-[80px] h-[80px] sm:w-[110px] sm:h-[110px] bg-white/20 border-2 border-dashed border-white/50 rounded flex items-center justify-center text-center p-1">
+                                    <span className="text-[7px] sm:text-[8px] text-white font-medium">Faltan datos</span>
                                 </div>
                             )}
                         </div>
                     </div>
 
                     {/* Contenido principal - área blanca */}
-                    <div className="flex-1 flex flex-col items-start p-4">
+                    <div className="flex-1 flex flex-col items-start p-2 sm:p-4 min-w-0">
 
                         {/* Información del alumno y colegio */}
                         <div className="flex-1 min-w-0 flex flex-col justify-start w-full h-full">
                             {/* Nombre del alumno - grande y en negrita */}
-                            <h3 className="font-bold text-lg leading-tight text-black mb-1">
+                            <h3 className="font-bold text-sm sm:text-base lg:text-lg leading-tight text-black mb-1 break-words">
                                 {nombreAlumno || "Nombre del Alumno"}
                             </h3>
 
                             {/* Curso y letra con subrayado */}
                             <div className="flex items-baseline gap-1 mb-2">
-                                <span className="text-sm font-bold text-black underline">
+                                <span className="text-xs sm:text-sm font-bold text-black underline">
                                     {curso || "Curso"} {letra || "?"}
                                 </span>
                             </div>
 
                             {/* Nombre del colegio en dos líneas con año y ESCOLAR */}
                             <div className="flex flex-col gap-0 mt-auto">
-                                <div className="flex items-baseline gap-2">
-                                    <div className="flex flex-col">
-                                        <span className="text-xs text-black leading-tight">
+                                <div className="flex items-baseline gap-1 sm:gap-2 flex-wrap">
+                                    <div className="flex flex-col min-w-0">
+                                        <span className="text-[10px] sm:text-xs text-black leading-tight break-words">
                                             {colegioLine1 || "Nombre del"}
                                         </span>
                                         {colegioLine2 && (
-                                            <span className="text-xs text-black leading-tight">
+                                            <span className="text-[10px] sm:text-xs text-black leading-tight break-words">
                                                 {colegioLine2}
                                             </span>
                                         )}
                                     </div>
-                                    <span className="text-xs text-black ml-auto">
+                                    <span className="text-[10px] sm:text-xs text-black ml-auto whitespace-nowrap">
                                         {currentYear}
                                     </span>
-                                    <span className="text-xs font-bold text-black uppercase ml-2">
+                                    <span className="text-[10px] sm:text-xs font-bold text-black uppercase ml-1 sm:ml-2 whitespace-nowrap">
                                         ESCOLAR
                                     </span>
                                 </div>
