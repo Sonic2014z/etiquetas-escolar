@@ -15,6 +15,7 @@ import { getColegios } from "@/lib/api/colegios";
 import dynamic from "next/dynamic";
 import { logger } from "@/lib/helpers/logger";
 import { Loader2, CheckCircle2 } from "lucide-react";
+import confetti from "canvas-confetti";
 
 export default function GeneratorPage() {
   // --- 1. ESTADO DE DATOS ---
@@ -53,6 +54,49 @@ export default function GeneratorPage() {
   const [isGeneratingPdfs, setIsGeneratingPdfs] = useState(false);
   const [pdfProgress, setPdfProgress] = useState({ completed: 0, total: 0 });
   const [pdfsCompleted, setPdfsCompleted] = useState(false);
+
+  // --- 2.0. EFECTO DE CONFETTI AL COMPLETAR PDFs ---
+  useEffect(() => {
+    if (pdfsCompleted) {
+      // Lanzar confetti cuando se complete la generación de PDFs
+      const duration = 3000; // 3 segundos
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
+
+      function randomInRange(min: number, max: number) {
+        return Math.random() * (max - min) + min;
+      }
+
+      const interval: NodeJS.Timeout = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        
+        // Confetti desde la izquierda
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+        });
+        
+        // Confetti desde la derecha
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+        });
+      }, 250);
+
+      // Cleanup: limpiar el intervalo si el componente se desmonta o pdfsCompleted cambia
+      return () => {
+        clearInterval(interval);
+      };
+    }
+  }, [pdfsCompleted]);
 
   // --- 2.1. CARGAR COLEGIOS DESDE STRAPI ---
   useEffect(() => {

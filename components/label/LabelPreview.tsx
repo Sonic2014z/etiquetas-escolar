@@ -1,7 +1,8 @@
-import { Card } from "@/components/ui/Card";
-import QRCode from "react-qr-code";
-import { formatChileanPhone } from "@/lib/helpers/common";
+'use client';
 
+import { Card } from "@/components/ui/Card";
+import { StudentCard } from "./StudentCard";
+import { useEffect, useState } from "react";
 
 interface LabelPreviewProps {
     nombreAlumno: string;
@@ -17,10 +18,56 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
     // Obtener el año actual
     const currentYear = new Date().getFullYear();
     
-    // Dividir el nombre del colegio en dos líneas si es muy largo
-    const colegioParts = colegio ? colegio.split(' ') : [];
-    const colegioLine1 = colegioParts.slice(0, Math.ceil(colegioParts.length / 2)).join(' ');
-    const colegioLine2 = colegioParts.slice(Math.ceil(colegioParts.length / 2)).join(' ');
+    // Construir el texto del curso completo
+    const gradeText = `${curso}${letra ? ` ${letra}` : ''}`;
+    
+    // Preparar datos para StudentCard
+    const studentData = {
+        name: nombreAlumno || "Nombre del Alumno",
+        grade: gradeText || "Curso",
+        school: colegio || "Seleccione un colegio",
+        year: currentYear.toString(),
+        qrUrl: qrUrl,
+    };
+
+    // Color por defecto para la vista previa (púrpura)
+    const defaultColor = '#9c2986';
+
+    // Estado para detectar el tamaño de pantalla
+    const [scale, setScale] = useState(0.40);
+    const [minHeight, setMinHeight] = useState(151);
+
+    useEffect(() => {
+        const updateScale = () => {
+            const width = window.innerWidth;
+            
+            if (width <= 375) {
+                // Móviles pequeños
+                setScale(0.30);
+                setMinHeight(113);
+            } else if (width <= 480) {
+                // Móviles medianos
+                setScale(0.34);
+                setMinHeight(129);
+            } else if (width <= 640) {
+                // Móviles grandes
+                setScale(0.36);
+                setMinHeight(136);
+            } else if (width <= 768) {
+                // Tablets
+                setScale(0.38);
+                setMinHeight(144);
+            } else {
+                // Escritorio
+                setScale(0.40);
+                setMinHeight(151);
+            }
+        };
+
+        updateScale();
+        window.addEventListener('resize', updateScale);
+        return () => window.removeEventListener('resize', updateScale);
+    }, []);
 
     return (
         <div className="w-full overflow-hidden">
@@ -28,90 +75,35 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
                 Vista Previa
             </h2>
 
-            <Card variant="accent" className="flex flex-col items-center justify-center p-2 sm:p-4 lg:p-8 bg-slate-50 w-full max-w-full overflow-hidden">
-
-                <div id="etiqueta-qr" className="bg-white w-full max-w-full sm:max-w-[508px] min-h-[140px] sm:min-h-[185px] aspect-[2.3/1] border-2 border-black rounded-lg shadow-xl flex flex-row overflow-hidden relative">
-                    {/* Borde izquierdo rosa/fucsia con texto "DEVOLVER AQUI" y QR Code */}
-                    <div className="bg-[#ec4899] w-28 sm:w-36 lg:w-40 flex flex-row items-center justify-center gap-2 sm:gap-3 p-2 sm:p-4 relative shrink-0 h-full">
-                        {/* Texto vertical "DEVOLVER AQUI" a la izquierda */}
-                        <div className="shrink-0 flex items-center justify-center">
-                            <span 
-                                className="text-white font-bold text-[10px] tracking-wider whitespace-nowrap"
-                                style={{ 
-                                    writingMode: 'vertical-rl',
-                                    textOrientation: 'mixed',
-                                    transform: 'rotate(180deg)'
-                                }}
-                            >
-                                DEVOLVER AQUI
-                            </span>
-                        </div>
-                        
-                        {/* QR Code centrado junto con el texto - Reducido 10% para mejor espaciado */}
-                        <div className="shrink-0 flex items-center justify-center">
-                            {qrUrl ? (
-                                <div className="border border-white/30 p-1 sm:p-1.5 rounded bg-white">
-                                    <div className="w-[76px] h-[76px] sm:w-[102px] sm:h-[102px] flex items-center justify-center overflow-hidden">
-                                        <QRCode 
-                                            value={qrUrl}
-                                            size={76}
-                                            level="H"
-                                            fgColor="#000000"
-                                            bgColor="#ffffff"
-                                            style={{ width: '100%', height: '100%' }}
-                                        />
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="w-[80px] h-[80px] sm:w-[110px] sm:h-[110px] bg-white/20 border-2 border-dashed border-white/50 rounded flex items-center justify-center text-center p-1">
-                                    <span className="text-[7px] sm:text-[8px] text-white font-medium">Faltan datos</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Contenido principal - área blanca */}
-                    <div className="flex-1 flex flex-col items-start p-2 sm:p-4 min-w-0">
-
-                        {/* Información del alumno y colegio */}
-                        <div className="flex-1 min-w-0 flex flex-col justify-start w-full h-full">
-                            {/* Nombre del alumno - grande y en negrita */}
-                            <h3 className="font-bold text-sm sm:text-base lg:text-lg leading-tight text-black mb-1 break-words">
-                                {nombreAlumno || "Nombre del Alumno"}
-                            </h3>
-
-                            {/* Curso y letra con subrayado */}
-                            <div className="flex items-baseline gap-1 mb-2">
-                                <span className="text-xs sm:text-sm font-bold text-black underline">
-                                    {curso || "Curso"} {letra || "?"}
-                                </span>
-                            </div>
-
-                            {/* Nombre del colegio en dos líneas con año y ESCOLAR */}
-                            <div className="flex flex-col gap-0 mt-auto">
-                                <div className="flex items-baseline gap-1 sm:gap-2 flex-wrap">
-                                    <div className="flex flex-col min-w-0">
-                                        <span className="text-[10px] sm:text-xs text-black leading-tight break-words">
-                                            {colegioLine1 || "Nombre del"}
-                                        </span>
-                                        {colegioLine2 && (
-                                            <span className="text-[10px] sm:text-xs text-black leading-tight break-words">
-                                                {colegioLine2}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <span className="text-[10px] sm:text-xs text-black ml-auto whitespace-nowrap">
-                                        {currentYear}
-                                    </span>
-                                    <span className="text-[10px] sm:text-xs font-bold text-black uppercase ml-1 sm:ml-2 whitespace-nowrap">
-                                        ESCOLAR
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+            <div className="rounded-xl border-2 border-accent/50 bg-accent/5 shadow-sm" style={{ padding: '0px' }}>
+                {/* Contenedor escalado para la vista previa - responsive y centrado */}
+                <div 
+                    className="w-full overflow-hidden flex items-center justify-center"
+                    style={{
+                        lineHeight: 0,
+                        minHeight: `${minHeight}px`,
+                    }}
+                >
+                    {/* Escalar el StudentCard para que quepa bien en la vista previa */}
+                    {/* Escala responsive: más grande en móviles */}
+                    <div
+                        style={{
+                            transform: `scale(${scale})`,
+                            transformOrigin: 'center center',
+                            width: '1018px', // Ancho total con bleed (980 + 19*2)
+                            height: '378px',  // Alto total con bleed (340 + 19*2)
+                            margin: '0 auto',
+                            padding: 0,
+                            flexShrink: 0,
+                        }}
+                    >
+                        <StudentCard
+                            student={studentData}
+                            colorHex={defaultColor}
+                        />
                     </div>
                 </div>
-            </Card>
+            </div>
         </div>
     )
 }

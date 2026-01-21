@@ -4,47 +4,50 @@ import React from "react";
 import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import type { ParentData, StudentData } from "@/types/label";
 
-// Colores para las franjas verticales (basado en el código proporcionado)
+// Colores para las franjas verticales (paleta actualizada) - Actualizados
+// Patrón: púrpura, azul, amarillo, naranjo (alternando por columna)
 const COLORS = [
-  '#9333ea', // purple-600
-  '#f97316', // orange-500
-  '#facc15', // yellow-400
-  '#2563eb', // blue-600
-  '#ec4899', // pink-500
-  '#ea580c', // orange-600
-  '#eab308', // yellow-500
+  '#9E2488', // MORADO
+  '#164296', // AZUL
+  '#FFC403', // AMARILLO
+  '#EA5936', // NARANJO
 ];
 
-// Asignaturas con sus colores (basado en el código proporcionado)
+// Asignaturas con sus colores (paleta actualizada) - Actualizados
 const SUBJECTS_ROW1 = [
-  { name: 'Matemática', color: '#1e40af' }, // blue-700
-  { name: 'Lenguaje', color: '#db2777' }, // pink-600
-  { name: 'Historia', color: '#f97316' }, // orange-500
-  { name: 'Ciencias', color: '#facc15' }, // yellow-400
-  { name: 'Artes', color: '#1e40af' }, // blue-700
+  { name: 'Matemática', color: '#164296' }, // AZUL
+  { name: 'Lenguaje', color: '#9E2488' }, // MORADO
+  { name: 'Historia', color: '#EA5936' }, // NARANJO
+  { name: 'Ciencias', color: '#FFC403' }, // AMARILLO
+  { name: 'Artes', color: '#164296' }, // AZUL
 ];
 
 const SUBJECTS_ROW2 = [
-  { name: 'Matemática', color: '#1e40af' },
-  { name: 'Lenguaje', color: '#db2777' },
-  { name: 'Historia', color: '#f97316' },
-  { name: 'Ciencias', color: '#facc15' },
-  { name: 'Música', color: '#1e40af' },
+  { name: 'Matemática', color: '#164296' }, // AZUL
+  { name: 'Lenguaje', color: '#9E2488' }, // MORADO
+  { name: 'Historia', color: '#EA5936' }, // NARANJO
+  { name: 'Ciencias', color: '#FFC403' }, // AMARILLO
+  { name: 'Música', color: '#164296' }, // AZUL
 ];
 
 const SUBJECTS_ROW3 = [
-  { name: 'Biología', color: '#1e40af' },
-  { name: 'Física', color: '#db2777' },
+  { name: 'Biología', color: '#164296' }, // AZUL
+  { name: 'Física', color: '#9E2488' }, // MORADO
 ];
 
 const SUBJECTS_ROW4 = [
-  { name: 'Biología', color: '#1e40af' },
-  { name: 'Física', color: '#db2777' },
+  { name: 'Biología', color: '#164296' }, // AZUL
+  { name: 'Física', color: '#9E2488' }, // MORADO
 ];
 
 const SUBJECTS_ROW5 = [
-  { name: 'Química', color: '#1e40af' },
-  { name: 'Química', color: '#db2777' },
+  { name: 'Química', color: '#164296' }, // AZUL
+  { name: 'Química', color: '#9E2488' }, // MORADO
+];
+
+const SUBJECTS_ROW6 = [
+  { name: 'Química', color: '#164296' }, // AZUL
+  { name: 'Química', color: '#9E2488' }, // MORADO
 ];
 
 const styles = StyleSheet.create({
@@ -63,8 +66,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     marginBottom: 8,
   },
-  // Grid para etiquetas simples (4 columnas)
-  grid4Cols: {
+  // Grid para etiquetas simples (5 columnas - 3 filas x 5 columnas = 15 etiquetas)
+  grid5ColsSimple: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginBottom: 8,
@@ -87,38 +90,41 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     flexDirection: 'row',
   },
-  // Sección QR con color
+  // Sección QR con color (franja vertical)
   qrSection: {
-    padding: 3,
-    flexDirection: 'row',
+    width: 20,
+    padding: 2,
+    flexDirection: 'column',
     alignItems: 'center',
+    justifyContent: 'center',
     position: 'relative',
   },
-  // QR Code container
-  qrContainer: {
-    backgroundColor: '#ffffff',
-    padding: 2,
-    borderRadius: 2,
-  },
-  qrImage: {
-    width: 15,
-    height: 15,
-  },
-  // Texto vertical "PORTA ESTO"
+  // Texto vertical "DEVOLVER AQUI"
   verticalText: {
     position: 'absolute',
-    left: 0,
+    left: 2,
     top: 0,
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingLeft: 1,
+    width: 12,
   },
   verticalTextChar: {
-    fontSize: 4,
+    fontSize: 3,
     color: '#ffffff',
     fontWeight: 'bold',
     lineHeight: 1.1,
+  },
+  // QR Code container
+  qrContainer: {
+    backgroundColor: '#ffffff',
+    padding: 1.5,
+    borderRadius: 1,
+    marginTop: 8,
+  },
+  qrImage: {
+    width: 18,
+    height: 18,
   },
   // Información del estudiante
   infoSection: {
@@ -155,18 +161,24 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     marginTop: 1,
   },
-  // Etiqueta simple
+  // Etiqueta simple (5 columnas = 20% cada una)
   simpleLabel: {
-    width: '25%',
-    height: 12,
+    width: '20%',
+    height: 10,
     borderWidth: 1,
     borderColor: '#d1d5db',
-    paddingHorizontal: 4,
-    paddingVertical: 3,
+    paddingHorizontal: 3,
+    paddingVertical: 2,
     fontSize: 2.5,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 2,
+  },
+  // Franja vertical de color en etiqueta simple
+  simpleColorStrip: {
+    width: 2,
+    height: '100%',
+    marginRight: 2,
   },
   simpleGrade: {
     marginRight: 4,
@@ -182,43 +194,51 @@ const styles = StyleSheet.create({
   // Etiqueta de asignatura
   subjectLabel: {
     width: '20%',
-    height: 18,
+    height: 16,
     marginRight: 2,
     marginBottom: 2,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 3,
-    paddingHorizontal: 4,
+    paddingVertical: 2,
+    paddingHorizontal: 3,
   },
   subjectName: {
     fontSize: 3.5,
     fontWeight: 'bold',
     textAlign: 'center',
+    color: '#ffffff',
+  },
+  subjectEscolar: {
+    fontSize: 2.5,
+    fontWeight: 'bold',
+    color: '#1e40af',
+    marginLeft: 2,
   },
   // Footer
   footer: {
     borderTopWidth: 1,
     borderTopColor: '#d1d5db',
-    paddingTop: 8,
+    paddingTop: 6,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginTop: 12,
+    marginTop: 10,
   },
   footerLeft: {
     flexDirection: 'column',
+    flex: 1,
   },
   footerTitle: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: 'bold',
-    marginBottom: 4,
-    lineHeight: 1.3,
+    marginBottom: 3,
+    lineHeight: 1.2,
   },
   footerSubtitle: {
     fontSize: 3.5,
     color: '#4b5563',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   footerOrder: {
     fontSize: 3,
@@ -232,17 +252,18 @@ const styles = StyleSheet.create({
   footerRight: {
     flexDirection: 'column',
     alignItems: 'flex-end',
+    justifyContent: 'flex-end',
   },
   logoEscolar: {
-    fontSize: 6,
+    fontSize: 7,
     color: '#1e40af',
     fontWeight: 'bold',
     marginBottom: 1,
   },
   logoLibreria: {
-    fontSize: 3.5,
-    color: '#4b5563',
-    fontStyle: 'italic',
+    fontSize: 4,
+    color: '#2563eb',
+    fontWeight: 'normal',
   },
 });
 
@@ -279,20 +300,20 @@ const StudentCard = ({
 
   return (
     <View style={styles.studentCard}>
-      {/* Sección QR con color de fondo */}
+      {/* Franja vertical de color con "DEVOLVER AQUI" y QR */}
       <View style={[styles.qrSection, { backgroundColor: color }]}>
+        {/* Texto vertical "DEVOLVER AQUI" - cada letra en una línea */}
+        <View style={styles.verticalText}>
+          {['D', 'E', 'V', 'O', 'L', 'V', 'E', 'R', ' ', 'A', 'Q', 'U', 'I'].map((char, i) => (
+            <Text key={i} style={styles.verticalTextChar}>{char}</Text>
+          ))}
+        </View>
         {/* QR Code */}
         {qrCodeDataUrl && (
           <View style={styles.qrContainer}>
             <Image src={qrCodeDataUrl} style={styles.qrImage} />
           </View>
         )}
-        {/* Texto vertical "DEVOLVER AQUI" */}
-        <View style={styles.verticalText}>
-          {['D', 'E', 'V', 'O', 'L', 'V', 'E', 'R', ' ', 'A', 'Q', 'U', 'I'].map((char, i) => (
-            <Text key={i} style={styles.verticalTextChar}>{char}</Text>
-          ))}
-        </View>
       </View>
 
       {/* Información del estudiante */}
@@ -303,9 +324,12 @@ const StudentCard = ({
         </View>
         <View>
           <Text style={styles.studentSchool}>{colegioLine1}</Text>
-          {colegioLine2 && <Text style={styles.studentLocation}>{colegioLine2} {currentYear}</Text>}
+          {colegioLine2 && <Text style={styles.studentLocation}>{colegioLine2}</Text>}
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', marginTop: 1 }}>
+            <Text style={styles.studentLocation}>{currentYear}</Text>
+            <Text style={styles.escolarText}> escolar</Text>
+          </View>
         </View>
-        <Text style={styles.escolarText}>escolar</Text>
       </View>
     </View>
   );
@@ -315,18 +339,21 @@ const StudentCard = ({
 const SimpleLabel = ({ 
   grade, 
   name, 
-  highlight 
+  color 
 }: { 
   grade: string; 
   name: string; 
-  highlight: boolean;
+  color: string;
 }) => {
   return (
     <View style={styles.simpleLabel}>
-      <Text style={highlight ? [styles.simpleGrade, styles.simpleGradeHighlight] : styles.simpleGrade}>
-        {grade}
-      </Text>
-      <Text style={styles.simpleName}>{name}</Text>
+      {/* Franja vertical de color */}
+      <View style={[styles.simpleColorStrip, { backgroundColor: color }]} />
+      {/* Contenido */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+        <Text style={styles.simpleGrade}>{grade}</Text>
+        <Text style={styles.simpleName}>{name}</Text>
+      </View>
     </View>
   );
 };
@@ -341,7 +368,8 @@ const SubjectLabel = ({
 }) => {
   return (
     <View style={[styles.subjectLabel, { backgroundColor: color }]}>
-      <Text style={[styles.subjectName, { color: '#ffffff' }]}>{subject}</Text>
+      <Text style={styles.subjectName}>{subject}</Text>
+      <Text style={styles.subjectEscolar}>escolar</Text>
     </View>
   );
 };
@@ -361,7 +389,9 @@ export const LabelPdf = ({ student, parent, colegioNombre, qrCodeDataUrl }: Labe
           {/* Sección 1: 21 etiquetas principales con QR (7 filas x 3 columnas) */}
           <View style={styles.grid3Cols}>
             {Array.from({ length: 21 }).map((_, idx) => {
-              const colorIndex = Math.floor(idx / 3) % COLORS.length;
+              // Colores alternando por columna: púrpura, azul, amarillo
+              const columnIndex = idx % 3;
+              const color = COLORS[columnIndex];
               return (
                 <StudentCard
                   key={`card-${idx}`}
@@ -369,23 +399,29 @@ export const LabelPdf = ({ student, parent, colegioNombre, qrCodeDataUrl }: Labe
                   parent={parent}
                   colegioNombre={colegioNombre}
                   qrCodeDataUrl={qrCodeDataUrl}
-                  color={COLORS[colorIndex]}
+                  color={color}
                   currentYear={currentYear}
                 />
               );
             })}
           </View>
 
-          {/* Sección 2: 16 etiquetas simples (4 filas x 4 columnas) */}
-          <View style={styles.grid4Cols}>
-            {Array.from({ length: 16 }).map((_, idx) => (
-              <SimpleLabel
-                key={`simple-${idx}`}
-                grade={courseText}
-                name={studentFullName}
-                highlight={idx % 4 === 2}
-              />
-            ))}
+          {/* Sección 2: 15 etiquetas simples (3 filas x 5 columnas) */}
+          <View style={styles.grid5ColsSimple}>
+            {Array.from({ length: 15 }).map((_, idx) => {
+              // Colores alternando por fila: púrpura, azul, amarillo
+              const rowIndex = Math.floor(idx / 5);
+              const colorIndex = rowIndex % COLORS.length;
+              const color = COLORS[colorIndex];
+              return (
+                <SimpleLabel
+                  key={`simple-${idx}`}
+                  grade={courseText}
+                  name={studentFullName}
+                  color={color}
+                />
+              );
+            })}
           </View>
 
           {/* Sección 3: Etiquetas de asignaturas */}
@@ -436,6 +472,16 @@ export const LabelPdf = ({ student, parent, colegioNombre, qrCodeDataUrl }: Labe
               <View style={{ width: '20%' }} />
               <View style={{ width: '20%' }} />
             </View>
+            {/* Fila 6: Química (2 asignaturas) */}
+            <View style={styles.grid5Cols}>
+              {SUBJECTS_ROW6.map((subject, idx) => (
+                <SubjectLabel key={`subj6-${idx}`} subject={subject.name} color={subject.color} />
+              ))}
+              {/* Espacios vacíos */}
+              <View style={{ width: '20%' }} />
+              <View style={{ width: '20%' }} />
+              <View style={{ width: '20%' }} />
+            </View>
           </View>
 
           {/* Footer */}
@@ -443,7 +489,7 @@ export const LabelPdf = ({ student, parent, colegioNombre, qrCodeDataUrl }: Labe
             {/* Izquierda */}
             <View style={styles.footerLeft}>
               <Text style={styles.footerTitle}>
-                Gracias por confiar{'\n'}en Librería Escolar.
+                Gracias por confiar en Librería Escolar.
               </Text>
               <Text style={styles.footerSubtitle}>
                 Etiquetas con QR: Si se pierde, te avisan.
