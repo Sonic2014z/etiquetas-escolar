@@ -292,3 +292,49 @@ body {
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
 }
+
+/* Estilos responsive para la vista previa de etiquetas */
+.preview-wrapper {
+  min-height: 151px; /* Altura base para escritorio (378 * 0.40) */
+}
+
+/* Media queries ordenados de mayor a menor para móviles - escalas más grandes */
+@media screen and (max-width: 768px) {
+  .preview-wrapper {
+    min-height: 166px; /* Altura para tablets (378 * 0.44) */
+  }
+  .preview-label-container {
+    transform: scale(0.44) !important;
+    transform-origin: center center !important;
+  }
+}
+
+@media screen and (max-width: 640px) {
+  .preview-wrapper {
+    min-height: 166px; /* Altura para móviles grandes (378 * 0.44) */
+  }
+  .preview-label-container {
+    transform: scale(0.44) !important;
+    transform-origin: center center !important;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .preview-wrapper {
+    min-height: 151px; /* Altura para móviles medianos (378 * 0.40) */
+  }
+  .preview-label-container {
+    transform: scale(0.40) !important;
+    transform-origin: center center !important;
+  }
+}
+
+@media screen and (max-width: 375px) {
+  .preview-wrapper {
+    min-height: 136px; /* Altura para móviles pequeños (378 * 0.36) */
+  }
+  .preview-label-container {
+    transform: scale(0.36) !important;
+    transform-origin: center center !important;
+  }
+}
