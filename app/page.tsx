@@ -748,6 +748,7 @@ export default function GeneratorPage() {
           año_escolar: currentYear,
           colegio_nombre: previewData.colegioNombre,
           etiquetasUrl,
+          studentName: studentFullName, // Nombre del estudiante para el email
         }),
       });
       

@@ -22,6 +22,25 @@ export async function verifyApoderadoExists(apoderadoId: number): Promise<Apoder
 }
 
 /**
+ * Obtiene un apoderado por documentId
+ */
+export async function getApoderadoByDocumentId(documentId: string): Promise<Apoderado | null> {
+  try {
+    const response = await strapi.get<StrapiResponse<Apoderado>>(
+      `etiquetas-apoderados/${documentId}`
+    );
+    
+    return response.data || null;
+  } catch (error: any) {
+    if (error.message?.includes('404')) {
+      return null;
+    }
+    logger.error("Error obteniendo apoderado por documentId:", error);
+    throw error;
+  }
+}
+
+/**
  * Busca un apoderado por RUT
  */
 export async function findApoderadoByRut(rut: string): Promise<Apoderado | null> {
