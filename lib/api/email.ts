@@ -38,8 +38,8 @@ export async function sendEmailWithPDF(
       return false;
     }
 
-    if (!env.SENDGRID_FROM_EMAIL) {
-      logger.warn('SENDGRID_FROM_EMAIL no está configurada. No se puede enviar email.');
+    if (!env.SENDGRID_DEFAULT_FROM) {
+      logger.warn('SENDGRID_DEFAULT_FROM no está configurada. No se puede enviar email.');
       return false;
     }
 
@@ -56,10 +56,11 @@ export async function sendEmailWithPDF(
     const pdfBase64 = pdfBuffer.toString('base64');
 
     // Preparar el mensaje
-    const msg = {
+    const msg: any = {
       to: to.trim(),
-      from: env.SENDGRID_FROM_EMAIL,
+      from: env.SENDGRID_DEFAULT_FROM,
       subject: `Etiquetas Escolares - ${studentName} (Orden #${orderNumber})`,
+      ...(env.SENDGRID_DEFAULT_REPLY_TO && { replyTo: env.SENDGRID_DEFAULT_REPLY_TO }),
       html: `
         <!DOCTYPE html>
         <html>

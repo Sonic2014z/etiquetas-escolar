@@ -74,7 +74,8 @@ function validateEnvVarFormat(name: string, value: string): { valid: boolean; er
 
 // Variables opcionales de SendGrid
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
-const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL;
+const SENDGRID_DEFAULT_FROM = process.env.SENDGRID_DEFAULT_FROM;
+const SENDGRID_DEFAULT_REPLY_TO = process.env.SENDGRID_DEFAULT_REPLY_TO;
 
 const requiredEnvVars = {
     NEXT_PUBLIC_STRAPI_URL: NEXT_PUBLIC_STRAPI_URL,
@@ -120,5 +121,6 @@ export const env = {
     STRAPI_URL: NEXT_PUBLIC_STRAPI_URL || '',
     STRAPI_API_TOKEN: STRAPI_API_TOKEN || '',
     SENDGRID_API_KEY: SENDGRID_API_KEY || '',
-    SENDGRID_FROM_EMAIL: SENDGRID_FROM_EMAIL || '',
+    SENDGRID_DEFAULT_FROM: SENDGRID_DEFAULT_FROM || '',
+    SENDGRID_DEFAULT_REPLY_TO: SENDGRID_DEFAULT_REPLY_TO || '',
 } as const;
