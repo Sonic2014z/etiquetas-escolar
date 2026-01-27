@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/helpers/logger";
 import { env } from "@/lib/env";
 import { strapi } from "@/lib/api/strapi";
-import { getApoderadoByDocumentId } from "@/lib/api/apoderados";
-import { sendEmailWithPDF } from "@/lib/api/email";
 import type { EtiquetaPDF, StrapiResponse, StrapiCollectionResponse } from "@/types/strapi";
 
 /**
@@ -386,50 +384,16 @@ export async function POST(request: NextRequest) {
 
     // Registro de etiqueta PDF creado exitosamente
 
-    // Enviar email con PDF adjuntado (no bloquea la respuesta si falla)
-    try {
-      // Obtener el email del apoderado desde Strapi
-      const apoderado = await getApoderadoByDocumentId(apoderadoDocumentId);
-      
-      if (apoderado && apoderado.email && apoderado.email.trim()) {
-        // Obtener el nombre del estudiante desde la URL o del parámetro
-        let studentNameForEmail = studentName;
-        if (!studentNameForEmail && etiquetasUrl) {
-          try {
-            const url = new URL(etiquetasUrl.startsWith('http') ? etiquetasUrl : `http://localhost${etiquetasUrl}`);
-            studentNameForEmail = url.searchParams.get('studentName') || 'Estudiante';
-          } catch {
-            studentNameForEmail = 'Estudiante';
-          }
-        }
-        
-        const orderNumberForEmail = finalOrderNumber.toString();
-        
-        // Enviar email con PDF adjuntado (no bloquea si falla)
-        const emailSent = await sendEmailWithPDF(
-          apoderado.email,
-          pdfBuffer,
-          studentNameForEmail || 'Estudiante',
-          orderNumberForEmail
-        );
-        
-        if (emailSent) {
-          logger.log(`Email enviado exitosamente a ${apoderado.email} para el estudiante ${studentNameForEmail}`);
-        } else {
-          logger.warn(`No se pudo enviar el email a ${apoderado.email} (puede ser que SendGrid no esté configurado o el email sea inválido)`);
-        }
-      } else {
-        logger.log('No se envió email: el apoderado no tiene email registrado');
-      }
-    } catch (emailError) {
-      // No fallar la generación del PDF si el email falla
-      logger.error('Error al intentar enviar email (no crítico):', emailError);
-    }
+    // Incluir el PDF en base64 para que el cliente pueda agrupar varios
+    const pdfBase64 = pdfBuffer.toString('base64');
 
     return NextResponse.json({
       success: true,
       message: "PDF generado y subido exitosamente",
       data: strapiData,
+      pdfBase64,
+      orderNumber: finalOrderNumber,
+      studentName: studentName || null,
     });
 
   } catch (error: unknown) {

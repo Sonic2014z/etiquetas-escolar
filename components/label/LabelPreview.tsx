@@ -1,7 +1,7 @@
 'use client';
 
 import { Card } from "@/components/ui/Card";
-import { StudentCard } from "./StudentCard";
+import { StudentCardPreview } from "./StudentCardPreview";
 import { useEffect, useState } from "react";
 
 interface LabelPreviewProps {
@@ -21,7 +21,7 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
     // Construir el texto del curso completo
     const gradeText = `${curso}${letra ? ` ${letra}` : ''}`;
     
-    // Preparar datos para StudentCard
+    // Preparar datos para StudentCardPreview (clon para la vista previa)
     const studentData = {
         name: nombreAlumno || "Nombre del Alumno",
         grade: gradeText || "Curso",
@@ -84,7 +84,7 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
                         minHeight: `${minHeight}px`,
                     }}
                 >
-                    {/* Escalar el StudentCard para que quepa bien en la vista previa */}
+                    {/* Escalar el StudentCardPreview para que quepa bien en la vista previa */}
                     {/* Escala responsive: más grande en móviles */}
                     <div
                         style={{
@@ -97,7 +97,7 @@ export function LabelPreview({ nombreAlumno, curso, letra, colegio, rutApoderado
                             flexShrink: 0,
                         }}
                     >
-                        <StudentCard
+                        <StudentCardPreview
                             student={studentData}
                             colorHex={defaultColor}
                         />

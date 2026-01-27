@@ -3,7 +3,7 @@
 import { QRCodeSVG } from 'qrcode.react';
 import { memo } from 'react';
 
-interface StudentCardProps {
+interface StudentCardPreviewProps {
   student: {
     name: string;
     grade: string;
@@ -15,10 +15,10 @@ interface StudentCardProps {
 }
 
 /**
- * Componente StudentCard - Etiqueta individual con QR
- * Basado en el diseño exacto de Figma
+ * Componente StudentCardPreview - Clon de StudentCard solo para la vista previa del formulario.
+ * Esto nos permite ajustar el diseño de la vista previa sin afectar el diseño del PDF.
  */
-export const StudentCard = memo(function StudentCard({ student, colorHex }: StudentCardProps) {
+export const StudentCardPreview = memo(function StudentCardPreview({ student, colorHex }: StudentCardPreviewProps) {
   // Sangrado de impresión (bleed) - 5mm = ~19px
   const bleed = 19;
   
@@ -56,37 +56,27 @@ export const StudentCard = memo(function StudentCard({ student, colorHex }: Stud
   }
 
   // Calcular el tamaño de fuente del nombre basado en su longitud
-  // Ancho disponible aproximado: 643px (ancho sección derecha) - 80px (padding) - 19px (bleed) = ~544px
   const studentName = student.name || "Nombre del Alumno";
   const nameLength = studentName.length;
   
-  // Tamaño de fuente base: 44px
-  // Reducir progresivamente según la longitud del nombre
   let nameFontSize = 44;
   
   if (nameLength > 35) {
-    // Nombres muy largos (más de 35 caracteres)
     nameFontSize = 28;
   } else if (nameLength > 30) {
-    // Nombres largos (30-35 caracteres)
     nameFontSize = 32;
   } else if (nameLength > 25) {
-    // Nombres medianos-largos (25-30 caracteres)
     nameFontSize = 36;
   } else if (nameLength > 20) {
-    // Nombres medianos (20-25 caracteres)
     nameFontSize = 40;
   }
-  // Para nombres de 20 caracteres o menos, usar el tamaño base de 44px
 
-  // Preparar líneas a mostrar para el colegio.
-  // Si no hay nombre de colegio, usar los textos por defecto;
-  // si hay nombre y solo una línea calculada, no mostrar la palabra "Colegio" por defecto.
+  const currentYear = student.year || new Date().getFullYear().toString();
+
+  // Preparar líneas a mostrar para el colegio (misma lógica que en StudentCard).
   const hasSchoolName = fullSchoolName.trim().length > 0;
   const displayColegioLine1 = hasSchoolName ? colegioLine1 : "Nombre del";
   const displayColegioLine2 = hasSchoolName ? colegioLine2 : "Colegio";
-
-  const currentYear = student.year || new Date().getFullYear().toString();
 
   return (
     <div className="relative">
@@ -179,7 +169,7 @@ export const StudentCard = memo(function StudentCard({ student, colorHex }: Stud
               style={{
                 fontSize: `${nameFontSize}px`,
                 fontFamily: 'var(--font-montserrat), Montserrat, sans-serif',
-                marginBottom: '8px',
+                marginBottom: '12px', // un poco más de espacio debajo del nombre
                 wordBreak: 'break-word',
                 overflowWrap: 'break-word',
                 maxWidth: '100%',
@@ -194,7 +184,7 @@ export const StudentCard = memo(function StudentCard({ student, colorHex }: Stud
               style={{
                 height: '4px',
                 width: '120px',
-                marginBottom: '16px',
+                marginBottom: '24px', // separa aún más la línea del texto de curso
               }}
             />
             
@@ -204,7 +194,7 @@ export const StudentCard = memo(function StudentCard({ student, colorHex }: Stud
               style={{
                 fontSize: '36px',
                 fontFamily: 'var(--font-montserrat), Montserrat, sans-serif',
-                marginBottom: '24px',
+                marginBottom: '28px', // un poco más de aire debajo del curso
               }}
             >
               {student.grade || "Curso"}
@@ -225,7 +215,6 @@ export const StudentCard = memo(function StudentCard({ student, colorHex }: Stud
               >
                 {displayColegioLine1}
                 <br />
-                {/* Si hay nombre de colegio pero solo una línea, no mostramos texto por defecto en la segunda línea */}
                 {hasSchoolName ? (colegioLine2 || '') : displayColegioLine2}
               </p>
               <div 
@@ -329,3 +318,4 @@ export const StudentCard = memo(function StudentCard({ student, colorHex }: Stud
     </div>
   );
 });
+

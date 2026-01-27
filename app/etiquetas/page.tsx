@@ -437,7 +437,8 @@ function EtiquetasContent() {
               <p 
                 className="text-black font-bold text-right"
                 style={{
-                  fontSize: '16px',
+                  // Tamaño reducido para que quepa completo en el PDF
+                  fontSize: '11px',
                   fontFamily: 'var(--font-montserrat), Montserrat, sans-serif',
                 }}
               >

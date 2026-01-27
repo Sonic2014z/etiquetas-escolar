@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ParentData, StudentData } from "@/types/label";
 import { ApoderadoForm } from "@/components/forms/ApoderadoForm";
 import { AlumnoForm } from "@/components/forms/AlumnoForm";
@@ -54,6 +54,12 @@ export default function GeneratorPage() {
   const [isGeneratingPdfs, setIsGeneratingPdfs] = useState(false);
   const [pdfProgress, setPdfProgress] = useState({ completed: 0, total: 0 });
   const [pdfsCompleted, setPdfsCompleted] = useState(false);
+  // Adjuntos de PDF para enviar en un solo email al finalizar
+  const pdfEmailAttachmentsRef = useRef<{
+    pdfBase64: string;
+    studentName: string;
+    orderNumber: string;
+  }[]>([]);
 
   // --- 2.0. EFECTO DE CONFETTI AL COMPLETAR PDFs ---
   useEffect(() => {
@@ -362,6 +368,8 @@ export default function GeneratorPage() {
         const alumnosRegistrados = result.data?.alumnosExitosos || result.data?.alumnos || [];
         
         if (alumnosRegistrados.length > 0) {
+          // Reiniciar la colección de adjuntos de email para este registro
+          pdfEmailAttachmentsRef.current = [];
           // Inicializar el banner de progreso
           setIsGeneratingPdfs(true);
           setPdfProgress({ completed: 0, total: alumnosRegistrados.length });
@@ -442,7 +450,12 @@ export default function GeneratorPage() {
                 // Validar que tenemos el documentId del alumno antes de generar PDF
                 if (alumno.documentId && result.data.apoderado?.documentId) {
                   // Generar y subir PDF a Strapi (secuencialmente)
-                  await generateAndUploadPDF(studentData, finalIndex, result.data.apoderado.documentId, alumno.documentId);
+                  await generateAndUploadPDF(
+                    studentData,
+                    finalIndex,
+                    result.data.apoderado.documentId,
+                    alumno.documentId
+                  );
                   
                   // Actualizar progreso
                   setPdfProgress(prev => ({ ...prev, completed: prev.completed + 1 }));
@@ -455,6 +468,27 @@ export default function GeneratorPage() {
                   setPdfProgress(prev => ({ ...prev, completed: prev.completed + 1 }));
                 }
               }
+            }
+
+            // Después de generar todos los PDFs, enviar un único correo con todos los adjuntos (si hay)
+            try {
+              if (
+                pdfEmailAttachmentsRef.current.length > 0 &&
+                result.data.apoderado?.documentId
+              ) {
+                await fetch("/api/send-pdfs-email", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    apoderadoDocumentId: result.data.apoderado.documentId,
+                    attachments: pdfEmailAttachmentsRef.current,
+                  }),
+                });
+              }
+            } catch (error: unknown) {
+              logger.error("Error enviando email combinado (no crítico):", {
+                errorType: error instanceof Error ? error.constructor.name : "Unknown",
+              });
             }
             
             // Marcar como completado y mostrar mensaje de éxito
@@ -767,7 +801,17 @@ export default function GeneratorPage() {
       logger.log('PDF generado y subido exitosamente:', {
         success: result.success,
         hasData: !!result.data,
+        hasPdfBase64: !!result.pdfBase64,
       });
+
+      // Guardar el PDF en memoria (base64) para enviarlo luego en un solo correo
+      if (result.pdfBase64) {
+        pdfEmailAttachmentsRef.current.push({
+          pdfBase64: result.pdfBase64 as string,
+          studentName: studentFullName,
+          orderNumber: (result.orderNumber ?? orderNumber).toString(),
+        });
+      }
       
     } catch (error: unknown) {
       // Error silencioso, no interrumpe el flujo del usuario
