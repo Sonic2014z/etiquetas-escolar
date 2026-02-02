@@ -80,13 +80,13 @@ export async function sendEmailWithPDF(
     const html = buildConfirmacionEnvioHtml({
       guardianName: guardianName ?? 'Apoderado/a',
       orderNumber,
-      attachmentFilenames: [pdfFilename],
+      attachmentItems: [{ filename: pdfFilename }],
       ...(checkIconSrc && { checkIconSrc }),
     });
     const text = buildConfirmacionEnvioText({
       guardianName: guardianName ?? 'Apoderado/a',
       orderNumber,
-      attachmentFilenames: [pdfFilename],
+      attachmentItems: [{ filename: pdfFilename }],
     });
 
     const msg: any = {
@@ -119,17 +119,17 @@ export async function sendEmailWithPDF(
 }
 
 /**
- * Envía un solo email con múltiples PDFs adjuntos (uno por alumno). Diseño "envío a domicilio".
+ * Envía un solo email con múltiples PDFs. Si cada ítem tiene pdfUrl, se muestra enlace de descarga y no se adjunta el PDF.
  *
  * @param to - Email del destinatario (apoderado)
  * @param orderNumbers - Lista de números de orden asociados a los PDFs
- * @param attachments - Arreglo de buffers + nombre de estudiante por cada PDF
+ * @param attachments - Por cada alumno: studentName, pdfBuffer (opcional) y pdfUrl (opcional). Si hay pdfUrl se usa enlace en vez de adjunto.
  * @param guardianName - Nombre del apoderado para el saludo (opcional)
  */
 export async function sendEmailWithMultiplePDFs(
   to: string,
   orderNumbers: string[],
-  attachments: { pdfBuffer: Buffer; studentName: string }[],
+  attachments: { pdfBuffer?: Buffer; studentName: string; pdfUrl?: string }[],
   guardianName?: string
 ): Promise<boolean> {
   try {
@@ -160,29 +160,49 @@ export async function sendEmailWithMultiplePDFs(
     );
     const mainOrderNumber = cleanedOrderNumbers[0] || 'varios';
 
-    const attachmentFilenames = attachments.map((att, idx) => {
+    const attachmentItems = attachments.map((att, idx) => {
       const order = orderNumbers[idx] || mainOrderNumber;
       const safeName = att.studentName.replace(/[^a-zA-Z0-9]/g, '_') || 'alumno';
-      return `etiquetas_${safeName}_${order || 'orden'}.pdf`;
+      const filename = `etiquetas_${safeName}_${order || 'orden'}.pdf`;
+      return {
+        filename,
+        downloadUrl: att.pdfUrl && att.pdfUrl.trim().startsWith('http') ? att.pdfUrl.trim() : undefined,
+      };
     });
 
     const checkIconSrc = await getCheckIconSrc();
     const html = buildConfirmacionEnvioHtml({
       guardianName: guardianName ?? 'Apoderado/a',
       orderNumber: mainOrderNumber,
-      attachmentFilenames,
+      attachmentItems,
       ...(checkIconSrc && { checkIconSrc }),
     });
     const text = buildConfirmacionEnvioText({
       guardianName: guardianName ?? 'Apoderado/a',
       orderNumber: mainOrderNumber,
-      attachmentFilenames,
+      attachmentItems,
     });
 
     const subject =
       attachments.length === 1
         ? `Etiquetas Escolares - ${attachments[0].studentName} (Orden #${mainOrderNumber})`
         : `Etiquetas Escolares - ${attachments.length} alumnos (Órdenes #${cleanedOrderNumbers.join(', ') || mainOrderNumber})`;
+
+    // Solo adjuntar PDFs cuando no hay URL de descarga (enlace en el correo)
+    const attachmentsToSend = attachments
+      .map((att, idx) => {
+        const hasUrl = att.pdfUrl && att.pdfUrl.trim().startsWith('http');
+        if (!att.pdfBuffer || hasUrl) return null;
+        const order = orderNumbers[idx] || mainOrderNumber;
+        const safeName = att.studentName.replace(/[^a-zA-Z0-9]/g, '_') || 'alumno';
+        return {
+          content: att.pdfBuffer.toString('base64'),
+          filename: `etiquetas_${safeName}_${order || 'orden'}.pdf`,
+          type: 'application/pdf' as const,
+          disposition: 'attachment' as const,
+        };
+      })
+      .filter((a): a is NonNullable<typeof a> => a !== null);
 
     const msg: any = {
       to: to.trim(),
@@ -191,16 +211,7 @@ export async function sendEmailWithMultiplePDFs(
       ...(env.SENDGRID_DEFAULT_REPLY_TO && { replyTo: env.SENDGRID_DEFAULT_REPLY_TO }),
       html,
       text,
-      attachments: attachments.map((att, idx) => {
-        const order = orderNumbers[idx] || mainOrderNumber;
-        const safeName = att.studentName.replace(/[^a-zA-Z0-9]/g, '_') || 'alumno';
-        return {
-          content: att.pdfBuffer.toString('base64'),
-          filename: `etiquetas_${safeName}_${order || 'orden'}.pdf`,
-          type: 'application/pdf',
-          disposition: 'attachment',
-        };
-      }),
+      attachments: attachmentsToSend,
     };
 
     await sgMail.send(msg);

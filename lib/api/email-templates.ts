@@ -3,19 +3,25 @@
  * HTML con estilos inline para compatibilidad con clientes de correo.
  */
 
+/** Un ítem de la sección de PDFs: nombre del archivo y opcionalmente URL para descargar. */
+export interface AttachmentItem {
+  filename: string;
+  downloadUrl?: string;
+}
+
 export interface ConfirmacionEnvioParams {
   /** Nombre del apoderado para el saludo (ej. "María González") */
   guardianName: string;
   /** Número de orden a mostrar */
   orderNumber: string;
-  /** Lista de nombres de archivo PDF (uno por alumno) para mostrar en el cuerpo */
-  attachmentFilenames: string[];
-  /** URL o data URI del icono de check (ej. public/check.png como data:image/png;base64,...). Si no se pasa, se usa SVG por defecto. */
+  /** Lista de PDFs: nombre y opcionalmente URL de descarga (si hay URL se muestra enlace con icono en vez de "PDF adjunto"). */
+  attachmentItems: AttachmentItem[];
+  /** URL o data URI del icono de check. Si no se pasa, se usa SVG por defecto. */
   checkIconSrc?: string;
 }
 
 const CHECK_ICON_SVG =
-  '<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="40" cy="40" r="38" fill="#E8F5E9" stroke="#4CAF50" stroke-width="2"/><path d="M24 40l10 10 22-22" stroke="#4CAF50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  '<svg width="120" height="120" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="40" cy="40" r="38" fill="#E8F5E9" stroke="#4CAF50" stroke-width="2"/><path d="M24 40l10 10 22-22" stroke="#4CAF50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 /** Icono de bombilla para la caja de aviso (compatible con clientes de correo). */
 const LIGHTBULB_SVG =
@@ -45,19 +51,25 @@ function escapeHtml(s: string): string {
  * Genera el HTML del cuerpo del correo de confirmación (envío a domicilio).
  */
 export function buildConfirmacionEnvioHtml(params: ConfirmacionEnvioParams): string {
-  const { guardianName, orderNumber, attachmentFilenames, checkIconSrc } = params;
+  const { guardianName, orderNumber, attachmentItems, checkIconSrc } = params;
   const safeName = escapeHtml(guardianName.trim() || 'Apoderado/a');
   const safeOrder = escapeHtml(String(orderNumber || '—'));
   const headerIcon =
     checkIconSrc && checkIconSrc.trim()
-      ? `<img src="${escapeHtml(checkIconSrc.trim())}" alt="Listo" width="80" height="80" style="display:block;margin:0 auto 24px;border:0;" />`
-      : `<div style="width:80px;height:80px;margin:0 auto 24px;">${CHECK_ICON_SVG}</div>`;
+      ? `<img src="${escapeHtml(checkIconSrc.trim())}" alt="Listo" width="120" height="120" style="display:block;margin:0 auto 24px;border:0;" />`
+      : `<div style="width:120px;height:120px;margin:0 auto 24px;">${CHECK_ICON_SVG}</div>`;
 
-  const attachmentRowsHtml = attachmentFilenames
-    .map((filename, i) => {
-      const safeFile = escapeHtml(filename);
-      const isLast = i === attachmentFilenames.length - 1;
+  const attachmentRowsHtml = attachmentItems
+    .map((item, i) => {
+      const safeFile = escapeHtml(item.filename);
+      const isLast = i === attachmentItems.length - 1;
       const borderStyle = isLast ? '' : ' border-bottom: 1px solid #e5e7eb;';
+      const hasLink = Boolean(item.downloadUrl && item.downloadUrl.trim().startsWith('http'));
+      const safeUrl = hasLink ? escapeHtml(item.downloadUrl!.trim()) : '';
+      const subtitle = hasLink ? 'Haz clic en el botón para descargar' : 'PDF adjunto';
+      const actionCell = hasLink && safeUrl
+        ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:8px 14px;background:#164296;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;border-radius:6px;">${DOWNLOAD_SVG} Descargar PDF</a>`
+        : DOWNLOAD_SVG;
       return `
         <tr>
           <td style="padding: 12px 16px;${borderStyle} vertical-align: middle;">
@@ -68,9 +80,9 @@ export function buildConfirmacionEnvioHtml(params: ConfirmacionEnvioParams): str
                 </td>
                 <td style="padding-left: 12px; vertical-align: middle;">
                   <p style="margin: 0; font-size: 13px; font-weight: 600; color: #1e2939;">${safeFile}</p>
-                  <p style="margin: 2px 0 0 0; font-size: 11px; color: #6a7282;">PDF adjunto</p>
+                  <p style="margin: 2px 0 0 0; font-size: 11px; color: #6a7282;">${escapeHtml(subtitle)}</p>
                 </td>
-                <td width="24" style="vertical-align: middle; text-align: right;">${DOWNLOAD_SVG}</td>
+                <td style="vertical-align: middle; text-align: right; padding-left: 12px;">${actionCell}</td>
               </tr>
             </table>
           </td>
@@ -189,11 +201,17 @@ export function buildConfirmacionEnvioHtml(params: ConfirmacionEnvioParams): str
  * Genera la versión en texto plano del correo de confirmación.
  */
 export function buildConfirmacionEnvioText(params: ConfirmacionEnvioParams): string {
-  const { guardianName, orderNumber, attachmentFilenames } = params;
+  const { guardianName, orderNumber, attachmentItems } = params;
   const name = guardianName.trim() || 'Apoderado/a';
   const order = String(orderNumber || '—');
-  const fileList = attachmentFilenames.length
-    ? attachmentFilenames.map((f) => `  - ${f}`).join('\n')
+  const fileList = attachmentItems.length
+    ? attachmentItems
+        .map((item) =>
+          item.downloadUrl && item.downloadUrl.trim().startsWith('http')
+            ? `  - ${item.filename}\n    Descargar: ${item.downloadUrl.trim()}`
+            : `  - ${item.filename} (adjunto)`
+        )
+        .join('\n')
     : '  - (PDF adjunto)';
 
   return `Etiquetas Escolares
@@ -204,7 +222,7 @@ Hola ${name},
 
 A continuación podrás descargar tus etiquetas, por si deseas tenerlas en formato digital o imprimirlas por tu cuenta.
 
-Archivos adjuntos:
+Archivos:
 ${fileList}
 
 ¿Quieres que te las entreguemos listas e impresas?

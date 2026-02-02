@@ -54,11 +54,12 @@ export default function GeneratorPage() {
   const [isGeneratingPdfs, setIsGeneratingPdfs] = useState(false);
   const [pdfProgress, setPdfProgress] = useState({ completed: 0, total: 0 });
   const [pdfsCompleted, setPdfsCompleted] = useState(false);
-  // Adjuntos de PDF para enviar en un solo email al finalizar
+  // Adjuntos de PDF para enviar en un solo email al finalizar (pdfUrl = enlace de descarga en el correo en vez de adjunto)
   const pdfEmailAttachmentsRef = useRef<{
-    pdfBase64: string;
+    pdfBase64?: string;
     studentName: string;
     orderNumber: string;
+    pdfUrl?: string;
   }[]>([]);
 
   // --- 2.0. EFECTO DE CONFETTI AL COMPLETAR PDFs ---
@@ -804,12 +805,13 @@ export default function GeneratorPage() {
         hasPdfBase64: !!result.pdfBase64,
       });
 
-      // Guardar el PDF en memoria (base64) para enviarlo luego en un solo correo
-      if (result.pdfBase64) {
+      // Guardar para enviar en un solo correo: base64 (fallback si no hay URL) y pdfUrl para enlace de descarga
+      if (result.pdfBase64 || result.pdfUrl) {
         pdfEmailAttachmentsRef.current.push({
-          pdfBase64: result.pdfBase64 as string,
+          ...(result.pdfBase64 && { pdfBase64: result.pdfBase64 as string }),
           studentName: studentFullName,
           orderNumber: (result.orderNumber ?? orderNumber).toString(),
+          ...(result.pdfUrl && { pdfUrl: result.pdfUrl as string }),
         });
       }
       

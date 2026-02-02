@@ -281,6 +281,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // URL pública del PDF para enlace de descarga en el correo
+    const relativeUrl = (uploadedFile as { url?: string })?.url;
+    const pdfUrl = relativeUrl
+      ? (relativeUrl.startsWith('http') ? relativeUrl : `${STRAPI_URL.replace(/\/$/, '')}${relativeUrl.startsWith('/') ? relativeUrl : `/${relativeUrl}`}`)
+      : null;
+
     // Archivo PDF subido exitosamente
 
     // Paso 2: Generar número de orden secuencial único (si no se proporciona)
@@ -392,6 +398,7 @@ export async function POST(request: NextRequest) {
       message: "PDF generado y subido exitosamente",
       data: strapiData,
       pdfBase64,
+      pdfUrl: pdfUrl || null,
       orderNumber: finalOrderNumber,
       studentName: studentName || null,
     });

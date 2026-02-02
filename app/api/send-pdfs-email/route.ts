@@ -4,9 +4,11 @@ import { getApoderadoByDocumentId } from "@/lib/api/apoderados";
 import { sendEmailWithMultiplePDFs } from "@/lib/api/email";
 
 interface PdfAttachmentPayload {
-  pdfBase64: string;
+  pdfBase64?: string;
   studentName: string;
   orderNumber?: string | number;
+  /** URL pública del PDF (Strapi). Si está presente, el correo muestra enlace de descarga y no adjunta el archivo. */
+  pdfUrl?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -45,9 +47,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const buffers = attachments.map((att) => ({
-      pdfBuffer: Buffer.from(att.pdfBase64, "base64"),
+    const payloads = attachments.map((att) => ({
+      pdfBuffer: att.pdfBase64 ? Buffer.from(att.pdfBase64, "base64") : undefined,
       studentName: att.studentName || "Estudiante",
+      pdfUrl: att.pdfUrl && att.pdfUrl.trim() ? att.pdfUrl.trim() : undefined,
     }));
 
     const orderNumbers = attachments.map((att) =>
@@ -68,7 +71,7 @@ export async function POST(request: NextRequest) {
     const emailSent = await sendEmailWithMultiplePDFs(
       apoderado.email,
       orderNumbers,
-      buffers,
+      payloads,
       guardianName || undefined
     );
 
