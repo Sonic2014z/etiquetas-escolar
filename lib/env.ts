@@ -77,8 +77,11 @@ const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const SENDGRID_DEFAULT_FROM = process.env.SENDGRID_DEFAULT_FROM;
 const SENDGRID_DEFAULT_REPLY_TO = process.env.SENDGRID_DEFAULT_REPLY_TO;
 
-/** URL base pública de la app (sin barra final). Ej: https://etiquetas.tudominio.com. Necesaria para que el icono check.png se muestre en el correo (Gmail/Outlook bloquean data: URIs). */
-const NEXT_PUBLIC_APP_URL = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, '') || '';
+/** URL base pública de la app (sin barra final). Usar APP_BASE_URL en Railway/servidor para que el check.png se cargue en el correo. */
+const APP_BASE_URL_RAW =
+  process.env.APP_BASE_URL?.trim().replace(/\/$/, '') ||
+  process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, '') ||
+  '';
 
 const requiredEnvVars = {
     NEXT_PUBLIC_STRAPI_URL: NEXT_PUBLIC_STRAPI_URL,
@@ -126,6 +129,6 @@ export const env = {
     SENDGRID_API_KEY: SENDGRID_API_KEY || '',
     SENDGRID_DEFAULT_FROM: SENDGRID_DEFAULT_FROM || '',
     SENDGRID_DEFAULT_REPLY_TO: SENDGRID_DEFAULT_REPLY_TO || '',
-    /** URL base de la app para enlaces e imágenes en emails (ej. https://tu-app.com). Si está vacía, el icono de check en el correo usará fallback SVG. */
-    APP_BASE_URL: NEXT_PUBLIC_APP_URL,
+    /** URL base de la app para enlaces e imágenes en emails (ej. https://tu-app.railway.app). Definir APP_BASE_URL o NEXT_PUBLIC_APP_URL en Railway. */
+    APP_BASE_URL: APP_BASE_URL_RAW,
 } as const;

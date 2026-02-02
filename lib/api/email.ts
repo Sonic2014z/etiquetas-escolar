@@ -11,18 +11,21 @@ import {
 /**
  * Devuelve la URL o data URI del icono de check para el correo.
  * Prioridad: 1) URL pública (APP_BASE_URL/check.png) — la única fiable en Gmail/Outlook.
- *            2) data URI (algunos clientes la bloquean).
+ *            2) data URI (muchos clientes la bloquean).
  */
 async function getCheckIconSrc(): Promise<string> {
   if (env.APP_BASE_URL && env.APP_BASE_URL.startsWith('http')) {
-    return `${env.APP_BASE_URL}/check.png`;
+    const url = `${env.APP_BASE_URL}/check.png`;
+    logger.log(`Correo: usando icono check desde URL (verifica en el navegador que cargue): ${url}`);
+    return url;
   }
   try {
     const filePath = path.join(process.cwd(), 'public', 'check.png');
     const buf = await fs.readFile(filePath);
+    logger.log('Correo: usando icono check en data URI (algunos clientes de correo la bloquean).');
     return 'data:image/png;base64,' + buf.toString('base64');
   } catch (e) {
-    logger.warn('No se pudo cargar public/check.png para el correo, se usará icono por defecto.', e);
+    logger.warn('No se pudo cargar public/check.png para el correo, se usará icono SVG por defecto.', e);
     return '';
   }
 }
