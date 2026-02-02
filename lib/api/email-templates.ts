@@ -27,8 +27,9 @@ const CHECK_ICON_SVG =
 const LIGHTBULB_SVG =
   '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="display:block;"><path fill="#164296" d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>';
 
-const PAPERCLIP_SVG =
-  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>';
+/** Icono de documento/PDF para el cuadrado amarillo (blanco sobre fondo #ffc403). */
+const FILE_PDF_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" style="display:block;"><path fill="white" d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm0 2l5 5h-5V4zm-4 9h2v4h-2v-4zm0-3h2v2h-2v-2zm4 3h2v4h-2v-4zm0-3h2v2h-2v-2z"/></svg>';
 
 const DOWNLOAD_SVG =
   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#99A1AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>';
@@ -66,7 +67,7 @@ export function buildConfirmacionEnvioHtml(params: ConfirmacionEnvioParams): str
       const borderStyle = isLast ? '' : ' border-bottom: 1px solid #e5e7eb;';
       const hasLink = Boolean(item.downloadUrl && item.downloadUrl.trim().startsWith('http'));
       const safeUrl = hasLink ? escapeHtml(item.downloadUrl!.trim()) : '';
-      const subtitle = hasLink ? 'Haz clic en el botón para descargar' : 'PDF adjunto';
+      const subtitle = hasLink ? 'Haz clic en el botón para descargar' : 'PDF adjunto en el correo';
       const actionCell = hasLink && safeUrl
         ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:8px 14px;background:#164296;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;border-radius:6px;">${DOWNLOAD_SVG} Descargar PDF</a>`
         : DOWNLOAD_SVG;
@@ -76,7 +77,7 @@ export function buildConfirmacionEnvioHtml(params: ConfirmacionEnvioParams): str
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
               <tr>
                 <td width="34" style="vertical-align: middle;">
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width: 34px; height: 34px; background: #ffc403; border-radius: 4px;"><tr><td align="center" valign="middle">${PAPERCLIP_SVG}</td></tr></table>
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width: 34px; height: 34px; background: #ffc403; border-radius: 4px;"><tr><td align="center" valign="middle">${FILE_PDF_SVG}</td></tr></table>
                 </td>
                 <td style="padding-left: 12px; vertical-align: middle;">
                   <p style="margin: 0; font-size: 13px; font-weight: 600; color: #1e2939;">${safeFile}</p>
@@ -209,10 +210,10 @@ export function buildConfirmacionEnvioText(params: ConfirmacionEnvioParams): str
         .map((item) =>
           item.downloadUrl && item.downloadUrl.trim().startsWith('http')
             ? `  - ${item.filename}\n    Descargar: ${item.downloadUrl.trim()}`
-            : `  - ${item.filename} (adjunto)`
+            : `  - ${item.filename} (PDF adjunto en el correo)`
         )
         .join('\n')
-    : '  - (PDF adjunto)';
+    : '  - (PDF adjunto en el correo)';
 
   return `Etiquetas Escolares
 
