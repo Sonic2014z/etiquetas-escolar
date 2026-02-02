@@ -18,6 +18,8 @@ export interface ConfirmacionEnvioParams {
   attachmentItems: AttachmentItem[];
   /** URL o data URI del icono de check. Si no se pasa, se usa SVG por defecto. */
   checkIconSrc?: string;
+  /** URL base de la app (sin barra final). Si se pasa, los iconos del correo usan PNG desde {iconBaseUrl}/nombre.png en vez de SVG inline. */
+  iconBaseUrl?: string;
 }
 
 const CHECK_ICON_SVG =
@@ -52,13 +54,22 @@ function escapeHtml(s: string): string {
  * Genera el HTML del cuerpo del correo de confirmación (envío a domicilio).
  */
 export function buildConfirmacionEnvioHtml(params: ConfirmacionEnvioParams): string {
-  const { guardianName, orderNumber, attachmentItems, checkIconSrc } = params;
+  const { guardianName, orderNumber, attachmentItems, checkIconSrc, iconBaseUrl } = params;
   const safeName = escapeHtml(guardianName.trim() || 'Apoderado/a');
   const safeOrder = escapeHtml(String(orderNumber || '—'));
+  const useIconUrls = Boolean(iconBaseUrl && iconBaseUrl.trim().startsWith('http'));
+  const base = useIconUrls ? escapeHtml(iconBaseUrl!.trim().replace(/\/$/, '')) : '';
+
   const headerIcon =
     checkIconSrc && checkIconSrc.trim()
       ? `<img src="${escapeHtml(checkIconSrc.trim())}" alt="Listo" width="120" height="120" style="display:block;margin:0 auto 24px;border:0;" />`
       : `<div style="width:120px;height:120px;margin:0 auto 24px;">${CHECK_ICON_SVG}</div>`;
+
+  const lightbulbIcon = useIconUrls ? `<img src="${base}/lightbulb.png" width="24" height="24" alt="" style="display:block;border:0;" />` : LIGHTBULB_SVG;
+  const filePdfIcon = useIconUrls ? `<img src="${base}/file-pdf.png" width="20" height="20" alt="" style="display:block;border:0;" />` : FILE_PDF_SVG;
+  const downloadIcon = useIconUrls ? `<img src="${base}/download.png" width="18" height="18" alt="" style="display:block;border:0;" />` : DOWNLOAD_SVG;
+  const mapPinIcon = useIconUrls ? `<img src="${base}/map-pin.png" width="12" height="12" alt="" style="display:block;border:0;" />` : MAP_PIN_SVG;
+  const calendarIcon = useIconUrls ? `<img src="${base}/calendar.png" width="12" height="12" alt="" style="display:block;border:0;" />` : CALENDAR_SVG;
 
   const attachmentRowsHtml = attachmentItems
     .map((item, i) => {
@@ -69,15 +80,15 @@ export function buildConfirmacionEnvioHtml(params: ConfirmacionEnvioParams): str
       const safeUrl = hasLink ? escapeHtml(item.downloadUrl!.trim()) : '';
       const subtitle = hasLink ? 'Haz clic en el botón para descargar' : 'PDF adjunto en el correo';
       const actionCell = hasLink && safeUrl
-        ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:8px 14px;background:#164296;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;border-radius:6px;">${DOWNLOAD_SVG} Descargar PDF</a>`
-        : DOWNLOAD_SVG;
+        ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:8px 14px;background:#164296;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;border-radius:6px;">${downloadIcon} Descargar PDF</a>`
+        : downloadIcon;
       return `
         <tr>
           <td style="padding: 12px 16px;${borderStyle} vertical-align: middle;">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
               <tr>
                 <td width="34" style="vertical-align: middle;">
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width: 34px; height: 34px; background: #ffc403; border-radius: 4px;"><tr><td align="center" valign="middle">${FILE_PDF_SVG}</td></tr></table>
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width: 34px; height: 34px; background: #ffc403; border-radius: 4px;"><tr><td align="center" valign="middle">${filePdfIcon}</td></tr></table>
                 </td>
                 <td style="padding-left: 12px; vertical-align: middle;">
                   <p style="margin: 0; font-size: 13px; font-weight: 600; color: #1e2939;">${safeFile}</p>
@@ -122,7 +133,7 @@ export function buildConfirmacionEnvioHtml(params: ConfirmacionEnvioParams): str
                     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                       <tr>
                         <td width="32" style="vertical-align: top; padding-right: 12px; width: 32px; min-width: 32px;">
-                          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="24" height="24" style="width: 24px; height: 24px;">${LIGHTBULB_SVG}</td></tr></table>
+                          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="24" height="24" style="width: 24px; height: 24px;">${lightbulbIcon}</td></tr></table>
                         </td>
                         <td style="vertical-align: top;">
                           <p style="margin: 0; font-size: 12px; line-height: 15px; color: #1e2939;">A continuación podrás descargar tus etiquetas, por si deseas tenerlas en <strong>formato digital</strong> o imprimirlas por tu cuenta.</p>
@@ -163,11 +174,11 @@ export function buildConfirmacionEnvioHtml(params: ConfirmacionEnvioParams): str
                   <td style="background: #f3f4f6; border-left: 4px solid #9e2488; border-radius: 0 4px 4px 0; padding: 12px 16px;">
                     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                       <tr>
-                        <td width="20" style="vertical-align: top; padding-top: 2px; width: 20px;">${MAP_PIN_SVG}</td>
+                        <td width="20" style="vertical-align: top; padding-top: 2px; width: 20px;">${mapPinIcon}</td>
                         <td style="padding-left: 8px; font-size: 12px; color: #1e2939; line-height: 1.4;"><strong>Librería Escolar:</strong> Av. Apoquindo 4900, Local 173</td>
                       </tr>
                       <tr>
-                        <td width="20" style="vertical-align: top; padding-top: 6px; width: 20px;">${CALENDAR_SVG}</td>
+                        <td width="20" style="vertical-align: top; padding-top: 6px; width: 20px;">${calendarIcon}</td>
                         <td style="padding-left: 8px; padding-top: 6px; font-size: 12px; color: #1e2939; line-height: 1.4;"><strong>Horario de atención:</strong> Lunes a viernes de 10:30 a 19:00 hrs.</td>
                       </tr>
                     </table>

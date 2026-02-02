@@ -82,6 +82,7 @@ export async function sendEmailWithPDF(
       orderNumber,
       attachmentItems: [{ filename: pdfFilename }],
       ...(checkIconSrc && { checkIconSrc }),
+      ...(env.APP_BASE_URL && env.APP_BASE_URL.startsWith('http') && { iconBaseUrl: env.APP_BASE_URL }),
     });
     const text = buildConfirmacionEnvioText({
       guardianName: guardianName ?? 'Apoderado/a',
@@ -176,6 +177,7 @@ export async function sendEmailWithMultiplePDFs(
       orderNumber: mainOrderNumber,
       attachmentItems,
       ...(checkIconSrc && { checkIconSrc }),
+      ...(env.APP_BASE_URL && env.APP_BASE_URL.startsWith('http') && { iconBaseUrl: env.APP_BASE_URL }),
     });
     const text = buildConfirmacionEnvioText({
       guardianName: guardianName ?? 'Apoderado/a',
