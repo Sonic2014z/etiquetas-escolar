@@ -77,6 +77,9 @@ const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const SENDGRID_DEFAULT_FROM = process.env.SENDGRID_DEFAULT_FROM;
 const SENDGRID_DEFAULT_REPLY_TO = process.env.SENDGRID_DEFAULT_REPLY_TO;
 
+/** URL base pública de la app (sin barra final). Ej: https://etiquetas.tudominio.com. Necesaria para que el icono check.png se muestre en el correo (Gmail/Outlook bloquean data: URIs). */
+const NEXT_PUBLIC_APP_URL = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, '') || '';
+
 const requiredEnvVars = {
     NEXT_PUBLIC_STRAPI_URL: NEXT_PUBLIC_STRAPI_URL,
     STRAPI_API_TOKEN: STRAPI_API_TOKEN,
@@ -123,4 +126,6 @@ export const env = {
     SENDGRID_API_KEY: SENDGRID_API_KEY || '',
     SENDGRID_DEFAULT_FROM: SENDGRID_DEFAULT_FROM || '',
     SENDGRID_DEFAULT_REPLY_TO: SENDGRID_DEFAULT_REPLY_TO || '',
+    /** URL base de la app para enlaces e imágenes en emails (ej. https://tu-app.com). Si está vacía, el icono de check en el correo usará fallback SVG. */
+    APP_BASE_URL: NEXT_PUBLIC_APP_URL,
 } as const;

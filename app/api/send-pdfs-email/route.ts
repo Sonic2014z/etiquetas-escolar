@@ -56,10 +56,20 @@ export async function POST(request: NextRequest) {
         : ""
     );
 
+    const guardianName = [
+      apoderado.nombres,
+      apoderado.primer_apellido,
+      apoderado.segundo_apellido,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+
     const emailSent = await sendEmailWithMultiplePDFs(
       apoderado.email,
       orderNumbers,
-      buffers
+      buffers,
+      guardianName || undefined
     );
 
     return NextResponse.json({ success: emailSent });
