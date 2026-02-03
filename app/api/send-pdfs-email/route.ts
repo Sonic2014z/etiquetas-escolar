@@ -68,14 +68,22 @@ export async function POST(request: NextRequest) {
       .join(' ')
       .trim();
 
-    const emailSent = await sendEmailWithMultiplePDFs(
+    const result = await sendEmailWithMultiplePDFs(
       apoderado.email,
       orderNumbers,
       payloads,
       guardianName || undefined
     );
 
-    return NextResponse.json({ success: emailSent });
+    if (!result.success) {
+      logger.warn(`Envío de correo fallido: ${result.error}`);
+      return NextResponse.json(
+        { success: false, error: result.error },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true });
   } catch (error: unknown) {
     logger.error("Error en /api/send-pdfs-email:", error);
 

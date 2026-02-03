@@ -44,6 +44,9 @@ export function initializeSendGrid() {
   return true;
 }
 
+/** Resultado del envío: éxito o fallo con mensaje. */
+export type SendEmailResult = { success: true } | { success: false; error: string };
+
 /**
  * Envía un email con un PDF adjunto usando SendGrid (diseño "envío a domicilio").
  *
@@ -59,20 +62,20 @@ export async function sendEmailWithPDF(
   studentName: string,
   orderNumber: string,
   guardianName?: string
-): Promise<boolean> {
+): Promise<SendEmailResult> {
   try {
     if (!env.SENDGRID_API_KEY) {
       logger.warn('SENDGRID_API_KEY no está configurada. No se puede enviar email.');
-      return false;
+      return { success: false, error: 'SENDGRID_API_KEY no está configurada' };
     }
     if (!env.SENDGRID_DEFAULT_FROM) {
       logger.warn('SENDGRID_DEFAULT_FROM no está configurada. No se puede enviar email.');
-      return false;
+      return { success: false, error: 'SENDGRID_DEFAULT_FROM no está configurada' };
     }
     initializeSendGrid();
     if (!to || !to.trim() || !to.includes('@')) {
       logger.warn(`Email del destinatario inválido: ${to}`);
-      return false;
+      return { success: false, error: 'Email del destinatario inválido' };
     }
 
     const pdfFilename = `etiquetas_${studentName.replace(/[^a-zA-Z0-9]/g, '_')}_${orderNumber}.pdf`;
@@ -109,13 +112,11 @@ export async function sendEmailWithPDF(
 
     await sgMail.send(msg);
     logger.log(`Email enviado exitosamente a ${to} para el estudiante ${studentName}`);
-    return true;
+    return { success: true };
   } catch (error) {
     logger.error('Error enviando email con SendGrid:', error);
-    if (error instanceof Error) {
-      logger.error(`Error details: ${error.message}`);
-    }
-    return false;
+    const message = error instanceof Error ? error.message : 'Error desconocido al enviar email';
+    return { success: false, error: message };
   }
 }
 
@@ -132,24 +133,24 @@ export async function sendEmailWithMultiplePDFs(
   orderNumbers: string[],
   attachments: { pdfBuffer?: Buffer; studentName: string; pdfUrl?: string }[],
   guardianName?: string
-): Promise<boolean> {
+): Promise<SendEmailResult> {
   try {
     if (!env.SENDGRID_API_KEY) {
       logger.warn('SENDGRID_API_KEY no está configurada. No se puede enviar email.');
-      return false;
+      return { success: false, error: 'SENDGRID_API_KEY no está configurada' };
     }
     if (!env.SENDGRID_DEFAULT_FROM) {
       logger.warn('SENDGRID_DEFAULT_FROM no está configurada. No se puede enviar email.');
-      return false;
+      return { success: false, error: 'SENDGRID_DEFAULT_FROM no está configurada' };
     }
     initializeSendGrid();
     if (!to || !to.trim() || !to.includes('@')) {
       logger.warn(`Email del destinatario inválido: ${to}`);
-      return false;
+      return { success: false, error: 'Email del destinatario inválido' };
     }
     if (!attachments || attachments.length === 0) {
       logger.warn('sendEmailWithMultiplePDFs llamado sin adjuntos');
-      return false;
+      return { success: false, error: 'No hay adjuntos para enviar' };
     }
 
     const cleanedOrderNumbers = Array.from(
@@ -220,12 +221,10 @@ export async function sendEmailWithMultiplePDFs(
     logger.log(
       `Email múltiple enviado exitosamente a ${to} para ${attachments.length} alumno(s)`
     );
-    return true;
+    return { success: true };
   } catch (error) {
     logger.error('Error enviando email múltiple con SendGrid:', error);
-    if (error instanceof Error) {
-      logger.error(`Error details: ${error.message}`);
-    }
-    return false;
+    const message = error instanceof Error ? error.message : 'Error desconocido al enviar email';
+    return { success: false, error: message };
   }
 }
