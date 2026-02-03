@@ -36,11 +36,13 @@ const FILE_PDF_SVG =
 const DOWNLOAD_SVG =
   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#99A1AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>';
 
+/** Icono map pin (igual que public/map-pin-remodeled.svg). */
 const MAP_PIN_SVG =
-  '<svg width="12" height="12" viewBox="0 0 24 24" fill="#164296" stroke="#164296" stroke-width="2" xmlns="http://www.w3.org/2000/svg"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" style="display:block;"><path fill="#164296" d="M12 2C7.58 2 4 5.58 4 10c0 6 8 12 8 12s8-6 8-12c0-4.42-3.58-8-8-8z"/><circle cx="12" cy="9.5" r="2.8" fill="white"/></svg>';
 
+/** Icono calendario con check (igual que public/calendar-remodeled.svg). */
 const CALENDAR_SVG =
-  '<svg width="12" height="12" viewBox="0 0 24 24" fill="#164296" stroke="#164296" stroke-width="2" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+  '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" style="display:block;"><rect x="3" y="5" width="18" height="16" rx="2" fill="#164296"/><rect x="4" y="2" width="5" height="4" rx="0.5" fill="#164296"/><rect x="15" y="2" width="5" height="4" rx="0.5" fill="#164296"/><path d="M8 13.5l2.5 2.5 5.5-6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
 
 function escapeHtml(s: string): string {
   return s
@@ -68,8 +70,8 @@ export function buildConfirmacionEnvioHtml(params: ConfirmacionEnvioParams): str
   const lightbulbIcon = useIconUrls ? `<img src="${base}/lightbulb.png" width="24" height="24" alt="" style="display:block;border:0;" />` : LIGHTBULB_SVG;
   const filePdfIcon = useIconUrls ? `<img src="${base}/file-pdf.png" width="20" height="20" alt="" style="display:block;border:0;" />` : FILE_PDF_SVG;
   const downloadIcon = useIconUrls ? `<img src="${base}/download.png" width="18" height="18" alt="" style="display:block;border:0;" />` : DOWNLOAD_SVG;
-  const mapPinIcon = useIconUrls ? `<img src="${base}/map-pin.png" width="12" height="12" alt="" style="display:block;border:0;" />` : MAP_PIN_SVG;
-  const calendarIcon = useIconUrls ? `<img src="${base}/calendar.png" width="12" height="12" alt="" style="display:block;border:0;" />` : CALENDAR_SVG;
+  const mapPinIcon = useIconUrls ? `<img src="${base}/map-pin-remodeled.svg" width="12" height="12" alt="" style="display:block;border:0;" />` : MAP_PIN_SVG;
+  const calendarIcon = useIconUrls ? `<img src="${base}/calendar-remodeled.svg" width="12" height="12" alt="" style="display:block;border:0;" />` : CALENDAR_SVG;
 
   const attachmentRowsHtml = attachmentItems
     .map((item, i) => {

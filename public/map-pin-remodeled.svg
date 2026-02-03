@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="none">
+  <!-- Pin de ubicaci?n: gota con punta abajo y c?rculo en el centro (azul oscuro s?lido) -->
+  <path
+    fill="#164296"
+    d="M12 2C7.58 2 4 5.58 4 10c0 6 8 12 8 12s8-6 8-12c0-4.42-3.58-8-8-8z"
+  />
+  <circle cx="12" cy="9.5" r="2.8" fill="white" />
+</svg>

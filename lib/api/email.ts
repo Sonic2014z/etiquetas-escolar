@@ -115,7 +115,11 @@ export async function sendEmailWithPDF(
     return { success: true };
   } catch (error) {
     logger.error('Error enviando email con SendGrid:', error);
-    const message = error instanceof Error ? error.message : 'Error desconocido al enviar email';
+    let message = error instanceof Error ? error.message : 'Error desconocido al enviar email';
+    if (message === 'Unauthorized' || (typeof message === 'string' && message.toLowerCase().includes('unauthorized'))) {
+      message =
+        'SendGrid: API key inválida o no autorizada. Revisa que SENDGRID_API_KEY en Railway sea correcta y esté activa en tu cuenta de SendGrid.';
+    }
     return { success: false, error: message };
   }
 }
@@ -224,7 +228,11 @@ export async function sendEmailWithMultiplePDFs(
     return { success: true };
   } catch (error) {
     logger.error('Error enviando email múltiple con SendGrid:', error);
-    const message = error instanceof Error ? error.message : 'Error desconocido al enviar email';
+    let message = error instanceof Error ? error.message : 'Error desconocido al enviar email';
+    if (message === 'Unauthorized' || (typeof message === 'string' && message.toLowerCase().includes('unauthorized'))) {
+      message =
+        'SendGrid: API key inválida o no autorizada. Revisa que SENDGRID_API_KEY en Railway sea correcta y esté activa en tu cuenta de SendGrid.';
+    }
     return { success: false, error: message };
   }
 }
