@@ -25,9 +25,9 @@ export interface ConfirmacionEnvioParams {
 const CHECK_ICON_SVG =
   '<svg width="120" height="120" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="40" cy="40" r="38" fill="#E8F5E9" stroke="#4CAF50" stroke-width="2"/><path d="M24 40l10 10 22-22" stroke="#4CAF50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-/** Icono de bombilla para la caja de aviso (compatible con clientes de correo). */
+/** Icono de bombilla para la caja de aviso (igual que public/lightbulb.svg, compatible con clientes de correo). */
 const LIGHTBULB_SVG =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="display:block;"><path fill="#164296" d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>';
+  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#164296" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M12 2.2 C17 2.2 20.5 5.5 20.5 8.5 C20.5 11.5 18.8 13.6 17 14.8 C17.5 16 17.6 17 17.2 17.7 L6.8 17.7 C6.4 17 6.5 16 7 14.8 C5.2 13.6 3.5 11.5 3.5 8.5 C3.5 5.5 7 2.2 12 2.2 Z"/><path d="M12 17.2 L12 13.2 M12 13.2 L9.5 9.2 M12 13.2 L14.5 9.2"/><line x1="7" y1="20.2" x2="17" y2="20.2"/></svg>';
 
 /** Icono de documento/PDF para el cuadrado amarillo (blanco sobre fondo #ffc403). */
 const FILE_PDF_SVG =

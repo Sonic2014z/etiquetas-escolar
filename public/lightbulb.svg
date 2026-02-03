@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#1e3a5f" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Bombilla: cúpula ancha (óvalo/semi-circle), cuello marcado, flare en la base del cristal -->
+  <path d="
+    M 12 2.2
+    C 17 2.2 20.5 5.5 20.5 8.5
+    C 20.5 11.5 18.8 13.6 17 14.8
+    C 17.5 16 17.6 17 17.2 17.7
+    L 6.8 17.7
+    C 6.4 17 6.5 16 7 14.8
+    C 5.2 13.6 3.5 11.5 3.5 8.5
+    C 3.5 5.5 7 2.2 12 2.2
+    Z
+  " />
+  <!-- Filamento Y: tallo más corto; brazos hacia arriba y afuera, extremos redondeados -->
+  <path d="M12 17.2 L12 13.2 M12 13.2 L9.5 9.2 M12 13.2 L14.5 9.2" />
+  <!-- Base: una sola línea (la de más abajo), con espacio respecto a la bombilla -->
+  <line x1="7" y1="20.2" x2="17" y2="20.2" />
+</svg>
