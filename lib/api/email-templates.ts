@@ -20,6 +20,10 @@ export interface ConfirmacionEnvioParams {
   checkIconSrc?: string;
   /** URL base de la app (sin barra final). Si se pasa, los iconos del correo usan PNG desde {iconBaseUrl}/nombre.png en vez de SVG inline. */
   iconBaseUrl?: string;
+  /** Data URI del icono map pin (para clientes que no muestran SVG inline). */
+  mapPinIconSrc?: string;
+  /** Data URI del icono calendario (para clientes que no muestran SVG inline). */
+  calendarIconSrc?: string;
 }
 
 const CHECK_ICON_SVG =
@@ -56,7 +60,7 @@ function escapeHtml(s: string): string {
  * Genera el HTML del cuerpo del correo de confirmación (envío a domicilio).
  */
 export function buildConfirmacionEnvioHtml(params: ConfirmacionEnvioParams): string {
-  const { guardianName, orderNumber, attachmentItems, checkIconSrc, iconBaseUrl } = params;
+  const { guardianName, orderNumber, attachmentItems, checkIconSrc, iconBaseUrl, mapPinIconSrc, calendarIconSrc } = params;
   const safeName = escapeHtml(guardianName.trim() || 'Apoderado/a');
   const safeOrder = escapeHtml(String(orderNumber || '—'));
   const useIconUrls = Boolean(iconBaseUrl && iconBaseUrl.trim().startsWith('http'));
@@ -70,9 +74,15 @@ export function buildConfirmacionEnvioHtml(params: ConfirmacionEnvioParams): str
   const lightbulbIcon = useIconUrls ? `<img src="${base}/lightbulb.png" width="24" height="24" alt="" style="display:block;border:0;" />` : LIGHTBULB_SVG;
   const filePdfIcon = useIconUrls ? `<img src="${base}/file-pdf.png" width="20" height="20" alt="" style="display:block;border:0;" />` : FILE_PDF_SVG;
   const downloadIcon = useIconUrls ? `<img src="${base}/download.png" width="18" height="18" alt="" style="display:block;border:0;" />` : DOWNLOAD_SVG;
-  /* Map pin y calendario siempre en inline SVG: muchos clientes de correo no muestran SVG en <img>. */
-  const mapPinIcon = MAP_PIN_SVG;
-  const calendarIcon = CALENDAR_SVG;
+  /* Map pin y calendario: si hay data URI (SVG en base64) usamos <img> para mejor compatibilidad; si no, SVG inline. */
+  const mapPinIcon =
+    mapPinIconSrc && mapPinIconSrc.trim().startsWith('data:')
+      ? `<img src="${escapeHtml(mapPinIconSrc.trim())}" width="12" height="12" alt="" style="display:block;border:0;" />`
+      : MAP_PIN_SVG;
+  const calendarIcon =
+    calendarIconSrc && calendarIconSrc.trim().startsWith('data:')
+      ? `<img src="${escapeHtml(calendarIconSrc.trim())}" width="12" height="12" alt="" style="display:block;border:0;" />`
+      : CALENDAR_SVG;
 
   const attachmentRowsHtml = attachmentItems
     .map((item, i) => {

@@ -31,6 +31,30 @@ async function getCheckIconSrc(): Promise<string> {
 }
 
 /**
+ * Devuelve data URIs de los iconos map-pin y calendario (SVG en base64)
+ * para usarlos en <img> y que se muestren en clientes que eliminan SVG inline.
+ */
+async function getMapPinAndCalendarIconSrcs(): Promise<{
+  mapPinIconSrc: string;
+  calendarIconSrc: string;
+}> {
+  const result = { mapPinIconSrc: '', calendarIconSrc: '' };
+  try {
+    const mapPinPath = path.join(process.cwd(), 'public', 'map-pin-remodeled.svg');
+    const calendarPath = path.join(process.cwd(), 'public', 'calendar-remodeled.svg');
+    const [mapPinBuf, calendarBuf] = await Promise.all([
+      fs.readFile(mapPinPath),
+      fs.readFile(calendarPath),
+    ]);
+    result.mapPinIconSrc = 'data:image/svg+xml;base64,' + mapPinBuf.toString('base64');
+    result.calendarIconSrc = 'data:image/svg+xml;base64,' + calendarBuf.toString('base64');
+  } catch (e) {
+    logger.warn('No se pudieron cargar map-pin o calendar SVG para data URI en correo.', e);
+  }
+  return result;
+}
+
+/**
  * Configura SendGrid con la API Key
  */
 export function initializeSendGrid() {
@@ -79,13 +103,15 @@ export async function sendEmailWithPDF(
     }
 
     const pdfFilename = `etiquetas_${studentName.replace(/[^a-zA-Z0-9]/g, '_')}_${orderNumber}.pdf`;
-    const checkIconSrc = await getCheckIconSrc();
+    const [checkIconSrc, iconSrcs] = await Promise.all([getCheckIconSrc(), getMapPinAndCalendarIconSrcs()]);
     const html = buildConfirmacionEnvioHtml({
       guardianName: guardianName ?? 'Apoderado/a',
       orderNumber,
       attachmentItems: [{ filename: pdfFilename }],
       ...(checkIconSrc && { checkIconSrc }),
       ...(env.APP_BASE_URL && env.APP_BASE_URL.startsWith('http') && { iconBaseUrl: env.APP_BASE_URL }),
+      ...(iconSrcs.mapPinIconSrc && { mapPinIconSrc: iconSrcs.mapPinIconSrc }),
+      ...(iconSrcs.calendarIconSrc && { calendarIconSrc: iconSrcs.calendarIconSrc }),
     });
     const text = buildConfirmacionEnvioText({
       guardianName: guardianName ?? 'Apoderado/a',
@@ -176,13 +202,15 @@ export async function sendEmailWithMultiplePDFs(
       };
     });
 
-    const checkIconSrc = await getCheckIconSrc();
+    const [checkIconSrc, iconSrcs] = await Promise.all([getCheckIconSrc(), getMapPinAndCalendarIconSrcs()]);
     const html = buildConfirmacionEnvioHtml({
       guardianName: guardianName ?? 'Apoderado/a',
       orderNumber: mainOrderNumber,
       attachmentItems,
       ...(checkIconSrc && { checkIconSrc }),
       ...(env.APP_BASE_URL && env.APP_BASE_URL.startsWith('http') && { iconBaseUrl: env.APP_BASE_URL }),
+      ...(iconSrcs.mapPinIconSrc && { mapPinIconSrc: iconSrcs.mapPinIconSrc }),
+      ...(iconSrcs.calendarIconSrc && { calendarIconSrc: iconSrcs.calendarIconSrc }),
     });
     const text = buildConfirmacionEnvioText({
       guardianName: guardianName ?? 'Apoderado/a',
