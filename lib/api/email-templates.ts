@@ -20,9 +20,9 @@ export interface ConfirmacionEnvioParams {
   checkIconSrc?: string;
   /** URL base de la app (sin barra final). Si se pasa, los iconos del correo usan PNG desde {iconBaseUrl}/nombre.png en vez de SVG inline. */
   iconBaseUrl?: string;
-  /** Data URI del icono map pin (para clientes que no muestran SVG inline). */
+  /** URL o data URI del icono map pin (PNG). */
   mapPinIconSrc?: string;
-  /** Data URI del icono calendario (para clientes que no muestran SVG inline). */
+  /** URL o data URI del icono calendario (PNG). */
   calendarIconSrc?: string;
 }
 
@@ -74,13 +74,13 @@ export function buildConfirmacionEnvioHtml(params: ConfirmacionEnvioParams): str
   const lightbulbIcon = useIconUrls ? `<img src="${base}/lightbulb.png" width="24" height="24" alt="" style="display:block;border:0;" />` : LIGHTBULB_SVG;
   const filePdfIcon = useIconUrls ? `<img src="${base}/file-pdf.png" width="20" height="20" alt="" style="display:block;border:0;" />` : FILE_PDF_SVG;
   const downloadIcon = useIconUrls ? `<img src="${base}/download.png" width="18" height="18" alt="" style="display:block;border:0;" />` : DOWNLOAD_SVG;
-  /* Map pin y calendario: si hay data URI (SVG en base64) usamos <img> para mejor compatibilidad; si no, SVG inline. */
+  /* Map pin y calendario: si hay URL o data URI (PNG) usamos <img>; si no, SVG inline. */
   const mapPinIcon =
-    mapPinIconSrc && mapPinIconSrc.trim().startsWith('data:')
+    mapPinIconSrc && mapPinIconSrc.trim()
       ? `<img src="${escapeHtml(mapPinIconSrc.trim())}" width="12" height="12" alt="" style="display:block;border:0;" />`
       : MAP_PIN_SVG;
   const calendarIcon =
-    calendarIconSrc && calendarIconSrc.trim().startsWith('data:')
+    calendarIconSrc && calendarIconSrc.trim()
       ? `<img src="${escapeHtml(calendarIconSrc.trim())}" width="12" height="12" alt="" style="display:block;border:0;" />`
       : CALENDAR_SVG;
 

@@ -31,25 +31,31 @@ async function getCheckIconSrc(): Promise<string> {
 }
 
 /**
- * Devuelve data URIs de los iconos map-pin y calendario (SVG en base64)
- * para usarlos en <img> y que se muestren en clientes que eliminan SVG inline.
+ * Devuelve URL o data URI de los iconos map-pin y calendario (PNG).
+ * Si hay APP_BASE_URL se usan URLs; si no, se leen public/map-pin-remodeled.png y calendar-remodeled.png como data URI.
  */
 async function getMapPinAndCalendarIconSrcs(): Promise<{
   mapPinIconSrc: string;
   calendarIconSrc: string;
 }> {
   const result = { mapPinIconSrc: '', calendarIconSrc: '' };
+  if (env.APP_BASE_URL && env.APP_BASE_URL.startsWith('http')) {
+    const base = env.APP_BASE_URL.replace(/\/$/, '');
+    result.mapPinIconSrc = `${base}/map-pin-remodeled.png`;
+    result.calendarIconSrc = `${base}/calendar-remodeled.png`;
+    return result;
+  }
   try {
-    const mapPinPath = path.join(process.cwd(), 'public', 'map-pin-remodeled.svg');
-    const calendarPath = path.join(process.cwd(), 'public', 'calendar-remodeled.svg');
+    const mapPinPath = path.join(process.cwd(), 'public', 'map-pin-remodeled.png');
+    const calendarPath = path.join(process.cwd(), 'public', 'calendar-remodeled.png');
     const [mapPinBuf, calendarBuf] = await Promise.all([
       fs.readFile(mapPinPath),
       fs.readFile(calendarPath),
     ]);
-    result.mapPinIconSrc = 'data:image/svg+xml;base64,' + mapPinBuf.toString('base64');
-    result.calendarIconSrc = 'data:image/svg+xml;base64,' + calendarBuf.toString('base64');
+    result.mapPinIconSrc = 'data:image/png;base64,' + mapPinBuf.toString('base64');
+    result.calendarIconSrc = 'data:image/png;base64,' + calendarBuf.toString('base64');
   } catch (e) {
-    logger.warn('No se pudieron cargar map-pin o calendar SVG para data URI en correo.', e);
+    logger.warn('No se pudieron cargar map-pin-remodeled.png o calendar-remodeled.png para el correo.', e);
   }
   return result;
 }
