@@ -9,23 +9,23 @@ import {
 } from '@/lib/api/email-templates';
 
 /**
- * Devuelve la URL o data URI del icono de check para el correo.
- * Prioridad: 1) URL pública (APP_BASE_URL/check.png) — la única fiable en Gmail/Outlook.
- *            2) data URI (muchos clientes la bloquean).
+ * Devuelve la URL o data URI del icono de check animado (GIF) para el correo.
+ * Prioridad: 1) URL pública (APP_BASE_URL/checkmark-animate.gif).
+ *            2) data URI de public/checkmark-animate.gif (algunos clientes la bloquean).
  */
 async function getCheckIconSrc(): Promise<string> {
   if (env.APP_BASE_URL && env.APP_BASE_URL.startsWith('http')) {
-    const url = `${env.APP_BASE_URL}/check.png`;
-    logger.log(`Correo: usando icono check desde URL (verifica en el navegador que cargue): ${url}`);
+    const url = `${env.APP_BASE_URL}/checkmark-animate.gif`;
+    logger.log(`Correo: usando icono check (GIF) desde URL: ${url}`);
     return url;
   }
   try {
-    const filePath = path.join(process.cwd(), 'public', 'check.png');
+    const filePath = path.join(process.cwd(), 'public', 'checkmark-animate.gif');
     const buf = await fs.readFile(filePath);
-    logger.log('Correo: usando icono check en data URI (algunos clientes de correo la bloquean).');
-    return 'data:image/png;base64,' + buf.toString('base64');
+    logger.log('Correo: usando icono check (GIF) en data URI (algunos clientes de correo la bloquean).');
+    return 'data:image/gif;base64,' + buf.toString('base64');
   } catch (e) {
-    logger.warn('No se pudo cargar public/check.png para el correo, se usará icono SVG por defecto.', e);
+    logger.warn('No se pudo cargar public/checkmark-animate.gif para el correo, se usará icono SVG por defecto.', e);
     return '';
   }
 }

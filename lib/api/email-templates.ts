@@ -82,7 +82,7 @@ export function buildConfirmacionEnvioHtml(params: ConfirmacionEnvioParams): str
       const safeUrl = hasLink ? escapeHtml(item.downloadUrl!.trim()) : '';
       const subtitle = hasLink ? 'Haz clic en el botón para descargar' : 'PDF adjunto en el correo';
       const actionCell = hasLink && safeUrl
-        ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:8px 14px;background:#164296;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;border-radius:6px;">${downloadIcon} Descargar PDF</a>`
+        ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:8px 14px;background:#164296;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;border-radius:6px;" download="${safeFile}">${downloadIcon} Descargar PDF</a>`
         : downloadIcon;
       return `
         <tr>
