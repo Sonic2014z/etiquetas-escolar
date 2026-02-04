@@ -70,8 +70,9 @@ export function buildConfirmacionEnvioHtml(params: ConfirmacionEnvioParams): str
   const lightbulbIcon = useIconUrls ? `<img src="${base}/lightbulb.png" width="24" height="24" alt="" style="display:block;border:0;" />` : LIGHTBULB_SVG;
   const filePdfIcon = useIconUrls ? `<img src="${base}/file-pdf.png" width="20" height="20" alt="" style="display:block;border:0;" />` : FILE_PDF_SVG;
   const downloadIcon = useIconUrls ? `<img src="${base}/download.png" width="18" height="18" alt="" style="display:block;border:0;" />` : DOWNLOAD_SVG;
-  const mapPinIcon = useIconUrls ? `<img src="${base}/map-pin-remodeled.svg" width="12" height="12" alt="" style="display:block;border:0;" />` : MAP_PIN_SVG;
-  const calendarIcon = useIconUrls ? `<img src="${base}/calendar-remodeled.svg" width="12" height="12" alt="" style="display:block;border:0;" />` : CALENDAR_SVG;
+  /* Map pin y calendario siempre en inline SVG: muchos clientes de correo no muestran SVG en <img>. */
+  const mapPinIcon = MAP_PIN_SVG;
+  const calendarIcon = CALENDAR_SVG;
 
   const attachmentRowsHtml = attachmentItems
     .map((item, i) => {
