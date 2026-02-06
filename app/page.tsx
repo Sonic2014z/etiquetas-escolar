@@ -127,6 +127,32 @@ export default function GeneratorPage() {
   // --- 3. HANDLERS APODERADO ---
   const handleParentChange = (field: keyof ParentData, value: string) => {
     setParentData((prev: ParentData) => ({ ...prev, [field]: value }));
+
+    // Limpiar errores de formulario asociados a este campo cuando el usuario lo edita
+    setFormErrors((prevErrors) => {
+      const newErrors = { ...prevErrors };
+
+      if (field === "nombres") {
+        delete newErrors["nombres"];
+      }
+      if (field === "primerApellido") {
+        delete newErrors["primerApellido"];
+      }
+      if (field === "segundoApellido") {
+        delete newErrors["segundoApellido"];
+      }
+      if (field === "rut") {
+        delete newErrors["rut"];
+      }
+      if (field === "phone") {
+        delete newErrors["phone"];
+      }
+      if (field === "email") {
+        delete newErrors["email"];
+      }
+
+      return newErrors;
+    });
     
     // Si estamos editando el RUT, validamos al vuelo
     if (field === 'rut') {
@@ -180,9 +206,34 @@ export default function GeneratorPage() {
 
   // Actualizar un alumno específico por índice
   const handleStudentChange = (index: number, field: keyof StudentData, value: string) => {
-    setStudentsData(prev => prev.map((student, i) => 
-      i === index ? { ...student, [field]: value } : student
-    ));
+    setStudentsData(prev =>
+      prev.map((student, i) =>
+        i === index ? { ...student, [field]: value } : student
+      )
+    );
+
+    // Limpiar errores asociados a este alumno y campo cuando se edita
+    setFormErrors((prevErrors) => {
+      const newErrors = { ...prevErrors };
+
+      // Mapeo de campos de StudentData a los sufijos usados en formErrors
+      const fieldKeyMap: Record<keyof StudentData, string | null> = {
+        nombres: "nombres",
+        primerApellido: "primerApellido",
+        segundoApellido: "segundoApellido",
+        course: "course",
+        letter: "letra",
+        colegio: "colegio",
+      };
+
+      const suffix = fieldKeyMap[field];
+      if (suffix) {
+        const errorKey = `student_${index}_${suffix}`;
+        delete newErrors[errorKey];
+      }
+
+      return newErrors;
+    });
   };
 
   // --- 5. LÓGICA DE NEGOCIO (QR & PDF) ---
@@ -848,6 +899,7 @@ export default function GeneratorPage() {
       'primerApellido': 'Primer apellido del apoderado',
       'rut': 'RUT del apoderado',
       'phone': 'Teléfono del apoderado',
+      'email': 'Correo electrónico del apoderado',
       'nombresAlumno': 'Nombres del alumno',
       'primerApellidoAlumno': 'Primer apellido del alumno',
       'course': 'Curso del alumno',
@@ -888,9 +940,13 @@ export default function GeneratorPage() {
       missingFields.push(fieldNames['phone']);
     }
     
-    // Validar email si está presente
+    // Validar email (obligatorio y sin caracteres peligrosos)
     if (parentData.email && hasDangerousCharacters(parentData.email)) {
       errors['email'] = "Este campo no permite caracteres especiales";
+      missingFields.push(fieldNames['email'] + " (contiene caracteres especiales)");
+    } else if (!parentData.email || !parentData.email.trim()) {
+      errors['email'] = "Este campo es obligatorio";
+      missingFields.push(fieldNames['email']);
     }
     // Validar cada alumno
     studentsData.forEach((student, index) => {

@@ -62,6 +62,7 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
                         onChange={(e) => onNombresChange?.(e.target.value)}
                         onBlur={(e) => onNombresChange?.(capitalizeFirstLetter(e.target.value))}
                         placeholder="Ej: Juan Carlos"
+                        maxLength={100}
                         className={baseInputClass}
                     />
                     {errors?.nombres && <p className="text-xs text-error mt-1 animate-pulse">{errors.nombres}</p>}
@@ -76,6 +77,7 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
                             onChange={(e) => onPrimerApellidoChange?.(e.target.value)}
                             onBlur={(e) => onPrimerApellidoChange?.(capitalizeFirstLetter(e.target.value))}
                             placeholder="Ej: Pérez"
+                            maxLength={100}
                             className={baseInputClass}
                         />
                         {errors?.primerApellido && <p className="text-xs text-error mt-1 animate-pulse">{errors.primerApellido}</p>}
@@ -89,6 +91,7 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
                             onChange={(e) => onSegundoApellidoChange?.(e.target.value)}
                             onBlur={(e) => onSegundoApellidoChange?.(capitalizeFirstLetter(e.target.value))}
                             placeholder="Ej: Gómez"
+                            maxLength={100}
                             className={baseInputClass}
                         />
                         {errors?.segundoApellido && <p className="text-xs text-error mt-1 animate-pulse">{errors.segundoApellido}</p>}

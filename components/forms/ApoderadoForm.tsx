@@ -59,6 +59,7 @@ export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApel
                         onChange={(e) => onNombresChange?.(e.target.value)}
                         onBlur={(e) => onNombresChange?.(capitalizeFirstLetter(e.target.value))}
                         placeholder="Ej: Juan Carlos"
+                        maxLength={100}
                         className={baseInputClass}
                     />
                     {errors?.nombres && <p className="text-xs text-error mt-1 animate-pulse">{errors.nombres}</p>}
@@ -73,6 +74,7 @@ export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApel
                             onChange={(e) => onPrimerApellidoChange?.(e.target.value)}
                             onBlur={(e) => onPrimerApellidoChange?.(capitalizeFirstLetter(e.target.value))}
                             placeholder="Ej: Pérez"
+                            maxLength={100}
                             className={baseInputClass}
                         />
                         {errors?.primerApellido && <p className="text-xs text-error mt-1 animate-pulse">{errors.primerApellido}</p>}
@@ -86,6 +88,7 @@ export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApel
                             onChange={(e) => onSegundoApellidoChange?.(e.target.value)}
                             onBlur={(e) =>  onSegundoApellidoChange?.(capitalizeFirstLetter(e.target.value))}
                             placeholder="Ej: Gómez"
+                            maxLength={100}
                             className={baseInputClass}
                         />
                         {errors?.segundoApellido && <p className="text-xs text-error mt-1 animate-pulse">{errors.segundoApellido}</p>}
@@ -120,6 +123,7 @@ export function ApoderadoForm({ rut, phone, nombres, primerApellido, segundoApel
                         value={email}
                         onChange={(e) => onEmailChange?.(e.target.value)}
                         placeholder="Ej: juan.perez@gmail.com"
+                        maxLength={254}
                         className={getEmailInputClass()}
                     />
                     {errors?.email && <p className="text-xs text-error mt-1 animate-pulse">{errors.email}</p>}

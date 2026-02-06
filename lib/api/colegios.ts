@@ -15,7 +15,8 @@ export async function getColegios(): Promise<Colegio[]> {
       headers: {
         'Content-Type': 'application/json',
       },
-      cache: 'no-store',
+      // Permitimos que el navegador/proxy cachee la respuesta para mejorar tiempos
+      cache: 'force-cache',
     });
 
     if (!response.ok) {

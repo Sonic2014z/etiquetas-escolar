@@ -66,32 +66,79 @@ function EtiquetasContent() {
   const searchParams = useSearchParams();
   const [studentData, setStudentData] = useState<StudentInfo | null>(null);
 
+  // Sanea texto proveniente de query params o storage para evitar caracteres peligrosos y longitudes excesivas
+  const sanitizeText = (value: string | null | undefined, maxLength: number, fallback: string): string => {
+    if (!value) return fallback;
+
+    // Eliminar caracteres de control
+    let clean = value.replace(/[\x00-\x1F\x7F]/g, "").trim();
+
+    if (!clean) return fallback;
+
+    // Bloquear caracteres potencialmente peligrosos
+    if (/[<>"'{}\[\]\\|`~]/.test(clean)) {
+      return fallback;
+    }
+
+    if (clean.length > maxLength) {
+      clean = clean.slice(0, maxLength);
+    }
+
+    return clean;
+  };
+
+  const safeDecode = (value: string | null): string | null => {
+    if (value == null) return null;
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return value;
+    }
+  };
+
   useEffect(() => {
     // Intentar obtener datos de query params
-    const studentName = searchParams.get('studentName');
-    const studentGrade = searchParams.get('studentGrade');
-    const studentSchool = searchParams.get('studentSchool');
-    const studentLocation = searchParams.get('studentLocation');
-    const studentYear = searchParams.get('studentYear');
-    const orderNumber = searchParams.get('orderNumber');
-    const guardian = searchParams.get('guardian');
-    const qrUrl = searchParams.get('qrUrl');
+    const rawStudentName = searchParams.get('studentName');
+    const rawStudentGrade = searchParams.get('studentGrade');
+    const rawStudentSchool = searchParams.get('studentSchool');
+    const rawStudentLocation = searchParams.get('studentLocation');
+    const rawStudentYear = searchParams.get('studentYear');
+    const rawOrderNumber = searchParams.get('orderNumber');
+    const rawGuardian = searchParams.get('guardian');
+    const rawQrUrl = searchParams.get('qrUrl');
+
+    const studentName = safeDecode(rawStudentName);
+    const studentGrade = safeDecode(rawStudentGrade);
+    const studentSchool = safeDecode(rawStudentSchool);
+    const studentLocation = safeDecode(rawStudentLocation);
+    const studentYear = safeDecode(rawStudentYear);
+    const orderNumber = safeDecode(rawOrderNumber);
+    const guardian = safeDecode(rawGuardian);
+    const qrUrl = safeDecode(rawQrUrl);
 
     if (studentName && studentGrade && studentSchool) {
       // Combinar school y location si location existe
-      const fullSchoolName = studentLocation 
-        ? `${decodeURIComponent(studentSchool)} ${decodeURIComponent(studentLocation)}`.trim()
-        : decodeURIComponent(studentSchool);
+      const fullSchoolNameRaw = studentLocation 
+        ? `${studentSchool} ${studentLocation}`.trim()
+        : studentSchool;
+
+      const safeName = sanitizeText(studentName, 100, "Alumno");
+      const safeGrade = sanitizeText(studentGrade, 50, "");
+      const safeSchool = sanitizeText(fullSchoolNameRaw, 120, "Colegio");
+      const safeLocation = studentLocation ? sanitizeText(studentLocation, 80, "") : "";
+      const safeGuardian = guardian ? sanitizeText(guardian, 100, "") : "";
+      const safeOrderNumber = sanitizeText(orderNumber || "", 20, Math.floor(Math.random() * 100000000).toString().padStart(8, '0'));
+      const safeQrUrl = qrUrl && !/[<>"'{}\[\]\\|`~]/.test(qrUrl) ? qrUrl : undefined;
       
       setStudentData({
-        name: decodeURIComponent(studentName),
-        grade: decodeURIComponent(studentGrade),
-        school: fullSchoolName,
-        location: studentLocation ? decodeURIComponent(studentLocation) : '',
-        year: studentYear || new Date().getFullYear().toString(),
-        orderNumber: orderNumber || Math.floor(Math.random() * 100000000).toString().padStart(8, '0'),
-        guardian: guardian ? decodeURIComponent(guardian) : '',
-        qrUrl: qrUrl ? decodeURIComponent(qrUrl) : undefined,
+        name: safeName,
+        grade: safeGrade || " ",
+        school: safeSchool,
+        location: safeLocation,
+        year: sanitizeText(studentYear || "", 10, new Date().getFullYear().toString()),
+        orderNumber: safeOrderNumber,
+        guardian: safeGuardian,
+        qrUrl: safeQrUrl,
       });
     } else {
       // Intentar obtener de sessionStorage como fallback (con manejo de errores)
