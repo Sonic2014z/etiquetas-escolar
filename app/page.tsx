@@ -49,6 +49,7 @@ export default function GeneratorPage() {
   const [validationAlert, setValidationAlert] = useState<{ show: boolean; missingFields: string[] }>({ show: false, missingFields: [] });
   const [confirmationAlert, setConfirmationAlert] = useState<{ show: boolean; missingFields: string[] }>({ show: false, missingFields: [] });
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [showEmailExistsModal, setShowEmailExistsModal] = useState(false);
   
   // --- 3. ESTADO DE PROGRESO DE PDFs ---
   const [isGeneratingPdfs, setIsGeneratingPdfs] = useState(false);
@@ -1022,7 +1023,7 @@ export default function GeneratorPage() {
 
   // Función para proceder después de confirmar en el modal
   const handleConfirmRegistration = async () => {
-    // Cerrar el modal
+    // Cerrar el modal de confirmación
     setShowConfirmationModal(false);
     
     // Ocultar alerta de validación al presionar el botón (se mostrará de nuevo si hay errores)
@@ -1047,8 +1048,38 @@ export default function GeneratorPage() {
       return;
     }
 
-    // Si no hay campos faltantes, proceder directamente
+    // Comprobar si el correo ya está registrado como apoderado
+    const emailToCheck = parentData.email?.trim();
+    if (emailToCheck) {
+      try {
+        const res = await fetch(
+          `/api/check-apoderado-email?email=${encodeURIComponent(emailToCheck)}`
+        );
+        const data = await res.json().catch(() => ({ exists: false }));
+        if (data.exists) {
+          setShowEmailExistsModal(true);
+          return;
+        }
+      } catch {
+        // Si falla la comprobación, permitir continuar
+      }
+    }
+
+    // Si no hay campos faltantes y el correo no existe (o no se pudo comprobar), proceder
     proceedWithRegistration();
+  };
+
+  const handleEmailExistsContinue = () => {
+    setShowEmailExistsModal(false);
+    proceedWithRegistration();
+  };
+
+  const handleEmailExistsCancel = () => {
+    setShowEmailExistsModal(false);
+    setTimeout(() => {
+      const el = document.getElementById('seccion-datos-apoderado');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   };
 
   return (
@@ -1262,12 +1293,43 @@ export default function GeneratorPage() {
           </div>
         )}
 
+        {/* Modal: correo ya registrado */}
+        {showEmailExistsModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 animate-fade-in">
+              <div className="mb-4">
+                <h3 className="text-lg font-bold text-gray-900 mb-3">
+                  Correo ya registrado
+                </h3>
+                <p className="text-sm text-gray-700">
+                  El correo electrónico que ingresó ya está registrado en el sistema. Si es usted, puede continuar para agregar alumnos. ¿Desea continuar?
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 justify-end">
+                <button
+                  onClick={handleEmailExistsCancel}
+                  className="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded-lg transition-colors"
+                >
+                  No, cambiar correo
+                </button>
+                <button
+                  onClick={handleEmailExistsContinue}
+                  className="px-6 py-2 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors"
+                >
+                  Sí, soy yo / Continuar con este correo
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Grid Principal */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             {/* COLUMNA IZQUIERDA: Formularios (7 cols) */}
             <div className="lg:col-span-7 space-y-6">
                 
+                <div id="seccion-datos-apoderado">
                 <ApoderadoForm 
                     nombres={parentData.nombres}
                     primerApellido={parentData.primerApellido}
@@ -1294,6 +1356,7 @@ export default function GeneratorPage() {
                       email: formErrors['email']
                     }}
                 />
+                </div>
                 
                 {/* Formularios de Alumnos */}
                 {studentsData.map((student, index) => (
