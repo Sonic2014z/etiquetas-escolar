@@ -4,18 +4,23 @@ import { logger } from "@/lib/helpers/logger";
 /**
  * Obtiene todos los colegios desde Strapi
  * Usa la API route de Next.js como proxy para mantener el token seguro
+ * @param search Término opcional de búsqueda por nombre de colegio
  * @returns Promise con array de colegios
  */
-export async function getColegios(): Promise<Colegio[]> {
+export async function getColegios(search?: string): Promise<Colegio[]> {
   try {
-    // Llamar a nuestra API route de Next.js (que actúa como proxy)
-    // Esta ruta está en el servidor donde el token está disponible
-    const response = await fetch('/api/colegios', {
+    const trimmedSearch = search?.trim();
+    const hasSearch = !!trimmedSearch && trimmedSearch.length >= 3;
+
+    const url = hasSearch
+      ? `/api/colegios?search=${encodeURIComponent(trimmedSearch!)}`
+      : '/api/colegios';
+
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
-      // Permitimos que el navegador/proxy cachee la respuesta para mejorar tiempos
       cache: 'force-cache',
     });
 

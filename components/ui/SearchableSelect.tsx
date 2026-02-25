@@ -12,20 +12,24 @@ interface SearchableSelectProps {
     options: Option[];
     value: string | number;
     onChange: (value: string | number) => void;
+    onSearchChange?: (term: string) => void;
     placeholder?: string;
     label?: string;
     className?: string;
     error?: string;
+    isLoading?: boolean;
 }
 
 export function SearchableSelect({
     options,
     value,
     onChange,
+    onSearchChange,
     placeholder = "Seleccionar...",
     label,
     className = "",
-    error
+    error,
+    isLoading = false,
 } : SearchableSelectProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -35,6 +39,7 @@ export function SearchableSelect({
 
     // Normalizar el término de búsqueda para hacer la búsqueda más flexible
     const normalizedSearchTerm = normalizeSearchText(searchTerm);
+    const minCharsForSearch = 3;
     
     // Filtrar opciones usando normalización (ignora acentos, mayúsculas, espacios extra)
     const filteredOptions = options.filter((opt) => {
@@ -89,7 +94,9 @@ export function SearchableSelect({
               placeholder={selectedOption ? selectedOption.label : placeholder}
               value={isOpen ? searchTerm : (selectedOption?.label || "")}
               onChange={(e) => {
-                setSearchTerm(e.target.value);
+                const term = e.target.value;
+                setSearchTerm(term);
+                onSearchChange?.(term);
                 if (!isOpen) setIsOpen(true);
               }}
               onClick={() => setIsOpen(true)}
@@ -107,7 +114,15 @@ export function SearchableSelect({
           {/* Lista Desplegable */}
           {isOpen && (
             <div className="absolute z-50 w-full mt-1 top-full left-0 bg-white border border-border rounded-md shadow-lg max-h-60 overflow-auto">
-              {filteredOptions.length > 0 ? (
+              {normalizedSearchTerm.length < minCharsForSearch ? (
+                <div className="p-2 text-sm text-foreground-muted text-center">
+                  Escribe al menos 3 caracteres para buscar tu colegio
+                </div>
+              ) : isLoading ? (
+                <div className="p-2 text-sm text-foreground-muted text-center">
+                  Cargando colegios...
+                </div>
+              ) : filteredOptions.length > 0 ? (
                 filteredOptions.map((opt) => (
                   <div
                     key={opt.value}

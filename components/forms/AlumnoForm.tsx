@@ -12,6 +12,7 @@ interface AlumnoFormProps {
     colegio: string;
     colegios?: Colegio[];
     loadingColegios?: boolean;
+    onColegioSearch?: (term: string) => void;
 
     onNombresChange: (nombres: string) => void;
     onPrimerApellidoChange: (primerApellido: string) => void;
@@ -30,7 +31,24 @@ interface AlumnoFormProps {
     };
 }
 
-export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, letra, colegio, colegios = [], loadingColegios = false, onNombresChange, onPrimerApellidoChange, onSegundoApellidoChange, onCursoChange, onLetraChange, onColegioChange, errors }: AlumnoFormProps) {
+export function AlumnoForm({
+    nombres,
+    primerApellido,
+    segundoApellido,
+    curso,
+    letra,
+    colegio,
+    colegios = [],
+    loadingColegios = false,
+    onColegioSearch,
+    onNombresChange,
+    onPrimerApellidoChange,
+    onSegundoApellidoChange,
+    onCursoChange,
+    onLetraChange,
+    onColegioChange,
+    errors,
+}: AlumnoFormProps) {
     const baseInputClass = "w-full p-2 rounded-md border border-border bg-background-secondary text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all";
 
     // Convertir colegios a opciones, asegurándonos de incluir todos los colegios válidos
@@ -103,10 +121,12 @@ export function AlumnoForm({ nombres, primerApellido, segundoApellido, curso, le
                     <label className="text-sm font-medium text-foreground-secondary">Colegio <strong className="text-error">*</strong></label>
                     <SearchableSelect
                         label=""
-                        placeholder={loadingColegios ? "Cargando datos..." : "Buscar colegio..."}
+                        placeholder="Escribe para buscar colegio..."
                         options={colegioOptions}
                         value={colegio}
                         onChange={(val) => onColegioChange(val as string)}
+                        onSearchChange={onColegioSearch}
+                        isLoading={loadingColegios}
                         error={errors?.colegio}
                     />
                 </div>

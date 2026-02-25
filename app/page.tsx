@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ParentData, StudentData } from "@/types/label";
 import { ApoderadoForm } from "@/components/forms/ApoderadoForm";
 import { AlumnoForm } from "@/components/forms/AlumnoForm";
@@ -43,7 +43,7 @@ export default function GeneratorPage() {
   const [isEmailValid, setIsEmailValid] = useState<boolean | null>(null);
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [colegios, setColegios] = useState<Colegio[]>([]);
-  const [loadingColegios, setLoadingColegios] = useState(true);
+  const [loadingColegios, setLoadingColegios] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [registerMessage, setRegisterMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [validationAlert, setValidationAlert] = useState<{ show: boolean; missingFields: string[] }>({ show: false, missingFields: [] });
@@ -106,24 +106,29 @@ export default function GeneratorPage() {
     }
   }, [pdfsCompleted]);
 
-  // --- 2.1. CARGAR COLEGIOS DESDE STRAPI ---
-  useEffect(() => {
-    const loadColegios = async () => {
+  // --- 2.1. BÚSQUEDA DE COLEGIOS DESDE STRAPI (búsqueda remota) ---
+  const searchColegios = useCallback(
+    async (term: string) => {
+      const search = term.trim();
+
+      if (search.length < 3) {
+        setColegios([]);
+        return;
+      }
+
       setLoadingColegios(true);
       try {
-        const colegiosData = await getColegios();
+        const colegiosData = await getColegios(search);
         setColegios(colegiosData);
       } catch (error) {
-        // Error cargando colegios (log solo en desarrollo)
         logger.error("Error cargando colegios:", error);
         setColegios([]);
       } finally {
         setLoadingColegios(false);
       }
-    };
-
-    loadColegios();
-  }, []);
+    },
+    []
+  );
 
   // --- 3. HANDLERS APODERADO ---
   const handleParentChange = (field: keyof ParentData, value: string) => {
@@ -1386,6 +1391,7 @@ export default function GeneratorPage() {
                         colegio={student.colegio}
                         colegios={colegios}
                         loadingColegios={loadingColegios}
+                        onColegioSearch={searchColegios}
                         onNombresChange={(val) => handleStudentChange(index, 'nombres', val)}
                         onPrimerApellidoChange={(val) => handleStudentChange(index, 'primerApellido', val)}
                         onSegundoApellidoChange={(val) => handleStudentChange(index, 'segundoApellido', val)}

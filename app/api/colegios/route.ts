@@ -52,8 +52,83 @@ interface StrapiPaginationResponse {
   };
 }
 
-export async function GET() {
+function normalizeColegios(colegiosRaw: StrapiColegioRaw[]): Colegio[] {
+  return colegiosRaw
+    .map((colegio: StrapiColegioRaw): Colegio => {
+      if (colegio.id && colegio.colegio_nombre && !colegio.attributes) {
+        return {
+          id: colegio.id,
+          rbd: colegio.rbd ?? 0,
+          colegio_nombre: colegio.colegio_nombre,
+          dependencia: colegio.dependencia || '',
+          comuna: colegio.comuna || '',
+          region: colegio.region || '',
+        };
+      }
+
+      if (colegio.attributes && typeof colegio.attributes === 'object') {
+        return {
+          id: colegio.id,
+          rbd: colegio.attributes.rbd ?? colegio.rbd ?? 0,
+          colegio_nombre: colegio.attributes.colegio_nombre || colegio.colegio_nombre || '',
+          dependencia: colegio.attributes.dependencia || colegio.dependencia || '',
+          comuna: colegio.attributes.comuna || colegio.comuna || '',
+          region: colegio.attributes.region || colegio.region || '',
+        };
+      }
+
+      return {
+        id: colegio.id,
+        rbd: colegio.rbd ?? 0,
+        colegio_nombre: colegio.colegio_nombre || '',
+        dependencia: colegio.dependencia || '',
+        comuna: colegio.comuna || '',
+        region: colegio.region || '',
+      };
+    })
+    .filter((colegio: Colegio) => {
+      return (
+        colegio &&
+        typeof colegio.id !== 'undefined' &&
+        colegio.colegio_nombre &&
+        colegio.colegio_nombre.trim().length > 0
+      );
+    });
+}
+
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search')?.trim();
+
+    // Búsqueda por nombre de colegio (modo "live search")
+    if (search && search.length >= 3) {
+      const page = 1;
+      const pageSize = 50;
+      const encodedSearch = encodeURIComponent(search);
+      const paginationParams = `pagination[page]=${page}&pagination[pageSize]=${pageSize}`;
+      const filterParams = `filters[colegio_nombre][$containsi]=${encodedSearch}`;
+      const path = `colegios?${paginationParams}&${filterParams}`;
+
+      const response = await strapi.get<StrapiPaginationResponse>(path);
+
+      if (!response || typeof response !== 'object' || !response.data) {
+        logger.error('[API /api/colegios] Invalid response structure en búsqueda', {
+          search,
+        });
+        return NextResponse.json([], { status: 200 });
+      }
+
+      const colegiosRaw = response.data || [];
+      const colegiosNormalizados = normalizeColegios(colegiosRaw);
+
+      return NextResponse.json(colegiosNormalizados, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600',
+        },
+      });
+    }
+
     const allColegios: StrapiColegioRaw[] = [];
     let page = 1;
     let pageSize = 100; // Máximo típico de Strapi (puede ser 100 o 1000 según configuración)
@@ -96,49 +171,8 @@ export async function GET() {
     // Extraer el array de colegios (ya tenemos todos)
     const colegiosRaw = allColegios;
     
-    // Normalizar los datos para Strapi v5: Los datos están directamente en el objeto
-    // Convertimos a la estructura esperada: { id, rbd, colegio_nombre, ... }
-    const colegiosNormalizados: Colegio[] = colegiosRaw.map((colegio: StrapiColegioRaw): Colegio => {
-      // Si ya tiene la estructura v5 (sin attributes), normalizar asegurando que rbd sea number
-      if (colegio.id && colegio.colegio_nombre && !colegio.attributes) {
-        return {
-          id: colegio.id,
-          rbd: colegio.rbd ?? 0, // Asegurar que rbd sea number, no undefined
-          colegio_nombre: colegio.colegio_nombre,
-          dependencia: colegio.dependencia || '',
-          comuna: colegio.comuna || '',
-          region: colegio.region || '',
-        };
-      }
-      
-      // Si viene con estructura v4 (con attributes), extraer los datos
-      if (colegio.attributes && typeof colegio.attributes === 'object') {
-        return {
-          id: colegio.id,
-          rbd: colegio.attributes.rbd ?? colegio.rbd ?? 0,
-          colegio_nombre: colegio.attributes.colegio_nombre || colegio.colegio_nombre || '',
-          dependencia: colegio.attributes.dependencia || colegio.dependencia || '',
-          comuna: colegio.attributes.comuna || colegio.comuna || '',
-          region: colegio.attributes.region || colegio.region || '',
-        };
-      }
-      
-      // Si no tiene attributes, los campos están directamente en el objeto
-      return {
-        id: colegio.id,
-        rbd: colegio.rbd ?? 0,
-        colegio_nombre: colegio.colegio_nombre || '',
-        dependencia: colegio.dependencia || '',
-        comuna: colegio.comuna || '',
-        region: colegio.region || '',
-      };
-    }).filter((colegio: Colegio) => {
-      // Filtrar solo colegios válidos
-      return colegio && 
-             typeof colegio.id !== 'undefined' && 
-             colegio.colegio_nombre &&
-             colegio.colegio_nombre.trim().length > 0;
-    });
+    // Normalizar y filtrar colegios válidos
+    const colegiosNormalizados: Colegio[] = normalizeColegios(colegiosRaw);
     
     // Retornar los datos normalizados al cliente
     return NextResponse.json(colegiosNormalizados, {
